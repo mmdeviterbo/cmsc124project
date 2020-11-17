@@ -53,6 +53,7 @@ public class GameStage{
 	public static final int WINDOW_WIDTH= 1890;
 	
 	public GameStage() {
+		//check changes
 		this.root = new Group();
 		this.hb = new HBox(); this.vb = new VBox();
 		this.paneLexeme = new VBox(); this.paneSymbolTable = new VBox();
