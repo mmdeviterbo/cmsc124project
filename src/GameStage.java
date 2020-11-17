@@ -582,7 +582,7 @@ public class GameStage{
 //    	     }
 //    	   }
 //    	 });
-	}
+//	}
 	
 	
 	private void btnExecuteHandle() { //get and process the code input by user from texarea named "inputUser"
