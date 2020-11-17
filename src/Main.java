@@ -18,6 +18,5 @@ public class Main extends Application {
 		theGameStage.setStage(stage);
 	}
 	
-	
 	//this is trial change/s, for testing commit to github
 }
