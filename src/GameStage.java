@@ -561,6 +561,30 @@ public class GameStage{
 		}
 
 	}
+	
+//	private void doGIMMEH() {
+        //for gimmeh part
+//    	displayResult.setEditable(true);
+//    	displayResult.setText(displayResult.getText()+"Enter input: ");
+////    	displayResult.setText("Hello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nhe\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\ndasfdfsdfd\n\n\n\n\n\n\n\n\n\n\ndsfsdfds");
+//    	
+//    	displayResult.setOnKeyPressed(new EventHandler<KeyEvent>()
+//    	 {
+//    	   @Override
+//    	   public void handle(KeyEvent ke)
+//    	   {
+//    	     if (ke.getCode().equals(KeyCode.ENTER))
+//    	     {
+//    	    	 //store this input to new variable
+//    	       System.out.println(displayResult.getText().split("Enter input: ")[1]);
+//    	       displayResult.setText(displayResult.getText()+"\n");
+//    	       displayResult.setEditable(false);`
+//    	     }
+//    	   }
+//    	 });
+	}
+	
+	
 	private void btnExecuteHandle() { //get and process the code input by user from texarea named "inputUser"
 		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() { 
             public void handle(ActionEvent e)
@@ -577,31 +601,7 @@ public class GameStage{
             		displayResult.setText(displayResult.getText()+"\n"+"501 Syntax Error.");
             	}
             	
-                //for gimmeh part
-//            	displayResult.setEditable(true);
-//            	displayResult.setText(displayResult.getText()+"Enter input: ");
-////            	displayResult.setText("Hello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nhe\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\ndasfdfsdfd\n\n\n\n\n\n\n\n\n\n\ndsfsdfds");
-//            	
-//            	displayResult.setOnKeyPressed(new EventHandler<KeyEvent>()
-//            	 {
-//            	   @Override
-//            	   public void handle(KeyEvent ke)
-//            	   {
-//            	     if (ke.getCode().equals(KeyCode.ENTER))
-//            	     {
-//            	    	 //store this input to new variable
-//            	       System.out.println(displayResult.getText().split("Enter input: ")[1]);
-//            	       displayResult.setText(displayResult.getText()+"\n");
-//            	       displayResult.setEditable(false);`
-//            	     }
-//            	   }
-//            	 });
             	
-            	
-
-            
-            
-            
             }
 		};
 		btnExecute.setOnAction(event); 
