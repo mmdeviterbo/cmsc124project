@@ -16,12 +16,12 @@ public class Lexeme{
 
 	//literals
 	public static final String NUMBR = "-?[0-9]+";
-	public static final String NUMBAR = "-?[0-9]*\\.[0-9]+"; //di ko pa alam ano equivalent ng regex nito sa java
-	public static final String YARN = "\".+\""; //di ko pa alam ano equivalent ng regex nito sa java
+	public static final String NUMBAR = "-?[0-9]*\\.[0-9]+";
+	public static final String YARN = "\"[^\"]+\""; 
 	public static final String[] TROOF = {"WIN","FAIL"};
 	public static final String[] TYPE = {"NUMBR","NUMBAR","YARN","TROOF"};
 	public static final String[] LITERALS = {NUMBR,NUMBAR,YARN,TROOF[0],TROOF[1],TYPE[0],TYPE[1],TYPE[2],TYPE[3]};
-	public static final String ALL_LITERALS = Lexeme.NUMBAR+"|"+NUMBR +"|"+YARN+"|"+TROOF[0]+"|"+TROOF[1]+"|"+TYPE[0]+"|"+TYPE[1]+"|"+TYPE[2]+"|"+TYPE[3] + "|" + "AN";
+	public static final String ALL_LITERALS = NUMBAR+"|"+NUMBR +"|"+YARN+"|"+TROOF[0]+"|"+TROOF[1]+"|"+TYPE[0]+"|"+TYPE[1]+"|"+TYPE[2]+"|"+TYPE[3] + "|" + "AN";
 	
 	//file naming and formatting
 	public static final String HAI =  "^HAI$";
@@ -59,7 +59,7 @@ public class Lexeme{
 	
 	//comparison operators
 	public static final String BOTH_SAEM = "\\bBOTH SAEM\\b";
-	public static final String DIFFRINT = "DIFFRINT";
+	public static final String DIFFRINT = "\\bDIFFRINT\\b";
 	
 	//string concatenation
 	public static final String SMOOSH = "\\bSMOOSH\\b";

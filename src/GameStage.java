@@ -154,7 +154,8 @@ public class GameStage{
 	}
 	private void initializeElements() {
 		inputUser.setPrefWidth(GameStage.WINDOW_WIDTH/3);
-		inputUser.setText("BOTH OF WIN AN EITHER OF FAIL AN WON OF WIN AN WIN");
+		inputUser.setWrapText(true);
+		inputUser.setText("DIFFRINT SUM OF SUM OF 5 AN 5 AN 11 AN SUM OF SUM OF 1 AN 1 AN 3");
 		
 		String str = "hello" + "\n" + "hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n";
 		str = str + str + str; //sample string lang if magsscroll yung window ng "Lexeme" at "Symbol Table"
@@ -214,7 +215,7 @@ public class GameStage{
 			        tokenizedOutput.add(combine);
 				}else {
 					//edit if this is a varident found in symbol table
-					if(match.matches("^BOTH$|^WON$|^EITHER$|^ALL$|^ANY$|^SUM$|^DIFF$|^PRODUKT$|^QUOSHUNT$|^MOD$|^BIGGR$|^SMALLR$|^DIFFRINT$")==true) {
+					if(match.matches("^BOTH$|^WON$|^EITHER$|^ALL$|^ANY$|^SUM$|^DIFF$|^PRODUKT$|^QUOSHUNT$|^MOD$|^BIGGR$|^SMALLR$")==true) {
 						System.out.println("216 Error: wrong use of operators");
 						return null;
 					}
@@ -229,7 +230,7 @@ public class GameStage{
 			if(arrResult.length!=0) tokenizedOutput.add(arrResult);
 		}
 //		for(String[] arr : tokenizedOutput) {
-//			System.out.println("224: "+Arrays.toString(arr));
+//			System.out.print("224: "+Arrays.toString(arr));
 //		}
 		
 		
@@ -342,21 +343,14 @@ public class GameStage{
 		ArrayList<String> stackOperation = new ArrayList<String>();
 		String regexNum = "^"+Lexeme.NUMBR+"$"+"|"+"^"+Lexeme.NUMBAR+"$"+"|"+"^\""+Lexeme.NUMBR+"\"$" +"|"+ "^\""+Lexeme.NUMBAR+"\"$";
 		for(int i=0;i<lexList.length;i++) {
-			if(lexList[i].matches("SUM OF")) {
-				stackOperation.add(0,"SUM OF");
-			}else if(lexList[i].matches("DIFF OF")){
-				stackOperation.add(0,"DIFF OF");
-			}else if(lexList[i].matches("PRODUKT OF"))  {
-				stackOperation.add(0,"PRODUKT OF");
-			}else if(lexList[i].equals("QUOSHUNT OF")) {
-				stackOperation.add(0,"QUOSHUNT OF");
-			}else if(lexList[i].equals("MOD OF")) {
-				stackOperation.add(0,"MOD OF");
-			}else if(lexList[i].equals("BIGGR OF")) {
-				stackOperation.add(0,"BIGGR OF");
-			}else if(lexList[i].equals("SMALLR OF")) {
-				stackOperation.add(0,"SMALLR OF");
-			}else if(lexList[i].matches(regexNum)) {
+			if(lexList[i].matches("SUM OF")) stackOperation.add(0,"SUM OF");
+			else if(lexList[i].matches("DIFF OF")) stackOperation.add(0,"DIFF OF");
+			else if(lexList[i].matches("PRODUKT OF")) stackOperation.add(0,"PRODUKT OF");
+			else if(lexList[i].equals("QUOSHUNT OF")) stackOperation.add(0,"QUOSHUNT OF");
+			else if(lexList[i].equals("MOD OF")) stackOperation.add(0,"MOD OF");
+			else if(lexList[i].equals("BIGGR OF")) stackOperation.add(0,"BIGGR OF");
+			else if(lexList[i].equals("SMALLR OF")) stackOperation.add(0,"SMALLR OF");
+			else if(lexList[i].matches(regexNum)) {
 				stackOperation.add(0,lexList[i]);
 				if(i+1!=lexList.length && lexList[i+1].matches(regexNum)==true) return null;
 			}else if(lexList[i].matches("^AN$")){
@@ -432,7 +426,6 @@ public class GameStage{
 		if(!isArity && stackOperation.size()>1) return null;
 		else return null; //wrong construct is used
 	}
-	
 	
 	private String setBooleanOperationArity(String[] lexList) {
 //		System.out.println(Arrays.toString(lexList));
@@ -520,16 +513,135 @@ public class GameStage{
 		
 
 	}
+	
+	@SuppressWarnings("unused")
+	private String setComparisonOperation(String[] lexList) {
+		//comparison_operatoor A  AN  B     where A,B can be literals, expression, or varident
+//		System.out.println(Arrays.toString(lexList));
+		String regexNum = "^"+Lexeme.NUMBR+"$|^"+Lexeme.NUMBAR+"$";
+		String regexMath = Lexeme.mathOperator.substring(0,Lexeme.mathOperator.length()-1);
+		String ansA=null; String ansB=null;
+		String[] operandA=null; String[] operandB=null;
+		
+		String strIfRelational = Arrays.toString(lexList);
+		String isRelationOp = null; //-1 means false, 1 means biggr of, 2 means smallr
+		if(strIfRelational.contains("BOTH SAEM") || strIfRelational.contains("DIFFRINT")) {
+			if(strIfRelational.contains("BIGGR OF"))  isRelationOp = "BIGGR OF";
+			else if(strIfRelational.contains("SMALLR OF")) isRelationOp = "SMALLR OF";
+			if(isRelationOp!=null) {
+				if(isRelationOp.equals("BIGGR OF") || isRelationOp.equals("SMALLR OF")) {
+					int comparisonLenA=-1; int comparisonLenB=-1;int middle=-1;
+					for(int i=1;i<lexList.length-1;i++) { //i=1 since both saem/diffrint is not included, only the two operands are needed
+						if(lexList[i].equals("AN") && lexList[i+1].equals(isRelationOp)) {
+							middle=i+1;
+							comparisonLenA=i-1; comparisonLenB=lexList.length-((i+1)+comparisonLenA+2);
+							break;
+						}
+					}
+					operandA = new String[comparisonLenA]; operandB = new String[comparisonLenB]; 
+					int c=1;
+					for(int i=0;i<comparisonLenA;i++) {
+						operandA[i] = lexList[c++];
+						if(lexList[c-1].equals(lexList[middle+c-1])==false) return null; //checks if x-operand in left is same/equal to x-operand in right
+					}
+					c = comparisonLenA+2+middle;
+					for(int j=0;j<comparisonLenB;j++) {
+						operandB[j] = lexList[c++];
+					}				
+				}
+			}
+		}		
+		int untilIndex=-1;
+		if(lexList.length==4 && isRelationOp==null) {
+			ansA = lexList[1];
+			ansB = lexList[3];
+			if((!ansA.matches(regexNum) || !ansB.matches(regexNum)) && lexList[0].matches(Lexeme.BOTH_SAEM)) return "FAIL";
+			else if((!ansA.matches(regexNum) || !ansB.matches(regexNum)) && lexList[0].matches(Lexeme.DIFFRINT))  return null;
+		}else if(lexList.length==7 && isRelationOp!=null) {
+			ansA = lexList[1];
+			ansB = lexList[6];
+			if(lexList[1].equals(lexList[4])==false) return null;
+		
+		}else if(lexList.length>4 && isRelationOp==null){
+			for(int i=0;i<lexList.length-2;i++) {
+				if(lexList[1].matches(regexNum)) {
+					untilIndex=1;
+					break;
+				}else if(lexList[i].matches(regexNum) && lexList[i+2].matches(regexNum) && i+2==lexList.length-3) {
+					untilIndex=i+2; break;
+				}else if(lexList[i].matches(regexNum) && lexList[i+2].matches(regexNum) && !lexList[i+4].matches(regexNum)) {
+					untilIndex=i+2; break;
+				}
+			}
+		}else if(lexList.length<4 || (lexList.length<7 && isRelationOp!=null)) return null;
+		
+		if(untilIndex==-1 && isRelationOp==null) {
+			operandA = new String[1];
+			operandB = new String[lexList.length-operandA.length-2];
+			operandA[0] = ansA; operandB[0] = ansB;
+		}
+		else if(untilIndex!=-1 && isRelationOp==null){
+			operandA = new String[untilIndex];
+			operandB = new String[lexList.length-operandA.length-2];
+			
+			for(int a=0;a<untilIndex;a++) operandA[a] = lexList[a+1];
+			int c=0;
+			for(int b=untilIndex+2;b<lexList.length;b++) operandB[c++] = lexList[b];
+		}
+		
+
+		boolean isNumOnlyA = false; boolean isNumOnlyB = false;
+		
+		if(operandA.length==1 && operandA[0].matches(regexNum)) {
+			ansA = operandA[0];
+			isNumOnlyA = true;
+		}else ansA = setArithmeticOperation(operandA);
+		
+		if(operandB.length==1 && operandB[0].matches(regexNum)) {
+			ansB = operandB[0];
+			isNumOnlyB = true;
+		}else ansB = setArithmeticOperation(operandB);
+		
+
+		if(ansA==null || ansB==null) return null;
+		
+		if(isRelationOp!=null) {
+				float ansAA = Float.parseFloat(ansA),ansBB = Float.parseFloat(ansB);
+				String strArr = Arrays.toString(lexList);
+				
+				if(lexList[0].matches(Lexeme.BOTH_SAEM) && strArr.contains("BIGGR OF")  && ansAA>=ansBB) return "WIN";
+				else if(lexList[0].matches(Lexeme.BOTH_SAEM) && strArr.contains("BIGGR OF")  && ansAA<=ansBB) return "FAIL";
+				
+				else if(lexList[0].matches(Lexeme.BOTH_SAEM) && strArr.contains("SMALLR OF")  && ansAA<=ansBB) return "WIN";
+				else if(lexList[0].matches(Lexeme.BOTH_SAEM) && strArr.contains("SMALLR OF")  && ansAA>=ansBB) return "FAIL";
+				
+				else if(lexList[0].matches(Lexeme.DIFFRINT) && strArr.contains("BIGGR OF") && ansAA>ansBB) return "WIN";
+				else if(lexList[0].matches(Lexeme.DIFFRINT) && strArr.contains("BIGGR OF") && ansAA<=ansBB) return "FAIL";
+				
+				else if(lexList[0].matches(Lexeme.DIFFRINT) && strArr.contains("SMALLR OF") && ansAA<ansBB) return "WIN";
+				else if(lexList[0].matches(Lexeme.DIFFRINT) && strArr.contains("SMALLR OF") && ansAA>=ansBB) return "FAIL";
+				else return null;
+		}
+		
+		if(lexList[0].matches(Lexeme.BOTH_SAEM) && ansA.equals(ansB)) return "WIN";
+		else if(lexList[0].matches(Lexeme.BOTH_SAEM) && ansA.equals(ansB)==false) return "FAIL";
+		else if(lexList[0].matches(Lexeme.DIFFRINT) && ansA.equals(ansB)==false) return "WIN";
+		else if(lexList[0].matches(Lexeme.DIFFRINT) && ansA.equals(ansB)) return "FAIL";
+		else return null;		
+	}
+	
+	
+	
 	private void clearTables() {
 		lexemeTable.getItems().clear();
 		symbolTable.getItems().clear();
 	}
 
 	
-	
 	private void doSyntaxAnalysis(ArrayList<String[]> tokensPerLine) {
 		for(int i=0;i<tokensPerLine.size();i++) {
 			String[] tokenArrLine = tokensPerLine.get(i);
+			
 			if(tokenArrLine[0].matches(Lexeme.mathOperator.substring(0, Lexeme.mathOperator.length()-1))) {
 				try {
 					String ans = setArithmeticOperation(tokenArrLine);
@@ -537,12 +649,15 @@ public class GameStage{
 						//set text to display to that says "Syntax Error"
 //						//store variable IT since there is no VISIBLE keyword before
 						System.out.println("Temporary print of ans: " + ans);
-					}else displayResult.setText(displayResult.getText()+"\n"+"473 Syntax Error.");
+					}else {
+						clearTables();
+						displayResult.setText(displayResult.getText()+"\n"+"473 Syntax Error.");
+					}
 				}catch(Exception e) {
 					displayResult.setText(displayResult.getText()+"\n"+"475 Syntax Error.");
 				}
 				//continue coding here,  add return value to symbol table and update it
-			}else if(tokenArrLine[0].matches(Lexeme.boolOperator.substring(0, Lexeme.boolOperator.length()-33))) { 
+			}else if(tokenArrLine[0].matches(Lexeme.boolOperator.substring(0, Lexeme.boolOperator.length()-37))) { 
 				try {
 					String ans = setBooleanOperation(tokenArrLine);
 					if(ans!=null) System.out.println("481 Correct syntax: " + ans);
@@ -554,7 +669,22 @@ public class GameStage{
 					clearTables();
 					displayResult.setText(displayResult.getText()+"\n"+"484 Syntax Error.");
 				}
-			}else {
+			}else if(tokenArrLine[0].matches(Lexeme.boolOperator.substring(67,93))){
+				try {
+				String ans = setComparisonOperation(tokenArrLine);
+				if(ans!=null) System.out.println("Comparison - Correct syntax: " + ans);
+				else{
+						clearTables();
+						displayResult.setText(displayResult.getText()+"\n"+"624 Syntax Error.");
+				}
+				}catch(Exception e) {
+					clearTables();
+					displayResult.setText(displayResult.getText()+"\n"+"Catch Syntax Error.");					
+				}
+			
+			}
+			
+			else {
 				clearTables();
 				displayResult.setText(displayResult.getText()+"\n"+"487 Syntax Error.");
 			}
@@ -600,7 +730,6 @@ public class GameStage{
             		clearTables();
             		displayResult.setText(displayResult.getText()+"\n"+"501 Syntax Error.");
             	}
-            	
             	
             }
 		};
