@@ -155,7 +155,7 @@ public class GameStage{
 	private void initializeElements() {
 		inputUser.setPrefWidth(GameStage.WINDOW_WIDTH/3);
 		inputUser.setWrapText(true);
-		inputUser.setText("DIFFRINT SUM OF SUM OF 5 AN 5 AN 11 AN SUM OF SUM OF 1 AN 1 AN 3");
+		inputUser.setText("I HAS A NUM ITZ \"hello\"\nI HAS A name ITZ \"hi world\"");
 		
 		String str = "hello" + "\n" + "hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n";
 		str = str + str + str; //sample string lang if magsscroll yung window ng "Lexeme" at "Symbol Table"
@@ -183,97 +183,6 @@ public class GameStage{
 	    
 	}
 
-	private ArrayList<String[]> doLexicalAnalysis() {
-		clearTables();
-		this.symbolTable.getItems().add(new SymbolTable(Lexeme.IT,""));
-		
-		String[] programInput= this.inputUser.getText().split("\n");
-		String wrongOperators = "|\\bBOTH\\b|\\bWON\\b|\\bEITHER\\b|\\bALL\\b|\\bANY\\b|\\bSUM\\b|\\bDIFF\\b|\\bPRODUKT\\b|QUOSHUNT\\b|\\bMOD\\b|\\bBIGGR\\b|\\bSMALLR\\b|\\bDIFFRINT\\b";
-		Pattern regex = Pattern.compile(Lexeme.combineRegex+wrongOperators);
-		Pattern regexSplit = Pattern.compile("[^\\s\"']+|\"[^\"]*\"");
-		
-		ArrayList<String[]> tokenizedOutput = new ArrayList<String[]>();
-		
-		for(int i=0;i<programInput.length;i++) { //programInput = [[sentence1],[sentence2],[sentence3],..,]
-			Matcher regexMatcher = regex.matcher(programInput[i]);
-			ArrayList<String> tempLine = new ArrayList<String>();
-			while (regexMatcher.find()) {
-				String match = regexMatcher.group();
-				
-				if(match.contains(Lexeme.I_HAS_A+" ")) {
-					String[] I_HAS_A_ARR = {Lexeme.I_HAS_A}; 
-					String[] splitMatch = match.split(Lexeme.I_HAS_A+" ");
-					ArrayList<String> result = new ArrayList<String>();
-					Matcher regexIHAS= regexSplit.matcher(splitMatch[1]);
-					while (regexIHAS.find()) {
-						result.add(regexIHAS.group());
-					}
-					Object[] resultArr = result.toArray();
-					String[] combine = new String[I_HAS_A_ARR.length + resultArr.length];
-					System.arraycopy(I_HAS_A_ARR, 0, combine, 0, I_HAS_A_ARR.length);  
-					System.arraycopy(resultArr, 0, combine, I_HAS_A_ARR.length, resultArr.length);  
-			        tokenizedOutput.add(combine);
-				}else {
-					//edit if this is a varident found in symbol table
-					if(match.matches("^BOTH$|^WON$|^EITHER$|^ALL$|^ANY$|^SUM$|^DIFF$|^PRODUKT$|^QUOSHUNT$|^MOD$|^BIGGR$|^SMALLR$")==true) {
-						System.out.println("216 Error: wrong use of operators");
-						return null;
-					}
-					tempLine.add(match);
-				}
-			}
-			String[] arrResult = new String[tempLine.size()];
-			for(int a=0;a<tempLine.size();a++) {
-				arrResult[a] = tempLine.get(a);	
-				
-			}
-			if(arrResult.length!=0) tokenizedOutput.add(arrResult);
-		}
-//		for(String[] arr : tokenizedOutput) {
-//			System.out.print("224: "+Arrays.toString(arr));
-//		}
-		
-		
-
-		
-		//--------------------------this: lexemes already tokenized here in this line-------------------------
-		
-		for(int k=0;k<tokenizedOutput.size();k++) { //tokenizedOutput = [[word1,word2],[word1,word2],[word1,word2],..,]
-			String[] arrLexeme = tokenizedOutput.get(k);
-			String classification;
-			if(arrLexeme[0].equals(Lexeme.I_HAS_A)) {
-				if(arrLexeme.length==2) {
-					classification = Lexeme.findLexemeType(arrLexeme[0]);
-					if(classification!=null) {
-						this.symbolTable.getItems().add(new SymbolTable(arrLexeme[1],""));
-						this.lexemeTable.getItems().add(new Lexeme(arrLexeme[0],Lexeme.VARIABLE_DECLARATION));
-						this.lexemeTable.getItems().add(new Lexeme(arrLexeme[1],Lexeme.VARIABLE_IDENTIFIER));
-					}
-				}else if(arrLexeme.length>3) {
-					if(checkExpression(arrLexeme[3]).equals("LITERAL")) {
-						String removeQuote = arrLexeme[3].replace("\"", "");
-						this.symbolTable.getItems().add(new SymbolTable(arrLexeme[1],removeQuote));
-						this.lexemeTable.getItems().add(new Lexeme(arrLexeme[0],Lexeme.VARIABLE_DECLARATION));
-						this.lexemeTable.getItems().add(new Lexeme(arrLexeme[1],Lexeme.VARIABLE_IDENTIFIER));
-						this.lexemeTable.getItems().add(new Lexeme(arrLexeme[2],Lexeme.VARIABLE_ASSIGNMENT));
-						this.lexemeTable.getItems().add(new Lexeme(arrLexeme[3],"Literal"));
-					}
-				}
-			}else{
-				for(int a=0;a<arrLexeme.length;a++) {
-					if(arrLexeme[a]==null) continue;
-					classification = Lexeme.findLexemeType(arrLexeme[a]);
-					if(classification!=null) {
-						this.lexemeTable.getItems().add(new Lexeme(arrLexeme[a],classification));
-					}	
-				}
-			}
-		} //for loop k
-//		for(String[] arr : tokenizedOutput) {
-//		System.out.println(Arrays.toString(arr));
-//	}
-		return tokenizedOutput;
-	} //end function
 	
 	private String checkExpression(String expr) { //determine if it is an expression, literal/what type of literal, varident
 //		public static final String LITERALS = Lexeme.YARN + Lexeme.NUMBR + Lexeme.NUMBAR + Lexeme.TROOF[0] + Lexeme.TROOF[1] + Lexeme.TYPE[0] + Lexeme.TYPE[1] + Lexeme.TYPE[2] + Lexeme.TYPE[3];
@@ -630,63 +539,189 @@ public class GameStage{
 		else return null;		
 	}
 	
+	private String setIHAS(String[] lexList) {
+		
+		//this is for operations eg "I HAS A var ITZ SUM OF 10 AN 5"
+		System.out.println("I HAS: " + Arrays.deepToString(lexList));
+		ArrayList<String> operands = new ArrayList<String>();
+		String ifOperations = null;
+		if(lexList.length>6) { //math,
+			for(int i=3;i<lexList.length;i++) operands.add(lexList[i]);
+			String[] operandsArr =  new String[operands.size()];
+			for(int i=0;i<operands.size();i++) operandsArr[i] = operands.get(i);
+			ifOperations = allOperations(operandsArr);
+		}
+		//====end of i has with operations=====		
+		
+		
+		if(!lexList[0].matches(Lexeme.I_HAS_A)) return null;
+		if(lexList.length==3) return null;
+		if(!lexList[2].matches(Lexeme.ITZ)) return null; 
+		if(lexList[3].matches(Lexeme.ALL_LITERALS)) {
+			if(lexList.length!=4) return null;
+			this.symbolTable.getItems().add(new SymbolTable(lexList[1],lexList[3]));			
+		}else if(lexList[3].matches(Lexeme.VARIDENT)) { //varident
+			if(lexList.length!=4) return null;
+			this.symbolTable.getItems().add(new SymbolTable(lexList[1],lexList[3]));			
+		}else if(ifOperations!=null) {
+			this.symbolTable.getItems().add(new SymbolTable(lexList[1],ifOperations));			
+		}
+		else {
+			return null;
+		}
+		
+		return "dsda";
+	}
 	
 	
+	private String[] toArray(ArrayList<String> operands) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	private void clearTables() {
 		lexemeTable.getItems().clear();
 		symbolTable.getItems().clear();
 	}
 
 	
+	
+	private ArrayList<String[]> doLexicalAnalysis() {
+		clearTables();
+		this.symbolTable.getItems().add(new SymbolTable(Lexeme.IT,""));
+		
+		String[] programInput= this.inputUser.getText().split("\n");
+//		String wrongOperators = "|\\bBOTH\\b|\\bWON\\b|\\bEITHER\\b|\\bALL\\b|\\bANY\\b|\\bSUM\\b|\\bDIFF\\b|\\bPRODUKT\\b|QUOSHUNT\\b|\\bMOD\\b|\\bBIGGR\\b|\\bSMALLR\\b|\\bDIFFRINT\\b";
+		Pattern regex = Pattern.compile(Lexeme.combineRegex);
+//		Pattern regexError = Pattern.compile(Lexeme.ERROR);
+//		Pattern regexSplit = Pattern.compile("[^\\s\"']+|\"[^\"]*\"");
+		
+		ArrayList<String[]> tokenizedOutput = new ArrayList<String[]>();
+		
+		for(int i=0;i<programInput.length;i++) { //programInput = [[sentence1],[sentence2],[sentence3],..,]
+			Matcher regexMatcher = regex.matcher(programInput[i]);
+			
+			ArrayList<String> tokenizedLine = new ArrayList<String>();
+			while (regexMatcher.find()) {
+				String match = regexMatcher.group();
+				tokenizedLine.add(match);
+			}
+						
+			String[] arrResult = new String[tokenizedLine.size()];
+			for(int a=0;a<tokenizedLine.size();a++) arrResult[a] = tokenizedLine.get(a);	
+			if(arrResult.length!=0) tokenizedOutput.add(arrResult);
+		}
+		
+//		for(String[] arr : tokenizedOutput) {
+//			System.out.println("224: "+Arrays.toString(arr));
+//		}
+		
+
+		//--------------------------this: lexemes already tokenized here in this line-------------------------
+		
+		for(int k=0;k<tokenizedOutput.size();k++) { //tokenizedOutput = [[word1,word2],[word1,word2],[word1,word2],..,]
+			String[] arrLexeme = tokenizedOutput.get(k);
+			String classification;
+			
+			for(int a=0;a<arrLexeme.length;a++) {
+				if(arrLexeme[a]==null) continue;
+				classification = Lexeme.findLexemeType(arrLexeme[a]);
+				if(classification!=null) {
+					this.lexemeTable.getItems().add(new Lexeme(arrLexeme[a],classification));
+				}else {
+					System.out.println("615 Lexeme not found");
+					return null;
+				}
+			}
+			
+		} //for loop k
+		
+		return tokenizedOutput;
+	} //end function
+	
+	
+	
+	
+	private String allOperations(String[] tokenArrLine) {
+		if(tokenArrLine[0].matches(Lexeme.mathOperator.substring(0, Lexeme.mathOperator.length()-1))) {
+			try {
+				String ans = setArithmeticOperation(tokenArrLine);
+				if(ans!=null) {
+					System.out.println("Temporary print of ans: " + ans);  
+					return ans;
+				}else {
+					clearTables();
+					displayResult.setText(displayResult.getText()+"\n"+"473 Syntax Error."); return null;
+				}
+			}catch(Exception e) {
+				clearTables();
+				displayResult.setText(displayResult.getText()+"\n"+"475 Syntax Error."); return null;
+			}
+			//continue coding here,  add return value to symbol table and update it
+		}else if(tokenArrLine[0].matches(Lexeme.boolOperator.substring(0, Lexeme.boolOperator.length()-37))) { 
+			try {
+				String ans = setBooleanOperation(tokenArrLine);
+				if(ans!=null) {
+					System.out.println("481 Correct syntax: " + ans); 
+					return ans;
+				}
+				else {
+					clearTables();
+					displayResult.setText(displayResult.getText()+"\n"+"481 Syntax Error."); return null;
+				}
+			}catch(Exception e) {
+				clearTables();
+				displayResult.setText(displayResult.getText()+"\n"+"484 Syntax Error."); return null;
+			}
+		}else if(tokenArrLine[0].matches(Lexeme.boolOperator.substring(67,93))){
+			try {
+			String ans = setComparisonOperation(tokenArrLine);
+			if(ans!=null) {
+				System.out.println("Comparison - Correct syntax: " + ans); 
+				return ans;
+			}
+			else{
+					clearTables();
+					displayResult.setText(displayResult.getText()+"\n"+"624 Syntax Error."); return null;
+			}
+			}catch(Exception e) {
+				clearTables();
+				displayResult.setText(displayResult.getText()+"\n"+"Catch Syntax Error.");	return null;				
+			}
+		}
+		return null;
+	}
+	
 	private void doSyntaxAnalysis(ArrayList<String[]> tokensPerLine) {
 		for(int i=0;i<tokensPerLine.size();i++) {
 			String[] tokenArrLine = tokensPerLine.get(i);
 			
-			if(tokenArrLine[0].matches(Lexeme.mathOperator.substring(0, Lexeme.mathOperator.length()-1))) {
-				try {
-					String ans = setArithmeticOperation(tokenArrLine);
-					if(ans!=null) {
-						//set text to display to that says "Syntax Error"
-//						//store variable IT since there is no VISIBLE keyword before
-						System.out.println("Temporary print of ans: " + ans);
-					}else {
-						clearTables();
-						displayResult.setText(displayResult.getText()+"\n"+"473 Syntax Error.");
-					}
-				}catch(Exception e) {
-					displayResult.setText(displayResult.getText()+"\n"+"475 Syntax Error.");
-				}
-				//continue coding here,  add return value to symbol table and update it
-			}else if(tokenArrLine[0].matches(Lexeme.boolOperator.substring(0, Lexeme.boolOperator.length()-37))) { 
-				try {
-					String ans = setBooleanOperation(tokenArrLine);
-					if(ans!=null) System.out.println("481 Correct syntax: " + ans);
-					else {
-						clearTables();
-						displayResult.setText(displayResult.getText()+"\n"+"481 Syntax Error.");	
-					}
-				}catch(Exception e) {
-					clearTables();
-					displayResult.setText(displayResult.getText()+"\n"+"484 Syntax Error.");
-				}
-			}else if(tokenArrLine[0].matches(Lexeme.boolOperator.substring(67,93))){
-				try {
-				String ans = setComparisonOperation(tokenArrLine);
-				if(ans!=null) System.out.println("Comparison - Correct syntax: " + ans);
-				else{
-						clearTables();
-						displayResult.setText(displayResult.getText()+"\n"+"624 Syntax Error.");
-				}
-				}catch(Exception e) {
-					clearTables();
-					displayResult.setText(displayResult.getText()+"\n"+"Catch Syntax Error.");					
-				}
+			//syntax for all operations (math, boolean, comparison, relational)
+			allOperations(tokenArrLine);
 			
+			//syntax for I HAS
+			if(Arrays.toString(tokenArrLine).contains("I HAS A")) {
+				try {
+					String ans = setIHAS(tokenArrLine);
+					if(ans!=null) {
+						System.out.println("I HAS syntax successful!");
+					}else {
+						System.out.println("668 IHAS ERROR");
+						clearTables();
+						displayResult.setText(displayResult.getText()+"\n"+"669 I HAS - Syntax Error."); return;
+					}
+					
+				}catch(Exception e) {
+					clearTables();
+					displayResult.setText(displayResult.getText()+"\n"+"688 I HAS - Catch Syntax Error."); return;
+				}
+				
 			}
 			
+			
 			else {
-				clearTables();
-				displayResult.setText(displayResult.getText()+"\n"+"487 Syntax Error.");
+//				clearTables();
+//				displayResult.setText(displayResult.getText()+"\n"+"487 Syntax Error.");
+				
 			}
 		}
 
@@ -719,17 +754,17 @@ public class GameStage{
 		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() { 
             public void handle(ActionEvent e)
             { 
-            	try {
+//            	try {
             		ArrayList<String[]> tokensPerLine = doLexicalAnalysis();
             		if(tokensPerLine!=null) doSyntaxAnalysis(tokensPerLine);
             		else {
             			clearTables();
             			displayResult.setText(displayResult.getText()+"\n"+" 499 Syntax Error.");
             		}
-            	}catch(Exception e1) {
-            		clearTables();
-            		displayResult.setText(displayResult.getText()+"\n"+"501 Syntax Error.");
-            	}
+//            	}catch(Exception e1) {
+//            		clearTables();
+//            		displayResult.setText(displayResult.getText()+"\n"+"501 Syntax Error.");
+//            	}
             	
             }
 		};

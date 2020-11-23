@@ -21,7 +21,7 @@ public class Lexeme{
 	public static final String[] TROOF = {"WIN","FAIL"};
 	public static final String[] TYPE = {"NUMBR","NUMBAR","YARN","TROOF"};
 	public static final String[] LITERALS = {NUMBR,NUMBAR,YARN,TROOF[0],TROOF[1],TYPE[0],TYPE[1],TYPE[2],TYPE[3]};
-	public static final String ALL_LITERALS = NUMBAR+"|"+NUMBR +"|"+YARN+"|"+TROOF[0]+"|"+TROOF[1]+"|"+TYPE[0]+"|"+TYPE[1]+"|"+TYPE[2]+"|"+TYPE[3] + "|" + "AN";
+	public static final String ALL_LITERALS = NUMBAR+"|"+NUMBR +"|"+YARN+"|"+TROOF[0]+"|"+TROOF[1]+"|"+TYPE[0]+"|"+TYPE[1]+"|"+TYPE[2]+"|"+TYPE[3] + "|AN";
 	
 	//file naming and formatting
 	public static final String HAI =  "^HAI$";
@@ -33,11 +33,13 @@ public class Lexeme{
 	public static final String TLDR = "\\bTLDR\\b";
 
 	//variable
-	public static final String I_HAS_A =  "I HAS A";
-	public static final String ITZ = "ITZ";
+	public static final String I_HAS_A =  "\\bI HAS A\\b";
+	public static final String ITZ = "\\bITZ\\b";
 	public static final String IT = "IT";
-	public static final String I_HAS_ITZ =  "I HAS A "+ Lexeme.VARIDENT +" ITZ ";
+	public static final String I_HAS_CONSTRUCT =  I_HAS_A +"|";
 	public static final String R = "R";
+	
+	
 
 	//arithmetic/mathematical Operations
 	public static final String SUM_OF = "\\bSUM OF\\b";
@@ -83,6 +85,8 @@ public class Lexeme{
 	//single quote
 	public static final String QUOTE = "\"";
 
+	
+	
 	//not included in Project specification
 	// public static final String MAEK = "MAEK";
 	// public static final String IS_NOW_A = "IS NOW A";
@@ -123,19 +127,20 @@ public class Lexeme{
 	
 	
 	//syntax analyzer regex (combined two or more keywords / contructs)
-	public static final String I_HAS_UNINITIALIZED = "^"+Lexeme.I_HAS_A +" " + Lexeme.VARIDENT +"$|";
-	public static final String I_HAS_String = "^" + Lexeme.I_HAS_ITZ + Lexeme.YARN + "$|";
-	public static final String I_HAS_NUMBR= "^" + Lexeme.I_HAS_ITZ + Lexeme.NUMBR+ "$|";
-	public static final String I_HAS_NUMBAR= "^" + Lexeme.I_HAS_ITZ + Lexeme.NUMBAR+ "$|";
-	public static final String I_HAS_TROOF0 = "^" + Lexeme.I_HAS_ITZ + Lexeme.TROOF[0]+ "$|";
-	public static final String I_HAS_TROOF1 = "^" + Lexeme.I_HAS_ITZ + Lexeme.TROOF[1]+ "$|";
-	public static final String I_HAS_TYPE0 = "^" + Lexeme.I_HAS_ITZ + Lexeme.TYPE[0]+ "$|";
-	public static final String I_HAS_TYPE1 = "^" + Lexeme.I_HAS_ITZ + Lexeme.TYPE[1]+ "$|";
-	public static final String I_HAS_TYPE2 = "^" + Lexeme.I_HAS_ITZ + Lexeme.TYPE[2]+ "$|";
-	public static final String I_HAS_TYPE3 = "^" + Lexeme.I_HAS_ITZ + Lexeme.TYPE[3]+ "$";
-	public static final String I_HAS_CONSTRUCT = I_HAS_UNINITIALIZED + I_HAS_String + I_HAS_NUMBR + I_HAS_NUMBAR  + I_HAS_TROOF0 + I_HAS_TROOF1 + I_HAS_TYPE0 + I_HAS_TYPE1+I_HAS_TYPE2+I_HAS_TYPE3;
-	
+//	public static final String I_HAS_UNINITIALIZED = "^"+Lexeme.I_HAS_A +" " + Lexeme.VARIDENT +"$|";
+//	public static final String I_HAS_String = "^" + Lexeme.I_HAS_ITZ + Lexeme.YARN + "$|";
+//	public static final String I_HAS_NUMBR= "^" + Lexeme.I_HAS_ITZ + Lexeme.NUMBR+ "$|";
+//	public static final String I_HAS_NUMBAR= "^" + Lexeme.I_HAS_ITZ + Lexeme.NUMBAR+ "$|";
+//	public static final String I_HAS_TROOF0 = "^" + Lexeme.I_HAS_ITZ + Lexeme.TROOF[0]+ "$|";
+//	public static final String I_HAS_TROOF1 = "^" + Lexeme.I_HAS_ITZ + Lexeme.TROOF[1]+ "$|";
+//	public static final String I_HAS_TYPE0 = "^" + Lexeme.I_HAS_ITZ + Lexeme.TYPE[0]+ "$|";
+//	public static final String I_HAS_TYPE1 = "^" + Lexeme.I_HAS_ITZ + Lexeme.TYPE[1]+ "$|";
+//	public static final String I_HAS_TYPE2 = "^" + Lexeme.I_HAS_ITZ + Lexeme.TYPE[2]+ "$|";
+//	public static final String I_HAS_TYPE3 = "^" + Lexeme.I_HAS_ITZ + Lexeme.TYPE[3]+ "$";
+//	public static final String I_HAS_CONSTRUCT = I_HAS_UNINITIALIZED + I_HAS_String + I_HAS_NUMBR + I_HAS_NUMBAR  + I_HAS_TROOF0 + I_HAS_TROOF1 + I_HAS_TYPE0 + I_HAS_TYPE1+I_HAS_TYPE2+I_HAS_TYPE3;
+//	
 	//compiled regex in every catergory (input/output, expression, comments, conditional statements)
+	
 	public static final String startEnd = Lexeme.HAI + "|" + Lexeme.KTHXBYE + "|";
 	public static final String inputOutput = Lexeme.VISIBLE + "|" + Lexeme.GIMMEH + "|";
 	public static final String itz = Lexeme.ITZ + "|";
@@ -144,7 +149,9 @@ public class Lexeme{
 	public static final String conditional = Lexeme.O_RLY + "|" + Lexeme.YA_RLY + "|" + Lexeme.MEBBE + "|" + Lexeme.NO_WAI + "|" + Lexeme.WTF + "|" + Lexeme.OMGWTF + "|" + Lexeme.OMG + "|" + Lexeme.OIC + "|";
 	public static final String mathOperator = Lexeme.SUM_OF +"|" + Lexeme.DIFF_OF + "|" + Lexeme.PRODUKT_OF + "|" + Lexeme.QUOSHUNT_OF + "|" + Lexeme.MOD_OF + "|" + Lexeme.BIGGR_OF + "|" + Lexeme.SMALLR_OF + "|";
 	public static final String boolOperator = Lexeme.BOTH_OF +  "|" + Lexeme.EITHER_OF +  "|" + Lexeme.WON_OF +  "|" + Lexeme.ANY_OF +  "|" + Lexeme.ALL_OF + "|" +Lexeme.NOT + "|"+Lexeme.BOTH_SAEM + "|" + Lexeme.DIFFRINT + "|"+Lexeme.MKAY+"|";	
-	public static final String combineRegex = startEnd + I_HAS_CONSTRUCT + itz + inputOutput + comments + concat + conditional + mathOperator + boolOperator + ALL_LITERALS; 
+	public static final String combineRegex = startEnd + I_HAS_CONSTRUCT + itz + inputOutput + comments + concat + conditional + mathOperator + boolOperator + ALL_LITERALS+"|"+VARIDENT; 
+	
+
 	
 	private String lexeme;
 	private String classification;
@@ -232,9 +239,15 @@ public class Lexeme{
 		Lexeme.TOKENS.put(COMPARISON_OPERATOR,comparison_operator);	
 		
 		ArrayList<String> literalValues = new ArrayList<String>();
-		literalValues.add(NUMBR); literalValues.add(NUMBAR);literalValues.add(TROOF[0]);literalValues.add(TROOF[1]);
-		literalValues.add(TYPE[0]);literalValues.add(TYPE[1]);literalValues.add(TYPE[2]);literalValues.add(TYPE[3]);
-		Lexeme.TOKENS.put("Literal", literalValues);	
+		literalValues.add(Lexeme.NUMBR); literalValues.add(Lexeme.NUMBAR);literalValues.add(Lexeme.TROOF[0]);literalValues.add(Lexeme.TROOF[1]);
+		literalValues.add(Lexeme.TYPE[0]);literalValues.add(Lexeme.TYPE[1]);literalValues.add(Lexeme.TYPE[2]);literalValues.add(Lexeme.TYPE[3]);
+		literalValues.add(Lexeme.YARN);
+		Lexeme.TOKENS.put(Lexeme.LITERAL, literalValues);	
+		
+		ArrayList<String> variable = new ArrayList<String>();
+		variable.add(Lexeme.VARIDENT);
+		Lexeme.TOKENS.put(Lexeme.VARIABLE_IDENTIFIER,variable);
+		
 	}
 	
 	public static void printLexemeContent() { //prints the content of hasmap TOKENS
