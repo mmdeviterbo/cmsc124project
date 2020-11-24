@@ -7,8 +7,6 @@ import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
-
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
@@ -17,6 +15,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableColumn.CellEditEvent;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -93,7 +92,6 @@ public class GameStage{
             		while((line = reader.readLine()) != null){
                         load = load + line + "\n";
             		}
-//            		System.out.println(load);
             		inputUser.setText(load);
                 }catch (IOException e1) {
                     e1.printStackTrace();
@@ -116,6 +114,10 @@ public class GameStage{
 	    this.symbolTable.setPlaceholder(new Label("Symbol Table"));
 	    lexemeTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 	    symbolTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+	    
+	    
+	    symbolTable.setEditable(true);
+	    lexemeTable.setEditable(true);
 	}
 	private void initializeWindow() { //put elements in window, make some elements scrollable (Lexeme window, Symbol Table window)
 		scrollResult.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
@@ -155,7 +157,7 @@ public class GameStage{
 	private void initializeElements() {
 		inputUser.setPrefWidth(GameStage.WINDOW_WIDTH/3);
 		inputUser.setWrapText(true);
-		inputUser.setText("I HAS A NUM ITZ \"hello\"\nI HAS A name ITZ \"hi world\"");
+		inputUser.setText("I HAS A str ITZ \"this is new var\"\nstr R SUM OF 10 AN 5");
 		
 		String str = "hello" + "\n" + "hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n";
 		str = str + str + str; //sample string lang if magsscroll yung window ng "Lexeme" at "Symbol Table"
@@ -183,21 +185,18 @@ public class GameStage{
 	    
 	}
 
-	
-	private String checkExpression(String expr) { //determine if it is an expression, literal/what type of literal, varident
-//		public static final String LITERALS = Lexeme.YARN + Lexeme.NUMBR + Lexeme.NUMBAR + Lexeme.TROOF[0] + Lexeme.TROOF[1] + Lexeme.TYPE[0] + Lexeme.TYPE[1] + Lexeme.TYPE[2] + Lexeme.TYPE[3];
-		for(int i=0;i<Lexeme.LITERALS.length;i++) {
-			if(Pattern.compile("^"+Lexeme.LITERALS[i]+"$").matcher(expr).find()) { 
-				return "LITERAL";
+	private String getValueVarident(String variable) {
+		for(SymbolTable rowData : symbolTable.getItems()) {
+			if(variable.equals(rowData.getIdentifier())) {
+				return rowData.getValue();
 			}
 		}
 		return null;
 	}
+	
 	private String solveArithmeticOperation(ArrayList<String> stackOperation, int index) {
-//		System.out.println("278: "+ Arrays.toString(stackOperation.toArray()));
 		if(stackOperation.size()<3) return null;
-		
-		
+				
 		String tempA = stackOperation.get(index).replace("\"",""); String tempB = stackOperation.get(index+1).replace("\"","");
 		boolean regexNUMBR_A = tempA.matches("^"+Lexeme.NUMBR+"$"); boolean regexNUMBAR_A = tempA.matches("^"+Lexeme.NUMBAR+"$");
 		boolean regexNUMBR_B = tempB.matches("^"+Lexeme.NUMBR+"$"); boolean regexNUMBAR_B = tempB.matches("^"+Lexeme.NUMBAR+"$");
@@ -248,9 +247,10 @@ public class GameStage{
 		else return null; //wrong construct is used
 	}
 
-	private String setArithmeticOperation(String[] lexList) {
+	private String setArithmeticOperation(String[] lexList) {		
 		ArrayList<String> stackOperation = new ArrayList<String>();
 		String regexNum = "^"+Lexeme.NUMBR+"$"+"|"+"^"+Lexeme.NUMBAR+"$"+"|"+"^\""+Lexeme.NUMBR+"\"$" +"|"+ "^\""+Lexeme.NUMBAR+"\"$";
+		
 		for(int i=0;i<lexList.length;i++) {
 			if(lexList[i].matches("SUM OF")) stackOperation.add(0,"SUM OF");
 			else if(lexList[i].matches("DIFF OF")) stackOperation.add(0,"DIFF OF");
@@ -262,16 +262,15 @@ public class GameStage{
 			else if(lexList[i].matches(regexNum)) {
 				stackOperation.add(0,lexList[i]);
 				if(i+1!=lexList.length && lexList[i+1].matches(regexNum)==true) return null;
-			}else if(lexList[i].matches("^AN$")){
+			}else if(lexList[i].matches("AN")){
 				if(i+1!=lexList.length) {
 					if(lexList[i+1].matches("AN")) return null;
-					if(i!=0 && lexList[i].matches("AN") && (lexList[i-1].matches(regexNum)==false)) return null;
 				}else if(i+1==lexList.length && lexList[i].matches(regexNum)==false) return null;
-			}else if(lexList[i].matches(Lexeme.VARIDENT)) { //kulang pa: check if it exists in symbol table, if yes: get its value, else error/not existing
-				stackOperation.add(0,lexList[i]);
-			}else {
-				return null;
-			}
+			}else if(lexList[i].matches(Lexeme.VARIDENT) && !lexList[i].matches("\\bAN\\b")) { //kulang pa: check if it exists in symbol table, if yes: get its value, else error/not existing
+				String valueVar = getValueVarident(lexList[i]);
+				if(valueVar!=null) stackOperation.add(0,valueVar);
+				else return null;
+			}else return null;
 		}
 		String answer = solveArithmeticOperation(stackOperation,0);
 		return answer;	
@@ -337,11 +336,10 @@ public class GameStage{
 	}
 	
 	private String setBooleanOperationArity(String[] lexList) {
-//		System.out.println(Arrays.toString(lexList));
 		ArrayList<String> operand = new ArrayList<String>();		
 		String regexBool = Lexeme.boolOperator.substring(0,Lexeme.boolOperator.length()-33);
 		
-		System.out.println("433: " + Arrays.toString(lexList));
+//		System.out.println("433: " + Arrays.toString(lexList));
 		for(int i=1;i<lexList.length-1;i++) { //start at 1 since any/all of is not included, length-1 since mkay is not included: only between ANs are included
 			if(lexList[i].matches(regexBool+"|\\b"+Lexeme.TROOF[0]+"\\b|\\b"+Lexeme.TROOF[1]+"\\b|\\b"+Lexeme.MKAY+"\\b")) {
 				operand.add(0,lexList[i]);
@@ -351,9 +349,12 @@ public class GameStage{
 			}else if(lexList[i].matches("\\bAN\\b")) {
 				if(i!=0 && lexList[i-1].matches("\\bAN\\b")) return null;
 				if(i==lexList.length-2) return null;
-			}else {
-				return null;
-			}
+			}else if(lexList[i].matches(Lexeme.VARIDENT)) {
+				String value = getValueVarident(lexList[i]);
+				if(value!=null) operand.add(0,value);
+				else return null;
+			}else return null;
+			
 		}
 		boolean isAllTroof = true;
 		for(String bool : operand) {
@@ -375,7 +376,6 @@ public class GameStage{
 		else if(lexList[0].matches("\\bALL OF\\b") && !answer.contains("FAIL")) return Lexeme.TROOF[0];
 		return null;
 	}
-	
 	
 	private String setBooleanOperation(String[] lexList){
 //		System.out.println(Arrays.toString(lexList));
@@ -401,16 +401,15 @@ public class GameStage{
 			}else if(lexList[i].matches(regexBool)) {
 				stackOperation.add(0,lexList[i]);
 				if(i+1!=lexList.length && lexList[i+1].matches(regexBool)==true) return null;
-			}else if(lexList[i].matches("^AN$")){
-				if(i+1!=lexList.length) {
-					if(lexList[i+1].matches("AN")) return null;
-					if(i!=0 && lexList[i].matches("AN") && (lexList[i-1].matches(regexBool)==false)) return null;
-				}else if(i+1==lexList.length && lexList[i].matches(regexBool)==false) return null;
+			}else if(lexList[i].matches("AN")){
+				if(i+1!=lexList.length) if(lexList[i+1].matches("AN")) return null;
 			}else if(lexList[i].matches("\\bMKAY\\b")) {
 				if(i+1==lexList.length) return null;
 				if(lexList[i].matches("\\bANY OF\\b")==false && lexList[i].matches("\\bALL OF\\b")==false) return null;
 			}else if(lexList[i].matches(Lexeme.VARIDENT)) { //check if variable is exist in symbol table and if type is troof type
-				stackOperation.add(0,lexList[i]);
+				String value = getValueVarident(lexList[i]);
+				if(value!=null) stackOperation.add(0,value);
+				else return null;
 			}else {
 				return null;
 			}
@@ -459,21 +458,38 @@ public class GameStage{
 					}				
 				}
 			}
-		}		
+		}
+		
+		
 		int untilIndex=-1;
 		if(lexList.length==4 && isRelationOp==null) {
-			ansA = lexList[1];
-			ansB = lexList[3];
+			if(lexList[1].matches(Lexeme.VARIDENT)) ansA = getValueVarident(lexList[1]);
+			else ansA = lexList[1];
+			if(lexList[3].matches(Lexeme.VARIDENT)) ansB = getValueVarident(lexList[3]);
+			else ansB = lexList[3];
+			
 			if((!ansA.matches(regexNum) || !ansB.matches(regexNum)) && lexList[0].matches(Lexeme.BOTH_SAEM)) return "FAIL";
 			else if((!ansA.matches(regexNum) || !ansB.matches(regexNum)) && lexList[0].matches(Lexeme.DIFFRINT))  return null;
 		}else if(lexList.length==7 && isRelationOp!=null) {
-			ansA = lexList[1];
-			ansB = lexList[6];
 			if(lexList[1].equals(lexList[4])==false) return null;
-		
+			
+			if(lexList[1].matches(Lexeme.VARIDENT)) ansA = getValueVarident(lexList[1]);
+			else ansA = lexList[1];
+			if(lexList[6].matches(Lexeme.VARIDENT)) ansB = getValueVarident(lexList[6]);
+			else ansB = lexList[6];
+			
 		}else if(lexList.length>4 && isRelationOp==null){
 			for(int i=0;i<lexList.length-2;i++) {
-				if(lexList[1].matches(regexNum)) {
+				if(lexList[i].matches(Lexeme.VARIDENT) && !lexList[i].matches(regexNum) && !lexList[i].matches(regexMath)) {
+					String ans = getValueVarident(lexList[i]);
+					if(ans!=null) lexList[i] = ans;
+				}
+				if(lexList[i+2].matches(Lexeme.VARIDENT) && !lexList[i+2].matches(regexNum) && !lexList[i+2].matches(regexMath)) {
+					String ans = getValueVarident(lexList[i+2]);
+					if(ans!=null) lexList[i+2] = ans;
+				}
+
+				if(lexList[1].matches(regexNum) || lexList[1].matches(Lexeme.VARIDENT)) {
 					untilIndex=1;
 					break;
 				}else if(lexList[i].matches(regexNum) && lexList[i+2].matches(regexNum) && i+2==lexList.length-3) {
@@ -483,6 +499,9 @@ public class GameStage{
 				}
 			}
 		}else if(lexList.length<4 || (lexList.length<7 && isRelationOp!=null)) return null;
+		
+		
+		
 		
 		if(untilIndex==-1 && isRelationOp==null) {
 			operandA = new String[1];
@@ -501,17 +520,18 @@ public class GameStage{
 
 		boolean isNumOnlyA = false; boolean isNumOnlyB = false;
 		
-		if(operandA.length==1 && operandA[0].matches(regexNum)) {
-			ansA = operandA[0];
+		if(operandA.length==1 && (operandA[0].matches(regexNum) || operandA[0].matches(Lexeme.VARIDENT))) {
+			if(operandA[0].matches(Lexeme.VARIDENT)) ansA = getValueVarident(operandA[0]);	
+			else ansA = operandA[0];
 			isNumOnlyA = true;
 		}else ansA = setArithmeticOperation(operandA);
 		
-		if(operandB.length==1 && operandB[0].matches(regexNum)) {
-			ansB = operandB[0];
+		if(operandB.length==1 && (operandB[0].matches(regexNum) || operandB[0].matches(Lexeme.VARIDENT)) ) {
+			if(operandB[0].matches(Lexeme.VARIDENT)) ansB = getValueVarident(operandB[0]);	
+			else ansB = operandB[0];
 			isNumOnlyB = true;
 		}else ansB = setArithmeticOperation(operandB);
 		
-
 		if(ansA==null || ansB==null) return null;
 		
 		if(isRelationOp!=null) {
@@ -542,49 +562,126 @@ public class GameStage{
 	private String setIHAS(String[] lexList) {
 		
 		//this is for operations eg "I HAS A var ITZ SUM OF 10 AN 5"
-		System.out.println("I HAS: " + Arrays.deepToString(lexList));
 		ArrayList<String> operands = new ArrayList<String>();
 		String ifOperations = null;
 		if(lexList.length>6) { //math,
 			for(int i=3;i<lexList.length;i++) operands.add(lexList[i]);
 			String[] operandsArr =  new String[operands.size()];
 			for(int i=0;i<operands.size();i++) operandsArr[i] = operands.get(i);
+			
 			ifOperations = allOperations(operandsArr);
 		}
 		//====end of i has with operations=====		
 		
-		
 		if(!lexList[0].matches(Lexeme.I_HAS_A)) return null;
 		if(lexList.length==3) return null;
 		if(!lexList[2].matches(Lexeme.ITZ)) return null; 
-		if(lexList[3].matches(Lexeme.ALL_LITERALS)) {
-			if(lexList.length!=4) return null;
-			this.symbolTable.getItems().add(new SymbolTable(lexList[1],lexList[3]));			
-		}else if(lexList[3].matches(Lexeme.VARIDENT)) { //varident
-			if(lexList.length!=4) return null;
-			this.symbolTable.getItems().add(new SymbolTable(lexList[1],lexList[3]));			
-		}else if(ifOperations!=null) {
-			this.symbolTable.getItems().add(new SymbolTable(lexList[1],ifOperations));			
-		}
-		else {
-			return null;
+		if(!lexList[1].matches(Lexeme.VARIDENT)) return null;
+		for(SymbolTable rowData : symbolTable.getItems()) {
+			if(lexList[1].contentEquals(rowData.getIdentifier())) {
+				System.out.println("Variable identifier already exist!");
+				return null;
+			}
 		}
 		
-		return "dsda";
-	}
-	
-	
-	private String[] toArray(ArrayList<String> operands) {
-		// TODO Auto-generated method stub
+		
+		if(lexList[3].matches(Lexeme.ALL_LITERALS)) {
+			if(lexList.length!=4) return null;
+			this.symbolTable.getItems().add(new SymbolTable(lexList[1],lexList[3]));	
+			return "Success";
+		}else if(ifOperations!=null) {
+			this.symbolTable.getItems().add(new SymbolTable(lexList[1],ifOperations));		
+			return "Success";
+		}else if(lexList[3].matches(Lexeme.VARIDENT)) { //varident
+			if(lexList.length!=4) return null;
+			boolean isFound = false;
+			for(SymbolTable row : symbolTable.getItems()) {
+				if(lexList[3].contentEquals(row.getIdentifier())) {
+					this.symbolTable.getItems().add(new SymbolTable(lexList[1],row.getValue()));			
+					isFound = true;
+					break;
+				}
+			}
+			if(!isFound) {
+				System.out.println("Variable identifier not found");
+				return null;
+			}else return "Success";
+		}
 		return null;
 	}
+	
+	private String solveSmoothhOperation(String[] lexList) {
+		for(int i=1;i<lexList.length;i++) {
+			if(!lexList[i].matches(Lexeme.YARN) && !lexList[i].matches(Lexeme.VARIDENT)) return null;	
+			
+			else if(lexList[i].matches(Lexeme.VARIDENT) && !lexList[i].matches(Lexeme.YARN)) {
+				boolean isFound = false;
+				for(SymbolTable row : symbolTable.getItems()) {
+					if(row.getIdentifier().equals(lexList[i])) {
+						isFound=true;
+						if(!row.getValue().matches(Lexeme.YARN)) {
+							isFound=false;
+							break;
+						}else lexList[i] = row.getValue();
+						break;
+					}
+				}
+				if(!isFound) return null;
+			}
+		}
+		String concatStr="";
+		for(int i=1;i<lexList.length;i++) { //1 since smoosh itself is not included
+			String tempStr = lexList[i].replace("\"","");
+			concatStr = concatStr + tempStr;
+		}
+		String withDquote = "\""+concatStr+"\"";
+		return withDquote;
+	}
+	
+	private String makeRreassignment(String[] lexList) {
+		//check if LHS varident is existing
+		System.out.println(Arrays.toString(lexList));
+		
+		
+		if(lexList[0].matches(Lexeme.VARIDENT)) {
+			if(getValueVarident(lexList[0])==null) {
+				System.out.println("Variable does not exist!");
+				return null;
+			}
+		}		
+		ArrayList<String> operands = new ArrayList<String>();
+		String ifOperations = null;
+		
+		//check if RHS is literals
+		String newVal = null;
+		if(lexList[2].matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3))) newVal = lexList[2];
+		else if(lexList.length>5) { //math,
+			for(int i=2;i<lexList.length;i++) operands.add(lexList[i]);
+			String[] operandsArr =  new String[operands.size()];
+			for(int i=0;i<operands.size();i++) operandsArr[i] = operands.get(i);
+			ifOperations = allOperations(operandsArr);
+		}else if(lexList[2].matches(Lexeme.VARIDENT)) { //check if RHS is varident and exisiting
+			newVal = getValueVarident(lexList[2]);
+			if(newVal==null) return null;
+			
+		}
+		if(ifOperations!=null) newVal = ifOperations;
+		
+		//reassigning after checking/solving if literals/varident/expression
+		for(SymbolTable row : symbolTable.getItems()) {
+			if(row.getIdentifier().equals(lexList[0])) {
+				row.setValue(newVal);
+				return "success";
+			}
+		}
+		return null;
+	}
+	
 	private void clearTables() {
 		lexemeTable.getItems().clear();
 		symbolTable.getItems().clear();
 	}
 
-	
-	
 	private ArrayList<String[]> doLexicalAnalysis() {
 		clearTables();
 		this.symbolTable.getItems().add(new SymbolTable(Lexeme.IT,""));
@@ -614,7 +711,7 @@ public class GameStage{
 //		for(String[] arr : tokenizedOutput) {
 //			System.out.println("224: "+Arrays.toString(arr));
 //		}
-		
+//		
 
 		//--------------------------this: lexemes already tokenized here in this line-------------------------
 		
@@ -638,8 +735,12 @@ public class GameStage{
 		return tokenizedOutput;
 	} //end function
 	
-	
-	
+	private void storeIT(String answer) {
+		for(SymbolTable row : symbolTable.getItems()) {
+			row.setValue(answer);
+			break;
+		}
+	}
 	
 	private String allOperations(String[] tokenArrLine) {
 		if(tokenArrLine[0].matches(Lexeme.mathOperator.substring(0, Lexeme.mathOperator.length()-1))) {
@@ -687,23 +788,40 @@ public class GameStage{
 				clearTables();
 				displayResult.setText(displayResult.getText()+"\n"+"Catch Syntax Error.");	return null;				
 			}
+		}else if(tokenArrLine[0].matches(Lexeme.SMOOSH)) {
+			try {
+				String ans = solveSmoothhOperation(tokenArrLine);
+				if(ans!=null) {
+					System.out.println("Smoosh - Correct syntax: " + ans);
+					return ans;
+				}else {
+					clearTables();
+					displayResult.setText(displayResult.getText()+"\n"+"Smoosh - Syntax Error."); return null;
+				}
+			}catch(Exception e) {
+				displayResult.setText(displayResult.getText()+"\n"+"Smoosh - Catch Syntax Error."); return null;
+			}
 		}
+			
 		return null;
 	}
+	
 	
 	private void doSyntaxAnalysis(ArrayList<String[]> tokensPerLine) {
 		for(int i=0;i<tokensPerLine.size();i++) {
 			String[] tokenArrLine = tokensPerLine.get(i);
 			
-			//syntax for all operations (math, boolean, comparison, relational)
-			allOperations(tokenArrLine);
+			//syntax for all operations (math, boolean, comparison, relational) and its result is not stored to a variable (then it must be stored to IT)
+			String storeIt = allOperations(tokenArrLine);
+			if(storeIt!=null) storeIT(storeIt);
+			
 			
 			//syntax for I HAS
 			if(Arrays.toString(tokenArrLine).contains("I HAS A")) {
 				try {
 					String ans = setIHAS(tokenArrLine);
 					if(ans!=null) {
-						System.out.println("I HAS syntax successful!");
+//						System.out.println("I HAS syntax successful!");
 					}else {
 						System.out.println("668 IHAS ERROR");
 						clearTables();
@@ -714,6 +832,20 @@ public class GameStage{
 					clearTables();
 					displayResult.setText(displayResult.getText()+"\n"+"688 I HAS - Catch Syntax Error."); return;
 				}
+				
+			}else if(tokenArrLine[0].matches(Lexeme.VARIDENT) && tokenArrLine[1].matches(Lexeme.R)) {
+				try {
+					String ans = makeRreassignment(tokenArrLine);
+					if(ans!=null) {}
+					else {
+						clearTables();
+						displayResult.setText(displayResult.getText()+"\n"+"R - Syntax Error."); return;
+					}
+				}catch(Exception e) {
+					clearTables();
+					displayResult.setText(displayResult.getText()+"\n"+"809 Catch - R Syntax Error."); return;
+				}
+			}else if(tokenArrLine[0].matches(Lexeme.GIMMEH)) {
 				
 			}
 			

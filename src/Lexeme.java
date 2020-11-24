@@ -37,7 +37,7 @@ public class Lexeme{
 	public static final String ITZ = "\\bITZ\\b";
 	public static final String IT = "IT";
 	public static final String I_HAS_CONSTRUCT =  I_HAS_A +"|";
-	public static final String R = "R";
+	public static final String R = "\\bR\\b";
 	
 	
 
