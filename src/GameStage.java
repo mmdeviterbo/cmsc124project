@@ -157,7 +157,7 @@ public class GameStage{
 	private void initializeElements() {
 		inputUser.setPrefWidth(GameStage.WINDOW_WIDTH/3);
 		inputUser.setWrapText(true);
-		inputUser.setText("I HAS A str ITZ \"this is new var\"\nstr R SUM OF 10 AN 5");
+		inputUser.setText("I HAS A var\nGIMMEH var");
 		
 		String str = "hello" + "\n" + "hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n";
 		str = str + str + str; //sample string lang if magsscroll yung window ng "Lexeme" at "Symbol Table"
@@ -559,7 +559,20 @@ public class GameStage{
 		else return null;		
 	}
 	
+	private boolean checkIfVarExist(String lex) {
+		for(SymbolTable row : symbolTable.getItems()) if(row.getIdentifier().equals(lex)) return true;
+		return false;
+	}
+	
 	private String setIHAS(String[] lexList) {
+		if(lexList.length==2) {
+			if(!lexList[1].matches(Lexeme.VARIDENT)) return null;	
+			if(checkIfVarExist(lexList[1])) return null;
+			else {
+				this.symbolTable.getItems().add(new SymbolTable(lexList[1],""));
+				return "success";
+			}
+		}
 		
 		//this is for operations eg "I HAS A var ITZ SUM OF 10 AN 5"
 		ArrayList<String> operands = new ArrayList<String>();
@@ -682,59 +695,6 @@ public class GameStage{
 		symbolTable.getItems().clear();
 	}
 
-	private ArrayList<String[]> doLexicalAnalysis() {
-		clearTables();
-		this.symbolTable.getItems().add(new SymbolTable(Lexeme.IT,""));
-		
-		String[] programInput= this.inputUser.getText().split("\n");
-//		String wrongOperators = "|\\bBOTH\\b|\\bWON\\b|\\bEITHER\\b|\\bALL\\b|\\bANY\\b|\\bSUM\\b|\\bDIFF\\b|\\bPRODUKT\\b|QUOSHUNT\\b|\\bMOD\\b|\\bBIGGR\\b|\\bSMALLR\\b|\\bDIFFRINT\\b";
-		Pattern regex = Pattern.compile(Lexeme.combineRegex);
-//		Pattern regexError = Pattern.compile(Lexeme.ERROR);
-//		Pattern regexSplit = Pattern.compile("[^\\s\"']+|\"[^\"]*\"");
-		
-		ArrayList<String[]> tokenizedOutput = new ArrayList<String[]>();
-		
-		for(int i=0;i<programInput.length;i++) { //programInput = [[sentence1],[sentence2],[sentence3],..,]
-			Matcher regexMatcher = regex.matcher(programInput[i]);
-			
-			ArrayList<String> tokenizedLine = new ArrayList<String>();
-			while (regexMatcher.find()) {
-				String match = regexMatcher.group();
-				tokenizedLine.add(match);
-			}
-						
-			String[] arrResult = new String[tokenizedLine.size()];
-			for(int a=0;a<tokenizedLine.size();a++) arrResult[a] = tokenizedLine.get(a);	
-			if(arrResult.length!=0) tokenizedOutput.add(arrResult);
-		}
-		
-//		for(String[] arr : tokenizedOutput) {
-//			System.out.println("224: "+Arrays.toString(arr));
-//		}
-//		
-
-		//--------------------------this: lexemes already tokenized here in this line-------------------------
-		
-		for(int k=0;k<tokenizedOutput.size();k++) { //tokenizedOutput = [[word1,word2],[word1,word2],[word1,word2],..,]
-			String[] arrLexeme = tokenizedOutput.get(k);
-			String classification;
-			
-			for(int a=0;a<arrLexeme.length;a++) {
-				if(arrLexeme[a]==null) continue;
-				classification = Lexeme.findLexemeType(arrLexeme[a]);
-				if(classification!=null) {
-					this.lexemeTable.getItems().add(new Lexeme(arrLexeme[a],classification));
-				}else {
-					System.out.println("615 Lexeme not found");
-					return null;
-				}
-			}
-			
-		} //for loop k
-		
-		return tokenizedOutput;
-	} //end function
-	
 	private void storeIT(String answer) {
 		for(SymbolTable row : symbolTable.getItems()) {
 			row.setValue(answer);
@@ -806,6 +766,48 @@ public class GameStage{
 		return null;
 	}
 	
+	private void storeGIMMEH(String variable, String literal, ArrayList<String[]> continueLine) {
+		String typedCastNum= literal;
+		typedCastNum = typedCastNum.replace("\"","");
+		if(typedCastNum.matches(Lexeme.NUMBR+"|"+Lexeme.NUMBAR)) {
+			literal = typedCastNum;
+		}else literal = "\"" + literal + "\"";
+
+		for(SymbolTable row : symbolTable.getItems()) {
+			if(row.getIdentifier().equals(variable)) {
+				row.setValue(literal);
+				symbolTable.refresh();
+				doSyntaxAnalysis(continueLine);
+				return;
+			}
+		}
+	}
+	
+	
+	private String doGIMMEH(String[] lexList, ArrayList<String[]> continueLine) {
+		if(!checkIfVarExist(lexList[1])) return null;
+
+		
+		String variable = lexList[1];
+    	displayResult.setEditable(true);
+    	displayResult.setText(displayResult.getText()+"\n");
+    	displayResult.setOnKeyPressed(new EventHandler<KeyEvent>(){
+    	   @Override
+    	   public void handle(KeyEvent ke){
+    	     if(ke.getCode().equals(KeyCode.ENTER)){
+    	    	//store this input to new variable
+    	    	String[] ans = displayResult.getText().split("\n");
+				storeGIMMEH(variable,ans[ans.length-1],continueLine);
+				
+				displayResult.setText(displayResult.getText()+"\n");
+				displayResult.setEditable(false);
+    	     }
+    	   }
+    	  
+    	});
+    	
+    	return "success";
+	}
 	
 	private void doSyntaxAnalysis(ArrayList<String[]> tokensPerLine) {
 		for(int i=0;i<tokensPerLine.size();i++) {
@@ -846,7 +848,20 @@ public class GameStage{
 					displayResult.setText(displayResult.getText()+"\n"+"809 Catch - R Syntax Error."); return;
 				}
 			}else if(tokenArrLine[0].matches(Lexeme.GIMMEH)) {
-				
+				try{
+					ArrayList<String[]> continueAfterInput = new ArrayList<String[]>();
+					for(int a=i+1;a<tokensPerLine.size();a++) continueAfterInput.add(tokensPerLine.get(a));
+					
+					String ans = doGIMMEH(tokenArrLine,continueAfterInput);
+					if(ans==null) {
+						clearTables();
+						displayResult.setText(displayResult.getText()+"\n"+"895 GIMMEH Syntax Error."); return;						
+					}
+				}catch(Exception e) {
+					clearTables();
+					displayResult.setText(displayResult.getText()+"\n"+"889 Catch - GIMMEH Syntax Error."); return;
+				}
+				break;
 			}
 			
 			
@@ -858,28 +873,107 @@ public class GameStage{
 		}
 
 	}
+
+	private String checkMultiComments(String[] programInput, int index) {
+		int inc = 0;
+		boolean isOBTWfound = false;
+		boolean isTLDRfound = false;
+		
+		for(int i=index;i<programInput.length;i++) { 
+			if(programInput[i].contains("OBTW") && !isOBTWfound) {
+				programInput[i] = programInput[i].replace(" ", "");
+				if(programInput[i].matches("^"+Lexeme.OBTW+"$")){
+					isOBTWfound=true;
+				}else return null;
+			}else if(programInput[i].contains("TLDR") && !isTLDRfound) {
+				programInput[i] = programInput[i].replace(" ", "");
+				if(programInput[i].matches("^"+Lexeme.TLDR+"$")){
+					isTLDRfound=true;
+				}else return null;
+			}
+			if(isOBTWfound && isTLDRfound) {
+				return Integer.toString(inc+1);
+			}
+			inc++;
+		}
+		return null;
+	}
 	
-//	private void doGIMMEH() {
-        //for gimmeh part
-//    	displayResult.setEditable(true);
-//    	displayResult.setText(displayResult.getText()+"Enter input: ");
-////    	displayResult.setText("Hello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nHello world\nhe\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\ndasfdfsdfd\n\n\n\n\n\n\n\n\n\n\ndsfsdfds");
-//    	
-//    	displayResult.setOnKeyPressed(new EventHandler<KeyEvent>()
-//    	 {
-//    	   @Override
-//    	   public void handle(KeyEvent ke)
-//    	   {
-//    	     if (ke.getCode().equals(KeyCode.ENTER))
-//    	     {
-//    	    	 //store this input to new variable
-//    	       System.out.println(displayResult.getText().split("Enter input: ")[1]);
-//    	       displayResult.setText(displayResult.getText()+"\n");
-//    	       displayResult.setEditable(false);`
-//    	     }
-//    	   }
-//    	 });
-//	}
+	private String checkHaiKthxbye(String[] programInput) {
+		
+		return null;
+	}
+	
+	
+	private ArrayList<String[]> doLexicalAnalysis() {
+		clearTables();
+		this.symbolTable.getItems().add(new SymbolTable(Lexeme.IT,""));
+		
+		String[] programInput= this.inputUser.getText().split("\n");
+		Pattern regex = Pattern.compile(Lexeme.combineRegex);
+		ArrayList<String[]> tokenizedOutput = new ArrayList<String[]>();
+		
+		for(int i=0;i<programInput.length;i++) { //programInput = [[line1],[line2],[line3],..,]
+			
+			//check multicomments if valid
+			if(programInput[i].contains("OBTW")) {
+				String multiComment = checkMultiComments(programInput,i);
+				if(multiComment==null) return null;
+				else i+=Integer.parseInt(multiComment);
+			}
+			//check if HAI/KTHXBYE are valid
+			if(programInput[i].contains("HAI") || programInput[i].contains("KTHXBYE")) {
+				String haiKthxbye = checkHaiKthxbye(programInput);
+				if(haiKthxbye==null) return null;
+				else i+=Integer.parseInt(haiKthxbye);
+				continue;
+			}
+			
+			
+			
+
+			Matcher regexMatcher = regex.matcher(programInput[i]);	
+			ArrayList<String> tokenizedLine = new ArrayList<String>();
+			
+			while (regexMatcher.find()) {
+				String match = regexMatcher.group();
+				if(match.matches(Lexeme.BTW)) break;
+				tokenizedLine.add(match);
+			}
+						
+			String[] arrResult = new String[tokenizedLine.size()];
+			for(int a=0;a<tokenizedLine.size();a++) {
+				arrResult[a] = tokenizedLine.get(a);	
+			}
+			if(arrResult.length!=0) tokenizedOutput.add(arrResult);
+		}
+		
+//		for(String[] arr : tokenizedOutput) {
+//			System.out.println("224: "+Arrays.toString(arr));
+//		}	
+
+		//--------------------------this: lexemes already tokenized here in this line-------------------------
+		
+		for(int k=0;k<tokenizedOutput.size();k++) { //tokenizedOutput = [[word1,word2],[word1,word2],[word1,word2],..,]
+			String[] arrLexeme = tokenizedOutput.get(k);
+			String classification;
+			
+			for(int a=0;a<arrLexeme.length;a++) {
+				if(arrLexeme[a]==null) continue;
+				classification = Lexeme.findLexemeType(arrLexeme[a]);
+				if(classification!=null) {
+					this.lexemeTable.getItems().add(new Lexeme(arrLexeme[a],classification));
+				}else {
+					System.out.println("615 Lexeme not found");
+					return null;
+				}
+			}
+			
+		} //for loop k
+		
+		return tokenizedOutput;
+	} //end function
+	
 	
 	
 	private void btnExecuteHandle() { //get and process the code input by user from texarea named "inputUser"
