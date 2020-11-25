@@ -157,7 +157,7 @@ public class GameStage{
 	private void initializeElements() {
 		inputUser.setPrefWidth(GameStage.WINDOW_WIDTH/3);
 		inputUser.setWrapText(true);
-		inputUser.setText("I HAS A var\nGIMMEH var");
+		inputUser.setText("BTW dasdas\nOBTW\nasddsdadsd\ndasdasdas\nTLDR");
 		
 		String str = "hello" + "\n" + "hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n";
 		str = str + str + str; //sample string lang if magsscroll yung window ng "Lexeme" at "Symbol Table"
@@ -809,6 +809,115 @@ public class GameStage{
     	return "success";
 	}
 	
+	private String checkMultiComments(String[] programInput, int index) {
+		int inc = 0;
+		boolean isOBTWfound = false;
+		boolean isTLDRfound = false;
+		
+		for(int i=index;i<programInput.length;i++) { 
+			if(programInput[i].contains("OBTW") && !isOBTWfound) {
+				programInput[i] = programInput[i].replace(" ", "");
+				if(programInput[i].matches("^"+Lexeme.OBTW+"$")){
+					isOBTWfound=true;
+				}else return null;
+			}else if(programInput[i].contains("TLDR") && !isTLDRfound) {
+				programInput[i] = programInput[i].replace(" ", "");
+				if(programInput[i].matches("^"+Lexeme.TLDR+"$")){
+					isTLDRfound=true;
+				}else return null;
+			}
+			if(isOBTWfound && isTLDRfound) {
+				return Integer.toString(inc+1);
+			}
+			inc++;
+		}
+		return null;
+	}
+	
+	private String checkHaiKthxbye(String[] programInput) {
+		int len = programInput.length-1;
+		if(len==-1) return null;
+		if(programInput[0].contains("HAI") && programInput[0].length()>3) return null;
+		if(programInput[len].contains("KTHXBYE") && programInput[len].length()>7) return null;
+		if(!programInput[0].matches(Lexeme.HAI) || !programInput[len].matches(Lexeme.KTHXBYE)) return null;
+		return "success";
+	}
+	
+	
+	private ArrayList<String[]> doLexicalAnalysis() {
+		clearTables();
+		this.symbolTable.getItems().add(new SymbolTable(Lexeme.IT,""));
+		this.displayResult.setText("");
+		
+		String[] programInputwComments = this.inputUser.getText().split("\n");
+		Pattern regex = Pattern.compile(Lexeme.combineRegex);
+		ArrayList<String[]> tokenizedOutput = new ArrayList<String[]>();
+		
+		//removes all comments
+		ArrayList<String> programInputList = new ArrayList<String>();
+		for(int i=0;i<programInputwComments.length;i++) { //programInput = [[line1],[line2],[line3],..,]	
+			//check multicomments if valid
+			if(programInputwComments[i].contains("OBTW")) {
+				String multiComment = checkMultiComments(programInputwComments,i);
+				if(multiComment==null) return null;
+				else i+=Integer.parseInt(multiComment)-1;
+			}else if(programInputwComments[i].contains("BTW") && programInputwComments[i].substring(0,3).equals("BTW")) continue;
+			else {
+				programInputList.add(programInputwComments[i]);
+			}
+		}
+		
+		String[] programInput = new String[programInputList.size()];
+		for(int a=0;a<programInputList.size();a++) programInput[a] = programInputList.get(a);
+//		System.out.println("894: " + Arrays.toString(programInput));
+		
+		if(checkHaiKthxbye(programInput)==null) return null;
+		
+		for(int i=0;i<programInput.length;i++) {
+			//check if HAI/KTHXBYE are valid		
+			Matcher regexMatcher = regex.matcher(programInput[i]);	
+			ArrayList<String> tokenizedLine = new ArrayList<String>();
+			while (regexMatcher.find()) {
+				String match = regexMatcher.group();
+				if(match.matches(Lexeme.BTW)) break;
+				if(match.matches(Lexeme.HAI)) break;
+				if(match.matches(Lexeme.KTHXBYE)) break;
+				tokenizedLine.add(match);
+			}
+			String[] arrResult = new String[tokenizedLine.size()];
+			for(int a=0;a<tokenizedLine.size();a++) {
+				arrResult[a] = tokenizedLine.get(a);	
+			}
+			if(arrResult.length!=0) tokenizedOutput.add(arrResult);
+		}
+		
+		for(String[] arr : tokenizedOutput) {
+			System.out.print(Arrays.toString(arr)+ " ");
+		}	
+
+		//--------------------------this: lexemes already tokenized here in this line-------------------------
+		
+		for(int k=0;k<tokenizedOutput.size();k++) { //tokenizedOutput = [[word1,word2],[word1,word2],[word1,word2],..,]
+			String[] arrLexeme = tokenizedOutput.get(k);
+			String classification;
+			
+			for(int a=0;a<arrLexeme.length;a++) {
+				if(arrLexeme[a]==null) continue;
+				classification = Lexeme.findLexemeType(arrLexeme[a]);
+				if(classification!=null) {
+					this.lexemeTable.getItems().add(new Lexeme(arrLexeme[a],classification));
+				}else {
+					System.out.println("615 Lexeme not found");
+					return null;
+				}
+			}
+			
+		} //for loop k
+		
+		return tokenizedOutput;
+	} //end function
+	
+	
 	private void doSyntaxAnalysis(ArrayList<String[]> tokensPerLine) {
 		for(int i=0;i<tokensPerLine.size();i++) {
 			String[] tokenArrLine = tokensPerLine.get(i);
@@ -874,107 +983,6 @@ public class GameStage{
 
 	}
 
-	private String checkMultiComments(String[] programInput, int index) {
-		int inc = 0;
-		boolean isOBTWfound = false;
-		boolean isTLDRfound = false;
-		
-		for(int i=index;i<programInput.length;i++) { 
-			if(programInput[i].contains("OBTW") && !isOBTWfound) {
-				programInput[i] = programInput[i].replace(" ", "");
-				if(programInput[i].matches("^"+Lexeme.OBTW+"$")){
-					isOBTWfound=true;
-				}else return null;
-			}else if(programInput[i].contains("TLDR") && !isTLDRfound) {
-				programInput[i] = programInput[i].replace(" ", "");
-				if(programInput[i].matches("^"+Lexeme.TLDR+"$")){
-					isTLDRfound=true;
-				}else return null;
-			}
-			if(isOBTWfound && isTLDRfound) {
-				return Integer.toString(inc+1);
-			}
-			inc++;
-		}
-		return null;
-	}
-	
-	private String checkHaiKthxbye(String[] programInput) {
-		
-		return null;
-	}
-	
-	
-	private ArrayList<String[]> doLexicalAnalysis() {
-		clearTables();
-		this.symbolTable.getItems().add(new SymbolTable(Lexeme.IT,""));
-		
-		String[] programInput= this.inputUser.getText().split("\n");
-		Pattern regex = Pattern.compile(Lexeme.combineRegex);
-		ArrayList<String[]> tokenizedOutput = new ArrayList<String[]>();
-		
-		for(int i=0;i<programInput.length;i++) { //programInput = [[line1],[line2],[line3],..,]
-			
-			//check multicomments if valid
-			if(programInput[i].contains("OBTW")) {
-				String multiComment = checkMultiComments(programInput,i);
-				if(multiComment==null) return null;
-				else i+=Integer.parseInt(multiComment);
-			}
-			//check if HAI/KTHXBYE are valid
-			if(programInput[i].contains("HAI") || programInput[i].contains("KTHXBYE")) {
-				String haiKthxbye = checkHaiKthxbye(programInput);
-				if(haiKthxbye==null) return null;
-				else i+=Integer.parseInt(haiKthxbye);
-				continue;
-			}
-			
-			
-			
-
-			Matcher regexMatcher = regex.matcher(programInput[i]);	
-			ArrayList<String> tokenizedLine = new ArrayList<String>();
-			
-			while (regexMatcher.find()) {
-				String match = regexMatcher.group();
-				if(match.matches(Lexeme.BTW)) break;
-				tokenizedLine.add(match);
-			}
-						
-			String[] arrResult = new String[tokenizedLine.size()];
-			for(int a=0;a<tokenizedLine.size();a++) {
-				arrResult[a] = tokenizedLine.get(a);	
-			}
-			if(arrResult.length!=0) tokenizedOutput.add(arrResult);
-		}
-		
-//		for(String[] arr : tokenizedOutput) {
-//			System.out.println("224: "+Arrays.toString(arr));
-//		}	
-
-		//--------------------------this: lexemes already tokenized here in this line-------------------------
-		
-		for(int k=0;k<tokenizedOutput.size();k++) { //tokenizedOutput = [[word1,word2],[word1,word2],[word1,word2],..,]
-			String[] arrLexeme = tokenizedOutput.get(k);
-			String classification;
-			
-			for(int a=0;a<arrLexeme.length;a++) {
-				if(arrLexeme[a]==null) continue;
-				classification = Lexeme.findLexemeType(arrLexeme[a]);
-				if(classification!=null) {
-					this.lexemeTable.getItems().add(new Lexeme(arrLexeme[a],classification));
-				}else {
-					System.out.println("615 Lexeme not found");
-					return null;
-				}
-			}
-			
-		} //for loop k
-		
-		return tokenizedOutput;
-	} //end function
-	
-	
 	
 	private void btnExecuteHandle() { //get and process the code input by user from texarea named "inputUser"
 		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() { 
