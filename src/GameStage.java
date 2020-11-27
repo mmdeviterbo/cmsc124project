@@ -158,9 +158,8 @@ public class GameStage{
 		inputUser.setPrefWidth(GameStage.WINDOW_WIDTH/3);
 		inputUser.setWrapText(true);
 		inputUser.setText("HAI\n");
-		inputUser.setText(inputUser.getText() + "VISIBLE SUM OF DIFF OF -1000 AN 10 AN 5");
-		inputUser.setText(inputUser.getText() + "\nKTHXBYE");
-
+		inputUser.setText(inputUser.getText() + "BOTH OF WIN AN WIN\nO RLY?\nYA RLY\nVISIBLE \"It is WIN\"\nNO WAI\nVISIBLE \"It is FAIL\"\nOIC");
+		inputUser.setText(inputUser.getText() + "\nKTHXBYE");		
 		String str = "hello" + "\n" + "hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n";
 		str = str + str + str; //sample string lang if magsscroll yung window ng "Lexeme" at "Symbol Table"
 		
@@ -908,6 +907,45 @@ public class GameStage{
 		return null;
 	}
 	
+	private int doIFELSE(ArrayList<String[]> tokensProgram,int i) {	
+		int isYA_RLY=-1;
+		int isNO_WAI=-1;
+		int isOIC=-1;
+		int increment=0;
+		for(int a=i;a<tokensProgram.size();a++) {
+			if(tokensProgram.get(a)[0].matches(Lexeme.OIC)) {
+				isOIC=a;
+				increment= a-i+1;
+				if(increment < 6) return -1;
+				break;
+			}else if(tokensProgram.get(a)[0].matches(Lexeme.YA_RLY)) {
+				if(!tokensProgram.get(a-1)[0].matches(Lexeme.O_RLY)) return -1;
+				isYA_RLY = a;
+			}else if(tokensProgram.get(a)[0].matches(Lexeme.NO_WAI)) isNO_WAI = a;
+		}
+		if(isYA_RLY==-1 || isNO_WAI==-1 || isOIC==-1) return -1;
+		
+		
+		String ITval= getValueVarident("IT");
+		ArrayList<String[]> blockStatement = new ArrayList<String[]>();
+		int start=0;
+		int end=0;
+		if(ITval.matches(Lexeme.TROOF[0]+"|"+"\""+Lexeme.TROOF[0]+"\"")) {
+			start=isYA_RLY+1;
+			end=isNO_WAI;
+		}else { //FAIL, or cannot be typecast to WIN
+			start=isNO_WAI+1;
+			end=isOIC;
+		}
+		
+		for(int j=start;j<end;j++) blockStatement.add(tokensProgram.get(j));
+		doSyntaxAnalysis(blockStatement);
+		return increment-1; //-1 if fail, syntax error
+	}
+	
+	
+	
+	
 	private ArrayList<String[]> doLexicalAnalysis() {
 		clearTables();
 		this.symbolTable.getItems().add(new SymbolTable(Lexeme.IT,""));
@@ -981,7 +1019,6 @@ public class GameStage{
 		return tokenizedOutput;
 	} //end function
 		
-	
 	private void doSyntaxAnalysis(ArrayList<String[]> tokensPerLine) {
 		for(int i=0;i<tokensPerLine.size();i++) {
 			String[] tokenArrLine = tokensPerLine.get(i);
@@ -1008,7 +1045,7 @@ public class GameStage{
 					displayResult.setText(displayResult.getText()+"\n"+"688 I HAS - Catch Syntax Error."); return;
 				}
 				
-			}else if(tokenArrLine[0].matches(Lexeme.VARIDENT) && tokenArrLine[1].matches(Lexeme.R)) {
+			}else if(tokenArrLine[0].matches(Lexeme.VARIDENT) && tokenArrLine.length>1 && tokenArrLine[1].matches(Lexeme.R)) {
 				try {
 					String ans = makeRreassignment(tokenArrLine);
 					if(ans!=null) {}
@@ -1035,19 +1072,31 @@ public class GameStage{
 					displayResult.setText(displayResult.getText()+"\n"+"889 Catch - GIMMEH Syntax Error."); return;
 				}
 				break;
-			}
+			}else if(tokenArrLine[0].matches(Lexeme.O_RLY)) {
+				try {
+					int ans = doIFELSE(tokensPerLine,i);
+					if(ans!=-1) {
+						System.out.println("1051 IF ELSE ORLY - Successful");
+						i+=ans;
+					}
+					else {
+						clearTables();
+						displayResult.setText(displayResult.getText()+"\n"+"1044 - IF ELSE Syntax Error."); return;
+					}
+				}catch(Exception e) {
+					clearTables();
+					displayResult.setText(displayResult.getText()+"\n"+"1048 Catch- IF ELSE Syntax Error."); return;	
+				}
+			}else if(storeIt!=null) {}
 			else {
-//				clearTables();
-//				displayResult.setText(displayResult.getText()+"\n"+"487 Syntax Error.");
-				
+				clearTables();
+				displayResult.setText(displayResult.getText()+"\n"+"487 Syntax Error.");
+				return;				
 			}
 		}
 
 	}
 
-	
-	
-	
 	private void btnExecuteHandle() { //get and process the code input by user from texarea named "inputUser"
 		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() { 
             public void handle(ActionEvent e)

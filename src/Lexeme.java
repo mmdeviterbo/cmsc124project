@@ -71,8 +71,8 @@ public class Lexeme{
 	public static final String GIMMEH  = "\\bGIMMEH\\b";
 	
 	//condtional / if then statements
-	public static final String O_RLY  = "\\bO RLY\\?\\b";
-	public static final String YA_RLY  = "\\bYA RLY?\\b";
+	public static final String O_RLY  = "^O RLY\\?$";
+	public static final String YA_RLY  = "\\bYA RLY\\b";
 	public static final String MEBBE  = "\\bMEBBE\\b";
 	public static final String NO_WAI  = "\\bNO WAI\\b";
 
