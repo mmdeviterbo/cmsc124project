@@ -749,7 +749,7 @@ public class GameStage{
 				String ans = doVISIBLE(tokenArrLine);	
 				if(ans!=null) {
 					System.out.println("VISIBLE - Correct syntax");
-					displayResult.setText(displayResult.getText()+ans);
+					displayResult.setText(displayResult.getText()+"\n"+ans);
 					return ans;
 				}else {
 					clearTables();
@@ -942,6 +942,7 @@ public class GameStage{
 		doSyntaxAnalysis(blockStatement);
 		return increment-1; //-1 if fail, syntax error
 	}
+	
 	
 	
 	
