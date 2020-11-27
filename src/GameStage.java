@@ -694,11 +694,11 @@ public class GameStage{
 					return ans;
 				}else {
 					clearTables();
-					displayResult.setText(displayResult.getText()+"\n"+"473 Syntax Error."); return null;
+					displayResult.setText("473 Syntax Error."); return null;
 				}
 			}catch(Exception e) {
 				clearTables();
-				displayResult.setText(displayResult.getText()+"\n"+"475 Syntax Error."); return null;
+				displayResult.setText("475 Syntax Error."); return null;
 			}
 			//continue coding here,  add return value to symbol table and update it
 		}else if(tokenArrLine[0].matches(Lexeme.boolOperator.substring(0, Lexeme.boolOperator.length()-37))) { 
@@ -710,11 +710,11 @@ public class GameStage{
 				}
 				else {
 					clearTables();
-					displayResult.setText(displayResult.getText()+"\n"+"481 Syntax Error."); return null;
+					displayResult.setText("481 Syntax Error."); return null;
 				}
 			}catch(Exception e) {
 				clearTables();
-				displayResult.setText(displayResult.getText()+"\n"+"484 Syntax Error."); return null;
+				displayResult.setText("484 Syntax Error."); return null;
 			}
 		}else if(tokenArrLine[0].matches(Lexeme.boolOperator.substring(67,93))){
 			try {
@@ -725,11 +725,11 @@ public class GameStage{
 			}
 			else{
 					clearTables();
-					displayResult.setText(displayResult.getText()+"\n"+"624 Syntax Error."); return null;
+					displayResult.setText("624 Syntax Error."); return null;
 			}
 			}catch(Exception e) {
 				clearTables();
-				displayResult.setText(displayResult.getText()+"\n"+"Catch Syntax Error.");	return null;				
+				displayResult.setText("Catch Syntax Error.");	return null;				
 			}
 		}else if(tokenArrLine[0].matches(Lexeme.SMOOSH)) {
 			try {
@@ -739,10 +739,10 @@ public class GameStage{
 					return ans;
 				}else {
 					clearTables();
-					displayResult.setText(displayResult.getText()+"\n"+"Smoosh - Syntax Error."); return null;
+					displayResult.setText("Smoosh - Syntax Error."); return null;
 				}
 			}catch(Exception e) {
-				displayResult.setText(displayResult.getText()+"\n"+"Smoosh - Catch Syntax Error."); return null;
+				displayResult.setText("Smoosh - Catch Syntax Error."); return null;
 			}
 		}else if(tokenArrLine[0].matches(Lexeme.VISIBLE)) {
 			try {
@@ -753,11 +753,11 @@ public class GameStage{
 					return ans;
 				}else {
 					clearTables();
-					displayResult.setText(displayResult.getText()+"\n"+"VISIBLE - Syntax Error."); return null;
+					displayResult.setText("VISIBLE - Syntax Error."); return null;
 				}
 			}catch(Exception e) {
 				clearTables();
-				displayResult.setText(displayResult.getText()+"\n"+"VISIBLE Catch - Syntax Error."); return null;
+				displayResult.setText("VISIBLE Catch - Syntax Error."); return null;
 			}
 		
 		}
@@ -938,8 +938,9 @@ public class GameStage{
 			end=isOIC;
 		}
 		
-		for(int j=start;j<end;j++) blockStatement.add(tokensProgram.get(j));
+		for(int j=start;j<end;j++) blockStatement.add(tokensProgram.get(j));		
 		doSyntaxAnalysis(blockStatement);
+		
 		return increment-1; //-1 if fail, syntax error
 	}
 	
@@ -1038,12 +1039,12 @@ public class GameStage{
 					}else {
 						System.out.println("668 IHAS ERROR");
 						clearTables();
-						displayResult.setText(displayResult.getText()+"\n"+"669 I HAS - Syntax Error."); return;
+						displayResult.setText("669 I HAS - Syntax Error."); return;
 					}
 					
 				}catch(Exception e) {
 					clearTables();
-					displayResult.setText(displayResult.getText()+"\n"+"688 I HAS - Catch Syntax Error."); return;
+					displayResult.setText("688 I HAS - Catch Syntax Error."); return;
 				}
 				
 			}else if(tokenArrLine[0].matches(Lexeme.VARIDENT) && tokenArrLine.length>1 && tokenArrLine[1].matches(Lexeme.R)) {
@@ -1052,11 +1053,11 @@ public class GameStage{
 					if(ans!=null) {}
 					else {
 						clearTables();
-						displayResult.setText(displayResult.getText()+"\n"+"R - Syntax Error."); return;
+						displayResult.setText("R - Syntax Error."); return;
 					}
 				}catch(Exception e) {
 					clearTables();
-					displayResult.setText(displayResult.getText()+"\n"+"809 Catch - R Syntax Error."); return;
+					displayResult.setText("809 Catch - R Syntax Error."); return;
 				}
 			}else if(tokenArrLine[0].matches(Lexeme.GIMMEH)) {
 				try{
@@ -1070,7 +1071,7 @@ public class GameStage{
 					}
 				}catch(Exception e) {
 					clearTables();
-					displayResult.setText(displayResult.getText()+"\n"+"889 Catch - GIMMEH Syntax Error."); return;
+					displayResult.setText("889 Catch - GIMMEH Syntax Error."); return;
 				}
 				break;
 			}else if(tokenArrLine[0].matches(Lexeme.O_RLY)) {
@@ -1082,16 +1083,16 @@ public class GameStage{
 					}
 					else {
 						clearTables();
-						displayResult.setText(displayResult.getText()+"\n"+"1044 - IF ELSE Syntax Error."); return;
+						displayResult.setText("1044 - IF ELSE Syntax Error."); return;
 					}
 				}catch(Exception e) {
 					clearTables();
-					displayResult.setText(displayResult.getText()+"\n"+"1048 Catch- IF ELSE Syntax Error."); return;	
+					displayResult.setText("1048 Catch- IF ELSE Syntax Error."); return;	
 				}
 			}else if(storeIt!=null) {}
 			else {
 				clearTables();
-				displayResult.setText(displayResult.getText()+"\n"+"487 Syntax Error.");
+				displayResult.setText("487 Syntax Error.");
 				return;				
 			}
 		}
