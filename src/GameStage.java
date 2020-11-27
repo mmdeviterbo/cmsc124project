@@ -158,7 +158,7 @@ public class GameStage{
 		inputUser.setPrefWidth(GameStage.WINDOW_WIDTH/3);
 		inputUser.setWrapText(true);
 		inputUser.setText("HAI\n");
-		inputUser.setText(inputUser.getText() + "BOTH OF WIN AN WIN\nO RLY?\nYA RLY\nVISIBLE \"It is WIN\"\nNO WAI\nVISIBLE \"It is FAIL\"\nOIC");
+		inputUser.setText(inputUser.getText() + "SUM OF 10 AN 10\nWTF?\nOMG 20\n\tVISIBLE \"first choice\"\nOMG 30\n\tVISIBLE \"2nd choice\"\nOMG 40\n\tVISIBLE \"3rd choice\"\nOMGWTF\n\tVISIBLE \"default choice\" \nOIC");
 		inputUser.setText(inputUser.getText() + "\nKTHXBYE");		
 		String str = "hello" + "\n" + "hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n";
 		str = str + str + str; //sample string lang if magsscroll yung window ng "Lexeme" at "Symbol Table"
@@ -944,6 +944,59 @@ public class GameStage{
 		return increment-1; //-1 if fail, syntax error
 	}
 	
+	private int doSWITCH(ArrayList<String[]> tokensProgram,int i) {
+		ArrayList<Integer> OMGlist = new ArrayList<Integer>();
+		int isOMGWTF=-1;
+		int isOIC=-1;
+		int increment=0;
+
+		if(i+1<tokensProgram.size() && !tokensProgram.get(i+1)[0].matches(Lexeme.OMG)) return -1;
+		
+		for(int a=i;a<tokensProgram.size();a++) {
+			if(tokensProgram.get(a)[0].matches(Lexeme.OIC)) {
+				isOIC=a;
+				increment= a-i+1;
+				if(increment < 6) return -1;
+				break;
+			}else if(tokensProgram.get(a)[0].matches(Lexeme.OMG)) {
+				if(tokensProgram.get(a).length==1 || !tokensProgram.get(a)[1].matches(Lexeme.ALL_LITERALS)) return -1;
+				if(a!=0 && tokensProgram.get(a-1)[0].matches(Lexeme.OMG)) return -1;
+				OMGlist.add(a);
+			}else if(tokensProgram.get(a)[0].matches(Lexeme.OMGWTF)) {
+				if(tokensProgram.get(a).length>1) return -1;
+				if(a!=0 && tokensProgram.get(a-1)[0].matches(Lexeme.OMG)) return -1;
+				isOMGWTF = a;
+			}
+		}
+		
+		if(isOMGWTF==-1 || OMGlist.size()==0 || isOIC==-1) return -1;
+		
+		String ITval= getValueVarident("IT");
+		ITval = ITval.replace("\"", "");
+		if(ITval.length()==0) return -1;
+		
+		//find on where OMG it satisfies, matches, or equal
+		boolean isOMGsatisfied = false;
+		ArrayList<String[]> blockStatement = new ArrayList<String[]>();
+		
+		for(Integer index : OMGlist) {
+			String omgVal = tokensProgram.get(index)[1].replace("\"", "");
+			if(omgVal.equals(ITval) && !isOMGsatisfied) isOMGsatisfied = true;
+			if(isOMGsatisfied) {
+				for(int a=index;a<isOIC;a++) if(!tokensProgram.get(a)[0].matches(Lexeme.OMG+"|"+Lexeme.OMGWTF)) blockStatement.add(tokensProgram.get(a));
+				doSyntaxAnalysis(blockStatement);
+				break;
+			}
+		}
+		
+		//if there is no OMG satisfied, matches, or equal
+		if(!isOMGsatisfied) {
+			for(int a=isOMGWTF+1;a<isOIC;a++) blockStatement.add(tokensProgram.get(a));
+			doSyntaxAnalysis(blockStatement);
+		}
+		
+		return increment-1;
+	}
 	
 	
 	
@@ -1020,7 +1073,8 @@ public class GameStage{
 		
 		return tokenizedOutput;
 	} //end function
-		
+	
+	
 	private void doSyntaxAnalysis(ArrayList<String[]> tokensPerLine) {
 		for(int i=0;i<tokensPerLine.size();i++) {
 			String[] tokenArrLine = tokensPerLine.get(i);
@@ -1088,6 +1142,20 @@ public class GameStage{
 				}catch(Exception e) {
 					clearTables();
 					displayResult.setText("1048 Catch- IF ELSE Syntax Error."); return;	
+				}
+			}else if(tokenArrLine[0].matches(Lexeme.WTF)) {
+				try {
+					int ans = doSWITCH(tokensPerLine,i);
+					if(ans!=-1) {
+						System.out.println("1102 SWITCH - Successful");
+						i+=ans;
+					}else {
+						clearTables();
+						displayResult.setText("1106 - SWITCH Syntax Error."); return;
+					}
+				}catch(Exception e) {
+					clearTables();
+					displayResult.setText("1100 - SWITCH Catch Syntax Error."); return;
 				}
 			}else if(storeIt!=null) {}
 			else {

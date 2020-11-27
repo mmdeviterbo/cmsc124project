@@ -77,7 +77,7 @@ public class Lexeme{
 	public static final String NO_WAI  = "\\bNO WAI\\b";
 
 	//conditional / switch case
-	public static final String WTF  = "\\bWTF\\?\\b";
+	public static final String WTF  = "^WTF\\?$";
 	public static final String OMG  = "\\bOMG\\b";
 	public static final String OMGWTF  =  "\\bOMGWTF\\b";
 	public static final String OIC  = "\\bOIC\\b"; 
