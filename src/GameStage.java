@@ -157,8 +157,10 @@ public class GameStage{
 	private void initializeElements() {
 		inputUser.setPrefWidth(GameStage.WINDOW_WIDTH/3);
 		inputUser.setWrapText(true);
-		inputUser.setText("BTW dasdas\nOBTW\nasddsdadsd\ndasdasdas\nTLDR");
-		
+		inputUser.setText("HAI\n");
+		inputUser.setText(inputUser.getText() + "VISIBLE SUM OF DIFF OF -1000 AN 10 AN 5");
+		inputUser.setText(inputUser.getText() + "\nKTHXBYE");
+
 		String str = "hello" + "\n" + "hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n";
 		str = str + str + str; //sample string lang if magsscroll yung window ng "Lexeme" at "Symbol Table"
 		
@@ -600,9 +602,11 @@ public class GameStage{
 		
 		if(lexList[3].matches(Lexeme.ALL_LITERALS)) {
 			if(lexList.length!=4) return null;
+			lexList[3] = lexList[3].replace("\"", "");
 			this.symbolTable.getItems().add(new SymbolTable(lexList[1],lexList[3]));	
 			return "Success";
 		}else if(ifOperations!=null) {
+			ifOperations = ifOperations.replace("\"", "");
 			this.symbolTable.getItems().add(new SymbolTable(lexList[1],ifOperations));		
 			return "Success";
 		}else if(lexList[3].matches(Lexeme.VARIDENT)) { //varident
@@ -623,32 +627,11 @@ public class GameStage{
 		return null;
 	}
 	
-	private String solveSmoothhOperation(String[] lexList) {
-		for(int i=1;i<lexList.length;i++) {
-			if(!lexList[i].matches(Lexeme.YARN) && !lexList[i].matches(Lexeme.VARIDENT)) return null;	
-			
-			else if(lexList[i].matches(Lexeme.VARIDENT) && !lexList[i].matches(Lexeme.YARN)) {
-				boolean isFound = false;
-				for(SymbolTable row : symbolTable.getItems()) {
-					if(row.getIdentifier().equals(lexList[i])) {
-						isFound=true;
-						if(!row.getValue().matches(Lexeme.YARN)) {
-							isFound=false;
-							break;
-						}else lexList[i] = row.getValue();
-						break;
-					}
-				}
-				if(!isFound) return null;
-			}
-		}
-		String concatStr="";
-		for(int i=1;i<lexList.length;i++) { //1 since smoosh itself is not included
-			String tempStr = lexList[i].replace("\"","");
-			concatStr = concatStr + tempStr;
-		}
-		String withDquote = "\""+concatStr+"\"";
-		return withDquote;
+	private String solveSmooshOperation(String[] lexList) {
+		String ans = doVISIBLE(lexList);
+		if(ans!=null) return ans;
+		else return null;
+		
 	}
 	
 	private String makeRreassignment(String[] lexList) {
@@ -683,6 +666,7 @@ public class GameStage{
 		//reassigning after checking/solving if literals/varident/expression
 		for(SymbolTable row : symbolTable.getItems()) {
 			if(row.getIdentifier().equals(lexList[0])) {
+				newVal = newVal.replace("\"", "");
 				row.setValue(newVal);
 				return "success";
 			}
@@ -697,7 +681,7 @@ public class GameStage{
 
 	private void storeIT(String answer) {
 		for(SymbolTable row : symbolTable.getItems()) {
-			row.setValue(answer);
+			row.setValue(answer);		
 			break;
 		}
 	}
@@ -750,9 +734,9 @@ public class GameStage{
 			}
 		}else if(tokenArrLine[0].matches(Lexeme.SMOOSH)) {
 			try {
-				String ans = solveSmoothhOperation(tokenArrLine);
+				String ans = solveSmooshOperation(tokenArrLine);
 				if(ans!=null) {
-					System.out.println("Smoosh - Correct syntax: " + ans);
+					System.out.println("Smoosh - Correct syntax: ");
 					return ans;
 				}else {
 					clearTables();
@@ -761,8 +745,23 @@ public class GameStage{
 			}catch(Exception e) {
 				displayResult.setText(displayResult.getText()+"\n"+"Smoosh - Catch Syntax Error."); return null;
 			}
+		}else if(tokenArrLine[0].matches(Lexeme.VISIBLE)) {
+			try {
+				String ans = doVISIBLE(tokenArrLine);	
+				if(ans!=null) {
+					System.out.println("VISIBLE - Correct syntax");
+					displayResult.setText(displayResult.getText()+ans);
+					return ans;
+				}else {
+					clearTables();
+					displayResult.setText(displayResult.getText()+"\n"+"VISIBLE - Syntax Error."); return null;
+				}
+			}catch(Exception e) {
+				clearTables();
+				displayResult.setText(displayResult.getText()+"\n"+"VISIBLE Catch - Syntax Error."); return null;
+			}
+		
 		}
-			
 		return null;
 	}
 	
@@ -782,7 +781,6 @@ public class GameStage{
 			}
 		}
 	}
-	
 	
 	private String doGIMMEH(String[] lexList, ArrayList<String[]> continueLine) {
 		if(!checkIfVarExist(lexList[1])) return null;
@@ -843,6 +841,72 @@ public class GameStage{
 		return "success";
 	}
 	
+	private String doVISIBLE(String[] lexList) {
+		if(lexList.length==1) return null; //must contain atleast one operand
+		
+		
+		String combinedOp = Lexeme.mathOperator + Lexeme.boolOperator+"\\bAN\\b";
+		String combinedVal = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3)+"|"+Lexeme.VARIDENT;
+		
+		ArrayList<String> outputPrint = new ArrayList<String>();
+		
+		for(int i=1;i<lexList.length;i++) { //1 because VISIBLE keyword is excluded
+			//literals only
+			if(lexList[i].matches(Lexeme.ALL_LITERALS)) {
+				outputPrint.add(lexList[i]); continue;
+			}
+			
+			//math,comparison, boolean
+			else if(lexList[i].matches(combinedOp)) {
+				ArrayList<String> tempStore = new ArrayList<String>();
+				while(i<lexList.length && lexList[i].matches(Lexeme.ALL_LITERALS+"|"+Lexeme.VARIDENT+"|"+combinedOp)) {
+					if((i+2<lexList.length && lexList[i].matches(combinedVal) && !lexList[i].matches("AN") && lexList[i+1].matches("AN")  && lexList[i+2].matches(combinedVal) && !lexList[i+2].matches("AN"))) {
+						if(i+3==lexList.length) {
+							tempStore.add(lexList[i]); tempStore.add(lexList[i+1]);tempStore.add(lexList[i+2]);i++;
+							break;
+						}else if(!lexList[i+3].matches("AN")) {
+							tempStore.add(lexList[i]);tempStore.add(lexList[i+1]);tempStore.add(lexList[i+2]);i++;
+							break;
+						}
+					}
+					tempStore.add(lexList[i]);
+					i++;					
+				}
+				if(tempStore.size()>3) {
+					String[] passToOp = new String[tempStore.size()];
+					for(int a=0;a<tempStore.size();a++) passToOp[a] = tempStore.get(a);
+					String ans = allOperations(passToOp);
+					if(ans!=null) outputPrint.add(ans);
+					else return null;
+				}else return null;
+				i++;
+				continue;
+			}
+			
+			//smoosh operation
+			else if(lexList[i].matches(Lexeme.SMOOSH)) continue;
+			
+			
+			//variable
+			else if(lexList[i].matches(Lexeme.VARIDENT)) {
+				 if(checkIfVarExist(lexList[i])) {
+					 outputPrint.add(getValueVarident(lexList[i])); continue;
+				 }else return null;
+			}
+		}
+		
+		
+		if(outputPrint.size()!=0) {
+			for(String output : outputPrint) {
+				output = output.replace("\"","");
+//				displayResult.setText(displayResult.getText()+output+" ");
+			}
+			String removeSpecialChar = Arrays.toString(outputPrint.toArray()).replaceAll("[\\[\\]]", "");
+			removeSpecialChar = removeSpecialChar.replaceAll("[\",]", "");
+			return removeSpecialChar;
+		}
+		return null;
+	}
 	
 	private ArrayList<String[]> doLexicalAnalysis() {
 		clearTables();
@@ -891,9 +955,9 @@ public class GameStage{
 			if(arrResult.length!=0) tokenizedOutput.add(arrResult);
 		}
 		
-		for(String[] arr : tokenizedOutput) {
-			System.out.print(Arrays.toString(arr)+ " ");
-		}	
+//		for(String[] arr : tokenizedOutput) {
+//			System.out.print(Arrays.toString(arr)+ " ");
+//		}	
 
 		//--------------------------this: lexemes already tokenized here in this line-------------------------
 		
@@ -916,7 +980,7 @@ public class GameStage{
 		
 		return tokenizedOutput;
 	} //end function
-	
+		
 	
 	private void doSyntaxAnalysis(ArrayList<String[]> tokensPerLine) {
 		for(int i=0;i<tokensPerLine.size();i++) {
@@ -972,8 +1036,6 @@ public class GameStage{
 				}
 				break;
 			}
-			
-			
 			else {
 //				clearTables();
 //				displayResult.setText(displayResult.getText()+"\n"+"487 Syntax Error.");
@@ -983,6 +1045,8 @@ public class GameStage{
 
 	}
 
+	
+	
 	
 	private void btnExecuteHandle() { //get and process the code input by user from texarea named "inputUser"
 		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() { 
