@@ -157,6 +157,8 @@ public class GameStage{
 	private void initializeElements() {
 		inputUser.setPrefWidth(GameStage.WINDOW_WIDTH/3);
 		inputUser.setWrapText(true);
+		
+		//sample input for test only
 		inputUser.setText("HAI\n");
 		inputUser.setText(inputUser.getText() + "SUM OF 10 AN 10\nWTF?\nOMG 20\n\tVISIBLE \"first choice\"\nOMG 30\n\tVISIBLE \"2nd choice\"\nOMG 40\n\tVISIBLE \"3rd choice\"\nOMGWTF\n\tVISIBLE \"default choice\" \nOIC");
 		inputUser.setText(inputUser.getText() + "\nKTHXBYE");		
@@ -175,7 +177,7 @@ public class GameStage{
 	    btnSelectFile.setStyle("-fx-background-color: #ffffff; -fx-background-radius: 3;-fx-border-color: black");
 	    
 	    inputUser.setPrefHeight(GameStage.WINDOW_HEIGHT/2.90);
-	    inputUser.setStyle("-fx-control-inner-background:#000000; -fx-font-family: Consolas; -fx-highlight-fill: #00ff00; -fx-highlight-text-fill: #000000; -fx-text-fill: #00ff00; ");
+	    inputUser.setStyle("-fx-control-inner-background:#000000; -fx-font-family: Consolas; -fx-highlight-fill: #00ff00; -fx-highlight-text-fill: #000000; -fx-text-fill: #00ff00; -fx-font-size: 1.2em;");
 	    
 	    displayResult.setStyle("-fx-control-inner-background:#000000; -fx-font-family: Consolas; -fx-highlight-fill: #00ff00; -fx-highlight-text-fill: #000000; -fx-text-fill: #00ff00; -fx-font-size: 1.5em;");
 	    displayResult.setPrefSize(GameStage.WINDOW_WIDTH, GameStage.WINDOW_HEIGHT);
@@ -748,8 +750,8 @@ public class GameStage{
 			try {
 				String ans = doVISIBLE(tokenArrLine);	
 				if(ans!=null) {
-					System.out.println("VISIBLE - Correct syntax");
-					displayResult.setText(displayResult.getText()+"\n"+ans);
+					System.out.println("VISIBLE - Correct syntax");					
+					printFormatVisible(ans);					
 					return ans;
 				}else {
 					clearTables();
@@ -762,6 +764,14 @@ public class GameStage{
 		
 		}
 		return null;
+	}
+	
+	private void printFormatVisible(String ans){
+		String isNewLine = "";
+		if(displayResult.getText().length()!=0) isNewLine = "\n"; 
+//		if(ans.substring(ans.length()-2,ans.length()).equals("a!")) isNewLine="";
+		
+		displayResult.setText(displayResult.getText()+isNewLine+ans);
 	}
 	
 	private void storeGIMMEH(String variable, String literal, ArrayList<String[]> continueLine) {
@@ -837,6 +847,16 @@ public class GameStage{
 		if(programInput[0].contains("HAI") && programInput[0].length()>3) return null;
 		if(programInput[len].contains("KTHXBYE") && programInput[len].length()>7) return null;
 		if(!programInput[0].matches(Lexeme.HAI) || !programInput[len].matches(Lexeme.KTHXBYE)) return null;
+		
+		//if hai or kthxbye has multiple occurences
+		int HAILen = 0; int KTHXBYELen = 0;
+		for(int i=0;i<programInput.length;i++) {
+			if(programInput[i].matches(Lexeme.HAI)) HAILen++;
+			if(programInput[i].matches(Lexeme.KTHXBYE)) KTHXBYELen++;
+		}
+		if(HAILen!=1 || KTHXBYELen!=1) return null;
+		this.lexemeTable.getItems().add(new Lexeme(programInput[0],Lexeme.CODE_DELIMETER));
+		this.lexemeTable.getItems().add(new Lexeme(programInput[len],Lexeme.CODE_DELIMETER));
 		return "success";
 	}
 	
@@ -997,9 +1017,6 @@ public class GameStage{
 		
 		return increment-1;
 	}
-	
-	
-	
 	
 	private ArrayList<String[]> doLexicalAnalysis() {
 		clearTables();
