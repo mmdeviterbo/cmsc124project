@@ -867,6 +867,10 @@ public class GameStage{
 	private String checkHaiKthxbye(String[] programInput) {
 		int len = programInput.length-1;
 		if(len==-1) return null;
+		programInput[0] = programInput[0].replaceAll("BTW.*","");
+		programInput[0] = programInput[0].replaceAll("\\s","");
+		programInput[len] = programInput[len].replaceAll("BTW.*","");
+		programInput[len] = programInput[len].replaceAll("\\s","");
 		if(programInput[0].contains("HAI") && programInput[0].length()>3) return null;
 		if(programInput[len].contains("KTHXBYE") && programInput[len].length()>7) return null;
 		if(!programInput[0].matches(Lexeme.HAI) || !programInput[len].matches(Lexeme.KTHXBYE)) return null;
@@ -874,6 +878,7 @@ public class GameStage{
 		//if hai or kthxbye has multiple occurences
 		int HAILen = 0; int KTHXBYELen = 0;
 		for(int i=0;i<programInput.length;i++) {
+			programInput[i] = programInput[i].replaceAll("BTW.*","");
 			if(programInput[i].matches(Lexeme.HAI)) HAILen++;
 			if(programInput[i].matches(Lexeme.KTHXBYE)) KTHXBYELen++;
 		}
@@ -1079,7 +1084,7 @@ public class GameStage{
 		
 		String[] programInput = new String[programInputList.size()];
 		for(int a=0;a<programInputList.size();a++) programInput[a] = programInputList.get(a);
-		System.out.println("894: " + Arrays.toString(programInput));
+//		System.out.println("894: " + Arrays.toString(programInput));
 		
 		if(checkHaiKthxbye(programInput)==null) return null;
 		

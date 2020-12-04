@@ -24,8 +24,8 @@ public class Lexeme{
 	public static final String ALL_LITERALS = NUMBAR+"|"+NUMBR +"|"+YARN+"|"+TROOF[0]+"|"+TROOF[1]+"|"+TYPE[0]+"|"+TYPE[1]+"|"+TYPE[2]+"|"+TYPE[3] + "|AN";
 	
 	//file naming and formatting
-	public static final String HAI =  "^HAI$";
-	public static final String KTHXBYE =  "^KTHXBYE$";
+	public static final String HAI =  "\\bHAI\\b";
+	public static final String KTHXBYE =  "\\bKTHXBYE\\b";
 
 	//comments	
 	public static final String BTW = "\\bBTW\\b";
@@ -71,13 +71,13 @@ public class Lexeme{
 	public static final String GIMMEH  = "\\bGIMMEH\\b";
 	
 	//condtional / if then statements
-	public static final String O_RLY  = "^O RLY\\?$";
+	public static final String O_RLY  = "O RLY\\?";
 	public static final String YA_RLY  = "\\bYA RLY\\b";
 	public static final String MEBBE  = "\\bMEBBE\\b";
 	public static final String NO_WAI  = "\\bNO WAI\\b";
 
 	//conditional / switch case
-	public static final String WTF  = "^WTF\\?$";
+	public static final String WTF  = "WTF\\?";
 	public static final String OMG  = "\\bOMG\\b";
 	public static final String OMGWTF  =  "\\bOMGWTF\\b";
 	public static final String OIC  = "\\bOIC\\b"; 
