@@ -81,6 +81,7 @@ public class Lexeme{
 	public static final String OMG  = "\\bOMG\\b";
 	public static final String OMGWTF  =  "\\bOMGWTF\\b";
 	public static final String OIC  = "\\bOIC\\b"; 
+	public static final String GTFO = "\\bGTFO\\b";
 	
 	//single quote
 	public static final String QUOTE = "\"";
@@ -113,7 +114,7 @@ public class Lexeme{
 	public static final String COMMENT_KEYWORD  = "Comment Identifier";
 	public static final String CONCATENATION_KEYWORD  = "Concatenation Identifier";
 	public static final String CONDITIONAL_KEYWORD  = "Conditional Identifier";
-
+	public static final String BREAK_IDENTIFIER = "Break Identifier";
 	
 	//literal
 	public static final String LITERAL = "Literal";
@@ -122,26 +123,10 @@ public class Lexeme{
 	public static final String ARITHMETIC_OPERATOR = "Arithmetic Operator";
 	public static final String BOOLEAN_OPERATOR  = "Boolean Operator";
 	public static final String COMPARISON_OPERATOR  = "Comparison Operator";
-	
 
-	
-	
-	//syntax analyzer regex (combined two or more keywords / contructs)
-//	public static final String I_HAS_UNINITIALIZED = "^"+Lexeme.I_HAS_A +" " + Lexeme.VARIDENT +"$|";
-//	public static final String I_HAS_String = "^" + Lexeme.I_HAS_ITZ + Lexeme.YARN + "$|";
-//	public static final String I_HAS_NUMBR= "^" + Lexeme.I_HAS_ITZ + Lexeme.NUMBR+ "$|";
-//	public static final String I_HAS_NUMBAR= "^" + Lexeme.I_HAS_ITZ + Lexeme.NUMBAR+ "$|";
-//	public static final String I_HAS_TROOF0 = "^" + Lexeme.I_HAS_ITZ + Lexeme.TROOF[0]+ "$|";
-//	public static final String I_HAS_TROOF1 = "^" + Lexeme.I_HAS_ITZ + Lexeme.TROOF[1]+ "$|";
-//	public static final String I_HAS_TYPE0 = "^" + Lexeme.I_HAS_ITZ + Lexeme.TYPE[0]+ "$|";
-//	public static final String I_HAS_TYPE1 = "^" + Lexeme.I_HAS_ITZ + Lexeme.TYPE[1]+ "$|";
-//	public static final String I_HAS_TYPE2 = "^" + Lexeme.I_HAS_ITZ + Lexeme.TYPE[2]+ "$|";
-//	public static final String I_HAS_TYPE3 = "^" + Lexeme.I_HAS_ITZ + Lexeme.TYPE[3]+ "$";
-//	public static final String I_HAS_CONSTRUCT = I_HAS_UNINITIALIZED + I_HAS_String + I_HAS_NUMBR + I_HAS_NUMBAR  + I_HAS_TROOF0 + I_HAS_TROOF1 + I_HAS_TYPE0 + I_HAS_TYPE1+I_HAS_TYPE2+I_HAS_TYPE3;
-//	
 	//compiled regex in every catergory (input/output, expression, comments, conditional statements)
 	
-	public static final String startEnd = Lexeme.HAI + "|" + Lexeme.KTHXBYE + "|";
+	public static final String startEnd = Lexeme.HAI + "|" + Lexeme.KTHXBYE + Lexeme.GTFO + "|";
 	public static final String inputOutput = Lexeme.VISIBLE + "|" + Lexeme.GIMMEH + "|";
 	public static final String itz = Lexeme.ITZ + "|";
 	public static final String comments = Lexeme.BTW + "|" + Lexeme.OBTW + "|" + Lexeme.TLDR + "|";
@@ -218,9 +203,13 @@ public class Lexeme{
 		
 		ArrayList<String> switch_keyword = new ArrayList<String>();
 		switch_keyword.add(WTF);switch_keyword.add(OMG);switch_keyword.add(OMGWTF);switch_keyword.add(OIC);
-		switch_keyword.add(O_RLY);switch_keyword.add(YA_RLY);switch_keyword.add(MEBBE);switch_keyword.add(NO_WAI);		
+		switch_keyword.add(O_RLY);switch_keyword.add(YA_RLY);switch_keyword.add(MEBBE);switch_keyword.add(NO_WAI);
 		Lexeme.TOKENS.put(CONDITIONAL_KEYWORD,switch_keyword);
 		
+		
+		ArrayList<String> break_identifier = new ArrayList<String>();
+		break_identifier.add(GTFO);
+		Lexeme.TOKENS.put(BREAK_IDENTIFIER,break_identifier);
 		
 		ArrayList<String> arithmetic_operator = new ArrayList<String>();
 		arithmetic_operator.add(SUM_OF);arithmetic_operator.add(DIFF_OF);arithmetic_operator.add(PRODUKT_OF);

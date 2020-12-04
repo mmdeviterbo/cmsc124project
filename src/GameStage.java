@@ -567,6 +567,29 @@ public class GameStage{
 		return false;
 	}
 	
+	private boolean checkIfLexemeExist(String lex) {
+		for(Lexeme row : lexemeTable.getItems()) if(row.getLexeme().equals(lex)) return true;
+		return false;
+	}
+
+	private String checkGFTO(ArrayList<String[]> tokensPerLine) {
+		//check if there's unreachable code after GTFO keyword
+		int index=0;
+		for(String[] row : tokensPerLine) {
+			if(row[0].matches("GTFO")) {
+				if(index+1<tokensPerLine.size()) {
+					if(!tokensPerLine.get(index+1)[0].matches(Lexeme.OMG+"|"+Lexeme.OMGWTF+"|"+Lexeme.OIC)) {
+						return null;
+					}
+				}
+			}
+			index++;
+		}
+		
+
+		return "succes";
+	}
+	
 	private String setIHAS(String[] lexList) {
 		if(lexList.length==2) {
 			if(!lexList[1].matches(Lexeme.VARIDENT)) return null;	
@@ -1003,7 +1026,14 @@ public class GameStage{
 			String omgVal = tokensProgram.get(index)[1].replace("\"", "");
 			if(omgVal.equals(ITval) && !isOMGsatisfied) isOMGsatisfied = true;
 			if(isOMGsatisfied) {
-				for(int a=index;a<isOIC;a++) if(!tokensProgram.get(a)[0].matches(Lexeme.OMG+"|"+Lexeme.OMGWTF)) blockStatement.add(tokensProgram.get(a));
+				for(int a=index;a<isOIC;a++) {
+					if(!tokensProgram.get(a)[0].matches(Lexeme.OMG+"|"+Lexeme.OMGWTF)) {
+						blockStatement.add(tokensProgram.get(a));
+					}
+					if(tokensProgram.get(a)[0].matches(Lexeme.GTFO)) {
+						break;
+					}
+				}
 				doSyntaxAnalysis(blockStatement);
 				break;
 			}
@@ -1043,7 +1073,7 @@ public class GameStage{
 		
 		String[] programInput = new String[programInputList.size()];
 		for(int a=0;a<programInputList.size();a++) programInput[a] = programInputList.get(a);
-//		System.out.println("894: " + Arrays.toString(programInput));
+		System.out.println("894: " + Arrays.toString(programInput));
 		
 		if(checkHaiKthxbye(programInput)==null) return null;
 		
@@ -1064,6 +1094,7 @@ public class GameStage{
 			}
 			if(arrResult.length!=0) tokenizedOutput.add(arrResult);
 		}
+		if(checkGFTO(tokenizedOutput)==null) return null; 
 		
 //		for(String[] arr : tokenizedOutput) {
 //			System.out.print(Arrays.toString(arr)+ " ");
@@ -1079,7 +1110,14 @@ public class GameStage{
 				if(arrLexeme[a]==null) continue;
 				classification = Lexeme.findLexemeType(arrLexeme[a]);
 				if(classification!=null) {
-					this.lexemeTable.getItems().add(new Lexeme(arrLexeme[a],classification));
+					if(arrLexeme[a].matches(Lexeme.YARN) && !checkIfLexemeExist(arrLexeme[a])) {
+						String removeQuote = arrLexeme[a].replace(Lexeme.QUOTE, "");
+						if(!checkIfLexemeExist(Lexeme.QUOTE)) this.lexemeTable.getItems().add(new Lexeme(Lexeme.QUOTE,Lexeme.STRING_DELIMETER));
+						this.lexemeTable.getItems().add(new Lexeme(removeQuote,classification));
+					}
+					else {
+						if(!checkIfLexemeExist(arrLexeme[a])) this.lexemeTable.getItems().add(new Lexeme(arrLexeme[a],classification));
+					}
 				}else {
 					System.out.println("615 Lexeme not found");
 					return null;
@@ -1091,15 +1129,14 @@ public class GameStage{
 		return tokenizedOutput;
 	} //end function
 	
-	
 	private void doSyntaxAnalysis(ArrayList<String[]> tokensPerLine) {
+		
 		for(int i=0;i<tokensPerLine.size();i++) {
 			String[] tokenArrLine = tokensPerLine.get(i);
 			
 			//syntax for all operations (math, boolean, comparison, relational) and its result is not stored to a variable (then it must be stored to IT)
 			String storeIt = allOperations(tokenArrLine);
 			if(storeIt!=null) storeIT(storeIt);
-			
 			
 			//syntax for I HAS
 			if(Arrays.toString(tokenArrLine).contains("I HAS A")) {
@@ -1160,7 +1197,8 @@ public class GameStage{
 					clearTables();
 					displayResult.setText("1048 Catch- IF ELSE Syntax Error."); return;	
 				}
-			}else if(tokenArrLine[0].matches(Lexeme.WTF)) {
+			}else if(tokenArrLine[0].matches(Lexeme.GTFO)) {}
+			else if(tokenArrLine[0].matches(Lexeme.WTF)) {
 				try {
 					int ans = doSWITCH(tokensPerLine,i);
 					if(ans!=-1) {
@@ -1174,8 +1212,8 @@ public class GameStage{
 					clearTables();
 					displayResult.setText("1100 - SWITCH Catch Syntax Error."); return;
 				}
-			}else if(storeIt!=null) {}
-			else {
+			}else if(storeIt!=null) {	
+			}else {
 				clearTables();
 				displayResult.setText("487 Syntax Error.");
 				return;				
