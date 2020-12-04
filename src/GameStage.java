@@ -161,7 +161,7 @@ public class GameStage{
 		//sample input for test only
 		inputUser.setText("HAI\n");
 		inputUser.setText(inputUser.getText() + "SUM OF 10 AN 10\nWTF?\nOMG 20\n\tVISIBLE \"first choice\"\nOMG 30\n\tVISIBLE \"2nd choice\"\nOMG 40\n\tVISIBLE \"3rd choice\"\nOMGWTF\n\tVISIBLE \"default choice\" \nOIC");
-//		inputUser.setText(inputUser.getText() + "OBTW dsadsda\ndsdasdasadas\nsadasdsdasd\nTLDR");
+		inputUser.setText(inputUser.getText() + "\nOBTW dsadsda\ndsdasdasadas\nsadasdsdasd\nTLDR");
 		inputUser.setText(inputUser.getText() + "\nKTHXBYE");		
 		String str = "hello" + "\n" + "hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n";
 		str = str + str + str; //sample string lang if magsscroll yung window ng "Lexeme" at "Symbol Table"
@@ -840,40 +840,15 @@ public class GameStage{
     	return "success";
 	}
 	
-	private String checkMultiComments(String[] programInput, int index) {
-		int inc = 0;
-		boolean isOBTWfound = false;
-		boolean isTLDRfound = false;
-		
-		for(int i=index;i<programInput.length;i++) { 
-			if(programInput[i].contains("OBTW") && !isOBTWfound) {
-				programInput[i] = programInput[i].replace(" ", "");
-				if(programInput[i].matches("^"+Lexeme.OBTW+"$")){
-					isOBTWfound=true;
-				}else return null;
-			}else if(programInput[i].contains("TLDR") && !isTLDRfound) {
-				programInput[i] = programInput[i].replace(" ", "");
-				if(programInput[i].matches("^"+Lexeme.TLDR+"$")){
-					isTLDRfound=true;
-				}else return null;
-			}
-			if(isOBTWfound && isTLDRfound) {
-				return Integer.toString(inc+1);
-			}
-			inc++;
-		}
-		return null;
-	}
-	
 	private String checkHaiKthxbye(String[] programInput) {
 		int len = programInput.length-1;
 		if(len==-1) return null;
 		programInput[0] = programInput[0].replaceAll("BTW.*","");
-		programInput[0] = programInput[0].replaceAll("\\s","");
+		programInput[0] = programInput[0].replaceAll("[\\s\\n]","");
 		programInput[len] = programInput[len].replaceAll("BTW.*","");
-		programInput[len] = programInput[len].replaceAll("\\s","");
-		if(programInput[0].contains("HAI") && programInput[0].length()>3) return null;
-		if(programInput[len].contains("KTHXBYE") && programInput[len].length()>7) return null;
+		programInput[len] = programInput[len].replaceAll("[\\s\\\n]","");
+		if(programInput[0].matches("HAI") && programInput[0].length()>3) return null;
+		if(programInput[len].matches("KTHXBYE|\\n") && programInput[len].length()>7) return null;
 		if(!programInput[0].matches(Lexeme.HAI) || !programInput[len].matches(Lexeme.KTHXBYE)) return null;
 		
 		//if hai or kthxbye has multiple occurences
@@ -888,6 +863,7 @@ public class GameStage{
 		this.lexemeTable.getItems().add(new Lexeme(programInput[len],Lexeme.CODE_DELIMETER));
 		return "success";
 	}
+	
 	
 	private String doVISIBLE(String[] lexList) {
 		if(lexList.length==1) return null; //must contain atleast one operand
@@ -1054,13 +1030,43 @@ public class GameStage{
 		return increment-1;
 	}
 	
-	private ArrayList<String[]> doLexicalAnalysis() {
+	
+	private String doRemoveComments() {
+		String removeComment = this.inputUser.getText();
+		if(removeComment.contains("TLDR")) {
+			
+			if(removeComment.matches(".*TLDR[\\s]*[a-zA-Z0-9_]+.*")) {
+				return null;
+			}
+		}
+		Pattern pattern = Pattern.compile("TLDR[ ]*[\\w]++");
+		Matcher match = pattern.matcher(removeComment);
+		if (match.find()) return null;
+		
+		pattern = Pattern.compile("[\\w]+[ ]*TLDR");
+		match = pattern.matcher(removeComment);
+		if (match.find()) return null;
+		
+		
+		while(removeComment.substring(0,4).equals("OBTW")==true || removeComment.contains("\nOBTW")==true) {
+			if(removeComment.contains("\nOBTW")==true) {
+				removeComment = removeComment.replaceAll("[\\n]OBTW.*[\\n\\s]*.*[\\n\\s]*.*[\\n\\s]*TLDR[\\n\\s]*", "\n");
+			}else if(removeComment.substring(0,4).equals("OBTW")) {
+				removeComment = removeComment.replaceAll("OBTW.*[\\n\\s]*.*[\\n\\s]*.*[\\n\\s]*TLDR[\\n\\s]*", "\n");
+			}
+		}
+		return removeComment;
+	}
+	
+	private ArrayList<String[]> doLexicalAnalysis() { 
 		clearTables();
 		this.symbolTable.getItems().add(new SymbolTable(Lexeme.IT,""));
 		this.displayResult.setText("");
 		
-		String removeComment = this.inputUser.getText().replaceAll("[\\n]OBTW.*[\\n\\s]*.*[\\n\\s]*.*[\\n\\s]*TLDR", "");
-
+		
+		String removeComment = doRemoveComments();
+		if(removeComment==null) return null;
+		
 		String[] programInputwComments = removeComment.split("\n");
 		Pattern regex = Pattern.compile(Lexeme.combineRegex);
 		ArrayList<String[]> tokenizedOutput = new ArrayList<String[]>();
@@ -1069,18 +1075,18 @@ public class GameStage{
 		//removes all comments
 		ArrayList<String> programInputList = new ArrayList<String>();
 		for(int i=0;i<programInputwComments.length;i++) { //programInput = [[line1],[line2],[line3],..,]	
-			if(programInputwComments[i].matches("[^O]BTW") ) {
+			if(programInputwComments[i].contains("BTW") ) {
 				 if(programInputwComments[i].substring(0,3).equals("BTW")){
 					 continue;
 				 }else if(programInputwComments[i].length()>3) {
-					 programInputList.add(programInputwComments[i].replaceAll("[^O]BTW.*",""));
+					 programInputList.add(programInputwComments[i].replaceAll("BTW.*",""));
 				 }
 			}
 			else {
-				if(!programInputwComments[i].matches("^\\s+$")) programInputList.add(programInputwComments[i]);
+				if(!programInputwComments[i].matches("^[\\s]+$") && programInputwComments[i].length()>0) programInputList.add(programInputwComments[i]);
 			}
 		}
-		System.out.println(Arrays.toString(programInputList.toArray()));
+//		System.out.println(Arrays.toString(programInputList.toArray()));
 		
 		String[] programInput = new String[programInputList.size()];
 		for(int a=0;a<programInputList.size();a++) programInput[a] = programInputList.get(a);
