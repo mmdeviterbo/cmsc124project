@@ -161,6 +161,7 @@ public class GameStage{
 		//sample input for test only
 		inputUser.setText("HAI\n");
 		inputUser.setText(inputUser.getText() + "SUM OF 10 AN 10\nWTF?\nOMG 20\n\tVISIBLE \"first choice\"\nOMG 30\n\tVISIBLE \"2nd choice\"\nOMG 40\n\tVISIBLE \"3rd choice\"\nOMGWTF\n\tVISIBLE \"default choice\" \nOIC");
+//		inputUser.setText(inputUser.getText() + "OBTW dsadsda\ndsdasdasadas\nsadasdsdasd\nTLDR");
 		inputUser.setText(inputUser.getText() + "\nKTHXBYE");		
 		String str = "hello" + "\n" + "hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n";
 		str = str + str + str; //sample string lang if magsscroll yung window ng "Lexeme" at "Symbol Table"
@@ -1058,29 +1059,28 @@ public class GameStage{
 		this.symbolTable.getItems().add(new SymbolTable(Lexeme.IT,""));
 		this.displayResult.setText("");
 		
-		String[] programInputwComments = this.inputUser.getText().split("\n");
+		String removeComment = this.inputUser.getText().replaceAll("[\\n]OBTW.*[\\n\\s]*.*[\\n\\s]*.*[\\n\\s]*TLDR", "");
+
+		String[] programInputwComments = removeComment.split("\n");
 		Pattern regex = Pattern.compile(Lexeme.combineRegex);
 		ArrayList<String[]> tokenizedOutput = new ArrayList<String[]>();
+		
 		
 		//removes all comments
 		ArrayList<String> programInputList = new ArrayList<String>();
 		for(int i=0;i<programInputwComments.length;i++) { //programInput = [[line1],[line2],[line3],..,]	
-			//check multicomments if valid
-			if(programInputwComments[i].contains("OBTW")) {
-				String multiComment = checkMultiComments(programInputwComments,i);
-				if(multiComment==null) return null;
-				else i+=Integer.parseInt(multiComment)-1;
-			}else if(programInputwComments[i].contains("BTW")) {
+			if(programInputwComments[i].matches("[^O]BTW") ) {
 				 if(programInputwComments[i].substring(0,3).equals("BTW")){
 					 continue;
 				 }else if(programInputwComments[i].length()>3) {
-					 programInputList.add(programInputwComments[i].replaceAll("BTW.*",""));
+					 programInputList.add(programInputwComments[i].replaceAll("[^O]BTW.*",""));
 				 }
 			}
 			else {
-				programInputList.add(programInputwComments[i]);
+				if(!programInputwComments[i].matches("^\\s+$")) programInputList.add(programInputwComments[i]);
 			}
 		}
+		System.out.println(Arrays.toString(programInputList.toArray()));
 		
 		String[] programInput = new String[programInputList.size()];
 		for(int a=0;a<programInputList.size();a++) programInput[a] = programInputList.get(a);
