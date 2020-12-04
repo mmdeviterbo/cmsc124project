@@ -1065,7 +1065,13 @@ public class GameStage{
 				String multiComment = checkMultiComments(programInputwComments,i);
 				if(multiComment==null) return null;
 				else i+=Integer.parseInt(multiComment)-1;
-			}else if(programInputwComments[i].contains("BTW") && programInputwComments[i].substring(0,3).equals("BTW")) continue;
+			}else if(programInputwComments[i].contains("BTW")) {
+				 if(programInputwComments[i].substring(0,3).equals("BTW")){
+					 continue;
+				 }else if(programInputwComments[i].length()>3) {
+					 programInputList.add(programInputwComments[i].replaceAll("BTW.*",""));
+				 }
+			}
 			else {
 				programInputList.add(programInputwComments[i]);
 			}
