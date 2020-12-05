@@ -1085,6 +1085,7 @@ public class GameStage{
 		this.displayResult.setText("");
 		
 		
+		
 		String removeComment = doRemoveComments();
 		if(removeComment==null) return null;
 		
@@ -1265,11 +1266,13 @@ public class GameStage{
             public void handle(ActionEvent e)
             { 
 //            	try {
-            		ArrayList<String[]> tokensPerLine = doLexicalAnalysis();
-            		if(tokensPerLine!=null) doSyntaxAnalysis(tokensPerLine);
-            		else {
-            			clearTables();
-            			displayResult.setText(displayResult.getText()+"\n"+" 499 Syntax Error.");
+            		if(inputUser.getText().replaceAll("[\\s]*","").length()>0) {
+                		ArrayList<String[]> tokensPerLine = doLexicalAnalysis();
+                		if(tokensPerLine!=null) doSyntaxAnalysis(tokensPerLine);
+                		else {
+                			clearTables();
+                			displayResult.setText(displayResult.getText()+"\n"+" 499 Syntax Error.");
+                		}
             		}
 //            	}catch(Exception e1) {
 //            		clearTables();
