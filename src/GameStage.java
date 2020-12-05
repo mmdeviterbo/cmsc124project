@@ -1056,7 +1056,7 @@ public class GameStage{
 		String removeComment = this.inputUser.getText();
 		if(removeComment.contains("TLDR")) {
 			
-			if(removeComment.matches(".*TLDR[\\s]*[a-zA-Z0-9_]+.*")) {
+			if(removeComment.matches(".*[\\s]*TLDR[\\s]*[a-zA-Z0-9_]+.*")) {
 				return null;
 			}
 		}
@@ -1069,10 +1069,10 @@ public class GameStage{
 		if (match.find()) return null;
 		
 		
-		while(removeComment.substring(0,4).equals("OBTW")==true || removeComment.contains("\nOBTW")==true) {
+		while(removeComment.contains("OBTW")==true || removeComment.contains("\nOBTW")==true) {
 			if(removeComment.contains("\nOBTW")==true) {
 				removeComment = removeComment.replaceAll("[\\n]OBTW.*[\\n\\s]*.*[\\n\\s]*.*[\\n\\s]*TLDR[\\n\\s]*", "\n");
-			}else if(removeComment.substring(0,4).equals("OBTW")) {
+			}else if(removeComment.contains("OBTW")) {
 				removeComment = removeComment.replaceAll("OBTW.*[\\n\\s]*.*[\\n\\s]*.*[\\n\\s]*TLDR[\\n\\s]*", "\n");
 			}
 		}
