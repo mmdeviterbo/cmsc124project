@@ -436,7 +436,6 @@ public class GameStage{
 		
 
 	}
-	
 	@SuppressWarnings("unused")
 	private String setComparisonOperation(String[] lexList) {
 		String regexNum = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3);
@@ -904,15 +903,13 @@ public class GameStage{
 			}
 		}
 		
-		
+		String finalOutput="";
 		if(outputPrint.size()!=0) {
 			for(String output : outputPrint) {
-				output = output.replace("\"","");
-//				displayResult.setText(displayResult.getText()+output+" ");
+				finalOutput = finalOutput + output.replace("\"","");
+//				
 			}
-			String removeSpecialChar = Arrays.toString(outputPrint.toArray()).replaceAll("[\\[\\]]", "");
-			removeSpecialChar = removeSpecialChar.replaceAll("[\",]", "");
-			return removeSpecialChar;
+			return finalOutput;
 		}
 		return null;
 	}
