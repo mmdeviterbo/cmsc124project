@@ -456,10 +456,10 @@ public class GameStage{
 							lexList[i] = lexList[i].split("\\.")[0];
 						}
 						operandA.add(lexList[i]);
-					}
-					else if(lexList[i].matches(Lexeme.VARIDENT)) {
-						lexList[i] = getValueVarident(lexList[i]);
-						if(lexList[i]==null) return null;
+					}else if(lexList[i].matches(Lexeme.VARIDENT)) {
+						String temp = getValueVarident(lexList[i]);
+						if(temp==null) return null;
+						lexList[i] = temp;
 						operandA.add(lexList[i]);
 					}
 					if(i==1) {
@@ -470,6 +470,10 @@ public class GameStage{
 						operandA.add(lexList[i+1]);
 						if(lexList[i+2].matches(Lexeme.NUMBAR) && lexList[i+2].matches("[0-9]+[.]0+")) {
 							lexList[i+2] = lexList[i].split("\\.")[0];
+						}else if(lexList[i+2].matches(Lexeme.VARIDENT)) {
+							String temp = getValueVarident(lexList[i+2]);
+							if(temp==null) return null;
+							lexList[i+2] = temp;
 						}
 						operandA.add(lexList[i+2]);i+=4; break;
 
@@ -489,14 +493,18 @@ public class GameStage{
 						operandB.add(lexList[j]);
 					}
 					else if(lexList[j].matches(Lexeme.VARIDENT)) {
-						lexList[j] = getValueVarident(lexList[j]);
-						if(lexList[j]==null) return null;
+						String temp = getValueVarident(lexList[j]);
+						if(temp==null) return null;
+						lexList[j] = temp;
 						operandB.add(lexList[j]);
 					}else if(j+2<lexList.length && lexList[j+1].matches("AN") && lexList[j+2].matches(regexNum+"|"+Lexeme.VARIDENT)) {
 						operandB.add(lexList[j+1]);
 						if(lexList[j+2].matches(Lexeme.NUMBAR) && lexList[j+2].matches("[0-9]+[.]0+")) {
-							System.out.println(456);
 							lexList[j+2] = lexList[j+2].split("\\.")[0];
+						}else if(lexList[j+2].matches(Lexeme.VARIDENT)) {
+							String temp = getValueVarident(lexList[j+2]);
+							if(temp==null) return null;
+							lexList[j+2] = temp;
 						}
 						operandB.add(lexList[j+2]);
 					}
