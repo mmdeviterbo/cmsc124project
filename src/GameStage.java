@@ -89,6 +89,11 @@ public class GameStage{
             	inputUser.setText("No file is selected.");
             }else {
             	try(BufferedReader reader = new BufferedReader(new FileReader(selectedFile))) {
+            		if(selectedFile.toString().matches(".+\\.lol$")==false) {
+            			inputUser.setText("Please insert lolcode file!");
+            			return;
+            		}
+            		
             		String line;
             		String load = "";
             		while((line = reader.readLine()) != null){
@@ -164,7 +169,7 @@ public class GameStage{
 		
 		//sample input for test only
 		inputUser.setText("HAI\n");
-		inputUser.setText(inputUser.getText()+"VISIBLE ANY OF WIN AN WIN MKAY");
+		inputUser.setText(inputUser.getText()+"DIFFRINT 2 AN 2");
 //		inputUser.setText(inputUser.getText() + "SUM OF 10 AN 10\nWTF?\nOMG 20\n\tVISIBLE \"first choice\"\nOMG 30\n\tVISIBLE \"2nd choice\"\nOMG 40\n\tVISIBLE \"3rd choice\"\nOMGWTF\n\tVISIBLE \"default choice\" \nOIC");
 //		inputUser.setText(inputUser.getText() + "\nOBTW dsadsda\ndsdasdasadas\nsadasdsdasd\nTLDR");
 		inputUser.setText(inputUser.getText() + "\nKTHXBYE");		
@@ -434,139 +439,89 @@ public class GameStage{
 	
 	@SuppressWarnings("unused")
 	private String setComparisonOperation(String[] lexList) {
-		//comparison_operatoor A  AN  B     where A,B can be literals, expression, or varident
-//		System.out.println(Arrays.toString(lexList));
-		String regexNum = "^"+Lexeme.NUMBR+"$|^"+Lexeme.NUMBAR+"$";
-		String regexMath = Lexeme.mathOperator.substring(0,Lexeme.mathOperator.length()-1);
-		String ansA=null; String ansB=null;
-		String[] operandA=null; String[] operandB=null;
-		
-		String strIfRelational = Arrays.toString(lexList);
+		String regexNum = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3);
+		String regexMath = Lexeme.boolOperator + Lexeme.mathOperator.substring(0,Lexeme.mathOperator.length()-1);
 		String isRelationOp = null; //-1 means false, 1 means biggr of, 2 means smallr
-		if(strIfRelational.contains("BOTH SAEM") || strIfRelational.contains("DIFFRINT")) {
-			if(strIfRelational.contains("BIGGR OF"))  isRelationOp = "BIGGR OF";
-			else if(strIfRelational.contains("SMALLR OF")) isRelationOp = "SMALLR OF";
-			if(isRelationOp!=null) {
-				if(isRelationOp.equals("BIGGR OF") || isRelationOp.equals("SMALLR OF")) {
-					int comparisonLenA=-1; int comparisonLenB=-1;int middle=-1;
-					for(int i=1;i<lexList.length-1;i++) { //i=1 since both saem/diffrint is not included, only the two operands are needed
-						if(lexList[i].equals("AN") && lexList[i+1].equals(isRelationOp)) {
-							middle=i+1;
-							comparisonLenA=i-1; comparisonLenB=lexList.length-((i+1)+comparisonLenA+2);
-							break;
+
+		ArrayList<String> operandA = new ArrayList<String>();
+		ArrayList<String> operandB = new ArrayList<String>();
+		
+		if(lexList[0].contentEquals("BOTH SAEM") || lexList[0].contentEquals("DIFFRINT")) {			
+			int i=1;
+			for(i=1;i<lexList.length;i++) { //getting operandA
+				if(lexList[i].matches(regexNum+"|"+Lexeme.VARIDENT) && !lexList[i].matches(regexMath+"|AN")) {
+					lexList[i] = lexList[i].replaceAll("\"","");
+					if(lexList[i].matches(regexNum)) {
+						if(lexList[i].matches(Lexeme.NUMBAR) && lexList[i].matches("[0-9]+[.]0+")) {
+							lexList[i] = lexList[i].split("\\.")[0];
 						}
+						operandA.add(lexList[i]);
 					}
-					operandA = new String[comparisonLenA]; operandB = new String[comparisonLenB]; 
-					int c=1;
-					for(int i=0;i<comparisonLenA;i++) {
-						operandA[i] = lexList[c++];
-						if(lexList[c-1].equals(lexList[middle+c-1])==false) return null; //checks if x-operand in left is same/equal to x-operand in right
+					else if(lexList[i].matches(Lexeme.VARIDENT)) {
+						lexList[i] = getValueVarident(lexList[i]);
+						if(lexList[i]==null) return null;
+						operandA.add(lexList[i]);
 					}
-					c = comparisonLenA+2+middle;
-					for(int j=0;j<comparisonLenB;j++) {
-						operandB[j] = lexList[c++];
-					}				
-				}
-			}
-		}
-		
-		
-		int untilIndex=-1;
-		if(lexList.length==4 && isRelationOp==null) {
-			if(lexList[1].matches(Lexeme.VARIDENT)) ansA = getValueVarident(lexList[1]);
-			else ansA = lexList[1];
-			if(lexList[3].matches(Lexeme.VARIDENT)) ansB = getValueVarident(lexList[3]);
-			else ansB = lexList[3];
-			
-			if((!ansA.matches(regexNum) || !ansB.matches(regexNum)) && lexList[0].matches(Lexeme.BOTH_SAEM)) return "FAIL";
-			else if((!ansA.matches(regexNum) || !ansB.matches(regexNum)) && lexList[0].matches(Lexeme.DIFFRINT))  return null;
-		}else if(lexList.length==7 && isRelationOp!=null) {
-			if(lexList[1].equals(lexList[4])==false) return null;
-			
-			if(lexList[1].matches(Lexeme.VARIDENT)) ansA = getValueVarident(lexList[1]);
-			else ansA = lexList[1];
-			if(lexList[6].matches(Lexeme.VARIDENT)) ansB = getValueVarident(lexList[6]);
-			else ansB = lexList[6];
-			
-		}else if(lexList.length>4 && isRelationOp==null){
-			for(int i=0;i<lexList.length-2;i++) {
-				if(lexList[i].matches(Lexeme.VARIDENT) && !lexList[i].matches(regexNum) && !lexList[i].matches(regexMath)) {
-					String ans = getValueVarident(lexList[i]);
-					if(ans!=null) lexList[i] = ans;
-				}
-				if(lexList[i+2].matches(Lexeme.VARIDENT) && !lexList[i+2].matches(regexNum) && !lexList[i+2].matches(regexMath)) {
-					String ans = getValueVarident(lexList[i+2]);
-					if(ans!=null) lexList[i+2] = ans;
-				}
+					if(i==1) {
+						if(!lexList[i+1].matches("AN")) return null;
+						i+=2;
+						break;
+					}else if(i+2<lexList.length && lexList[i+1].matches("AN") && lexList[i+2].matches(regexNum+"|"+Lexeme.VARIDENT)) {
+						operandA.add(lexList[i+1]);
+						if(lexList[i+2].matches(Lexeme.NUMBAR) && lexList[i+2].matches("[0-9]+[.]0+")) {
+							lexList[i+2] = lexList[i].split("\\.")[0];
+						}
+						operandA.add(lexList[i+2]);i+=4; break;
 
-				if(lexList[1].matches(regexNum) || lexList[1].matches(Lexeme.VARIDENT)) {
-					untilIndex=1;
-					break;
-				}else if(lexList[i].matches(regexNum) && lexList[i+2].matches(regexNum) && i+2==lexList.length-3) {
-					untilIndex=i+2; break;
-				}else if(lexList[i].matches(regexNum) && lexList[i+2].matches(regexNum) && !lexList[i+4].matches(regexNum)) {
-					untilIndex=i+2; break;
-				}
+					}
+				}else if(lexList[i].matches(regexMath+"|AN")) {
+					operandA.add(lexList[i]);
+				}else return null;
 			}
-		}else if(lexList.length<4 || (lexList.length<7 && isRelationOp!=null)) return null;
-		
-		
-		
-		
-		if(untilIndex==-1 && isRelationOp==null) {
-			operandA = new String[1];
-			operandB = new String[lexList.length-operandA.length-2];
-			operandA[0] = ansA; operandB[0] = ansB;
-		}
-		else if(untilIndex!=-1 && isRelationOp==null){
-			operandA = new String[untilIndex];
-			operandB = new String[lexList.length-operandA.length-2];
 			
-			for(int a=0;a<untilIndex;a++) operandA[a] = lexList[a+1];
-			int c=0;
-			for(int b=untilIndex+2;b<lexList.length;b++) operandB[c++] = lexList[b];
-		}
-		
-
-		boolean isNumOnlyA = false; boolean isNumOnlyB = false;
-		
-		if(operandA.length==1 && (operandA[0].matches(regexNum) || operandA[0].matches(Lexeme.VARIDENT))) {
-			if(operandA[0].matches(Lexeme.VARIDENT)) ansA = getValueVarident(operandA[0]);	
-			else ansA = operandA[0];
-			isNumOnlyA = true;
-		}else ansA = setArithmeticOperation(operandA);
-		
-		if(operandB.length==1 && (operandB[0].matches(regexNum) || operandB[0].matches(Lexeme.VARIDENT)) ) {
-			if(operandB[0].matches(Lexeme.VARIDENT)) ansB = getValueVarident(operandB[0]);	
-			else ansB = operandB[0];
-			isNumOnlyB = true;
-		}else ansB = setArithmeticOperation(operandB);
-		
-		if(ansA==null || ansB==null) return null;
-		
-		if(isRelationOp!=null) {
-				float ansAA = Float.parseFloat(ansA),ansBB = Float.parseFloat(ansB);
-				String strArr = Arrays.toString(lexList);
-				
-				if(lexList[0].matches(Lexeme.BOTH_SAEM) && strArr.contains("BIGGR OF")  && ansAA>=ansBB) return "WIN";
-				else if(lexList[0].matches(Lexeme.BOTH_SAEM) && strArr.contains("BIGGR OF")  && ansAA<=ansBB) return "FAIL";
-				
-				else if(lexList[0].matches(Lexeme.BOTH_SAEM) && strArr.contains("SMALLR OF")  && ansAA<=ansBB) return "WIN";
-				else if(lexList[0].matches(Lexeme.BOTH_SAEM) && strArr.contains("SMALLR OF")  && ansAA>=ansBB) return "FAIL";
-				
-				else if(lexList[0].matches(Lexeme.DIFFRINT) && strArr.contains("BIGGR OF") && ansAA>ansBB) return "WIN";
-				else if(lexList[0].matches(Lexeme.DIFFRINT) && strArr.contains("BIGGR OF") && ansAA<=ansBB) return "FAIL";
-				
-				else if(lexList[0].matches(Lexeme.DIFFRINT) && strArr.contains("SMALLR OF") && ansAA<ansBB) return "WIN";
-				else if(lexList[0].matches(Lexeme.DIFFRINT) && strArr.contains("SMALLR OF") && ansAA>=ansBB) return "FAIL";
+			for(int j=i;j<lexList.length;j++) { //getting operandB
+				if(lexList[j].matches(regexNum+"|"+Lexeme.VARIDENT) && !lexList[j].matches(regexMath+"|AN")) {
+					lexList[j] = lexList[j].replaceAll("\"","");
+					if(lexList[j].matches(regexNum)) {
+						if(lexList[j].matches(Lexeme.NUMBAR) && lexList[j].matches("[0-9]+[.]0+")) {
+							lexList[j] = lexList[j].split("\\.")[0];
+						}
+						operandB.add(lexList[j]);
+					}
+					else if(lexList[j].matches(Lexeme.VARIDENT)) {
+						lexList[j] = getValueVarident(lexList[j]);
+						if(lexList[j]==null) return null;
+						operandB.add(lexList[j]);
+					}else if(j+2<lexList.length && lexList[j+1].matches("AN") && lexList[j+2].matches(regexNum+"|"+Lexeme.VARIDENT)) {
+						operandB.add(lexList[j+1]);
+						if(lexList[j+2].matches(Lexeme.NUMBAR) && lexList[j+2].matches("[0-9]+[.]0+")) {
+							System.out.println(456);
+							lexList[j+2] = lexList[j+2].split("\\.")[0];
+						}
+						operandB.add(lexList[j+2]);
+					}
+				}else if(lexList[j].matches(regexMath+"|AN")) operandB.add(lexList[j]);
 				else return null;
-		}
+
+			}
+			
+			if(operandA.size()==0 || operandB.size()==0) return null;
 		
-		if(lexList[0].matches(Lexeme.BOTH_SAEM) && ansA.equals(ansB)) return "WIN";
-		else if(lexList[0].matches(Lexeme.BOTH_SAEM) && ansA.equals(ansB)==false) return "FAIL";
-		else if(lexList[0].matches(Lexeme.DIFFRINT) && ansA.equals(ansB)==false) return "WIN";
-		else if(lexList[0].matches(Lexeme.DIFFRINT) && ansA.equals(ansB)) return "FAIL";
-		else return null;		
+			String[] operandAtemp = new String[operandA.size()];
+			for(int a=0;a<operandA.size();a++) operandAtemp[a] = operandA.get(a);
+			String[] operandBtemp = new String[operandB.size()];
+			for(int b=0;b<operandB.size();b++) operandBtemp[b] = operandB.get(b);
+			String valueA = operandA.size()==1? operandA.get(0) : allOperations(operandAtemp);
+			String valueB = operandB.size()==1? operandB.get(0) : allOperations(operandBtemp);
+			if(valueA==null || valueB==null) return null;
+
+		
+			if(lexList[0].matches(Lexeme.DIFFRINT) && !valueA.contentEquals(valueB)) return Lexeme.TROOF[0];
+			else if(lexList[0].matches(Lexeme.DIFFRINT) && valueA.contentEquals(valueB)) return Lexeme.TROOF[1];
+			if(lexList[0].matches(Lexeme.BOTH_SAEM) && valueA.contentEquals(valueB)) return Lexeme.TROOF[0];
+			else if(lexList[0].matches(Lexeme.BOTH_SAEM) && !valueA.contentEquals(valueB)) return Lexeme.TROOF[1];			
+		}
+		return null;
 	}
 	
 	private boolean checkIfVarExist(String lex) {
