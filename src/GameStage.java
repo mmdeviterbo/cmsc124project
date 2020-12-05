@@ -160,8 +160,9 @@ public class GameStage{
 		
 		//sample input for test only
 		inputUser.setText("HAI\n");
-		inputUser.setText(inputUser.getText() + "SUM OF 10 AN 10\nWTF?\nOMG 20\n\tVISIBLE \"first choice\"\nOMG 30\n\tVISIBLE \"2nd choice\"\nOMG 40\n\tVISIBLE \"3rd choice\"\nOMGWTF\n\tVISIBLE \"default choice\" \nOIC");
-		inputUser.setText(inputUser.getText() + "\nOBTW dsadsda\ndsdasdasadas\nsadasdsdasd\nTLDR");
+		inputUser.setText(inputUser.getText()+"VISIBLE ANY OF WIN AN WIN MKAY");
+//		inputUser.setText(inputUser.getText() + "SUM OF 10 AN 10\nWTF?\nOMG 20\n\tVISIBLE \"first choice\"\nOMG 30\n\tVISIBLE \"2nd choice\"\nOMG 40\n\tVISIBLE \"3rd choice\"\nOMGWTF\n\tVISIBLE \"default choice\" \nOIC");
+//		inputUser.setText(inputUser.getText() + "\nOBTW dsadsda\ndsdasdasadas\nsadasdsdasd\nTLDR");
 		inputUser.setText(inputUser.getText() + "\nKTHXBYE");		
 		String str = "hello" + "\n" + "hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n";
 		str = str + str + str; //sample string lang if magsscroll yung window ng "Lexeme" at "Symbol Table"
@@ -386,7 +387,8 @@ public class GameStage{
 		ArrayList<String> stackOperation = new ArrayList<String>();
 		String regexBool= "^"+Lexeme.TROOF[0]+"$"+"|"+"^"+Lexeme.TROOF[1]+"$";
 		
-		if(lexList[0].matches("\\bALL OF\\b") || lexList[0].matches("\\bANY OF\\b")) {	
+		if(lexList[0].matches("\\bALL OF\\b") || lexList[0].matches("\\bANY OF\\b")) {
+			if(checkInvalidNest(lexList)) return null;
 			if(lexList[0].matches("\\bALL OF\\b")) stackOperation.add(0,"ALL OF");
 			else if(lexList[0].matches("\\bANY OF\\b")) stackOperation.add(0,"ANY OF");
 			if(lexList[lexList.length-1].matches("\\bMKAY\\b")==false) return null;
@@ -652,11 +654,25 @@ public class GameStage{
 		return null;
 	}
 	
-	private String solveSmooshOperation(String[] lexList) {
+	private boolean checkInvalidNest(String[] lexList) {
+		String[] removeOp = new String[lexList.length-1];
+ 		for(int i=0;i<lexList.length-1;i++) removeOp[i] = lexList[i+1];
+
+ 		String lexListStr = Arrays.toString(removeOp);
+		String patternString = "SMOOSH|ALL OF|ANY OF";
+		Pattern pattern = Pattern.compile(patternString);
+		Matcher matcher = pattern.matcher(lexListStr);
+
+//		System.out.println(lexListStr);
+		while(matcher.find()) return true;
+		return false;
+	}
+	
+	private String solveSmooshOperation(String[] lexList) {		
+		if(checkInvalidNest(lexList)) return null;
 		String ans = doVISIBLE(lexList);
 		if(ans!=null) return ans;
 		else return null;
-		
 	}
 	
 	private String makeRreassignment(String[] lexList) {
@@ -864,11 +880,9 @@ public class GameStage{
 		return "success";
 	}
 	
-	
 	private String doVISIBLE(String[] lexList) {
+	
 		if(lexList.length==1) return null; //must contain atleast one operand
-		
-		
 		String combinedOp = Lexeme.mathOperator + Lexeme.boolOperator+"\\bAN\\b";
 		String combinedVal = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3)+"|"+Lexeme.VARIDENT;
 		
@@ -877,14 +891,15 @@ public class GameStage{
 		for(int i=1;i<lexList.length;i++) { //1 because VISIBLE keyword is excluded
 			//literals only
 			if(lexList[i].matches(Lexeme.ALL_LITERALS)) {
-				outputPrint.add(lexList[i]); continue;
+				outputPrint.add(lexList[i]); continue; //outputPrint list will collect all operands (arity) before it prints/displays to the textarea
 			}
 			
 			//math,comparison, boolean
 			else if(lexList[i].matches(combinedOp)) {
 				ArrayList<String> tempStore = new ArrayList<String>();
 				while(i<lexList.length && lexList[i].matches(Lexeme.ALL_LITERALS+"|"+Lexeme.VARIDENT+"|"+combinedOp)) {
-					if((i+2<lexList.length && lexList[i].matches(combinedVal) && !lexList[i].matches("AN") && lexList[i+1].matches("AN")  && lexList[i+2].matches(combinedVal) && !lexList[i+2].matches("AN"))) {
+					if(Arrays.deepToString(lexList).contains("MKAY")) {}
+					else if((i+2<lexList.length && lexList[i].matches(combinedVal) && !lexList[i].matches("AN") && lexList[i+1].matches("AN")  && lexList[i+2].matches(combinedVal) && !lexList[i+2].matches("AN"))) {
 						if(i+3==lexList.length) {
 							tempStore.add(lexList[i]); tempStore.add(lexList[i+1]);tempStore.add(lexList[i+2]);i++;
 							break;
@@ -1029,7 +1044,6 @@ public class GameStage{
 		
 		return increment-1;
 	}
-	
 	
 	private String doRemoveComments() {
 		String removeComment = this.inputUser.getText();
