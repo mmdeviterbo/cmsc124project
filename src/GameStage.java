@@ -572,7 +572,7 @@ public class GameStage{
 		//this is for operations eg "I HAS A var ITZ SUM OF 10 AN 5"
 		ArrayList<String> operands = new ArrayList<String>();
 		String ifOperations = null;
-		if(lexList.length>6) { //math,
+		if(lexList.length>=5) { //math,
 			for(int i=3;i<lexList.length;i++) operands.add(lexList[i]);
 			String[] operandsArr =  new String[operands.size()];
 			for(int i=0;i<operands.size();i++) operandsArr[i] = operands.get(i);
@@ -898,7 +898,11 @@ public class GameStage{
 			//variable
 			else if(lexList[i].matches(Lexeme.VARIDENT)) {
 				 if(checkIfVarExist(lexList[i])) {
-					 outputPrint.add(getValueVarident(lexList[i])); continue;
+					 String val = getValueVarident(lexList[i]);
+					 if(val.length()>0) {
+						 outputPrint.add(val); 
+					 }else outputPrint.add("");
+					 continue;
 				 }else return null;
 			}
 		}
