@@ -43,11 +43,13 @@ public class GameStage{
 	
 	Text displayLexeme; Text displaySymbolTable;
 	TextArea displayResult; ScrollPane scrollResult; VBox paneResult; 
+	boolean isNewLine;
 	
 	Button btnExecute;
 	
     TableView<Lexeme> lexemeTable; TableColumn<Lexeme, String> columnLexeme; TableColumn<Lexeme, String> columnClassification;
     TableView<SymbolTable> symbolTable; TableColumn<SymbolTable, String> columnIdentifier; TableColumn<SymbolTable, String> columnValue;
+
 	public static final int WINDOW_HEIGHT = 1070;
 	public static final int WINDOW_WIDTH= 1890;
 	
@@ -155,6 +157,8 @@ public class GameStage{
 		stage.show(); 
 	}
 	private void initializeElements() {
+		isNewLine=true;
+		
 		inputUser.setPrefWidth(GameStage.WINDOW_WIDTH/3);
 		inputUser.setWrapText(true);
 		
@@ -788,6 +792,10 @@ public class GameStage{
 			}
 		}else if(tokenArrLine[0].matches(Lexeme.VISIBLE)) {
 			try {
+				if(tokenArrLine[tokenArrLine.length-1].contentEquals("a!")) {
+					tokenArrLine[tokenArrLine.length-1]="";
+					isNewLine=false;
+				}
 				String ans = doVISIBLE(tokenArrLine);	
 				if(ans!=null) {
 					System.out.println("VISIBLE - Correct syntax");					
@@ -807,11 +815,10 @@ public class GameStage{
 	}
 	
 	private void printFormatVisible(String ans){
-		String isNewLine = "";
-		if(displayResult.getText().length()!=0) isNewLine = "\n"; 
-//		if(ans.substring(ans.length()-2,ans.length()).equals("a!")) isNewLine="";
-		
-		displayResult.setText(displayResult.getText()+isNewLine+ans);
+		//bonus#1
+		if(isNewLine) displayResult.setText(displayResult.getText()+ans+"\n");
+		else displayResult.setText(displayResult.getText()+ans);
+		this.isNewLine=true;
 	}
 	
 	private void storeGIMMEH(String variable, String literal, ArrayList<String[]> continueLine) {
