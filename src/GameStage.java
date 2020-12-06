@@ -169,7 +169,8 @@ public class GameStage{
 		
 		//sample input for test only
 		inputUser.setText("HAI\n");
-		inputUser.setText(inputUser.getText()+"\n\nI HAS A VAR ITZ 0\nIM IN YR LOOPY UPPIN YR VAR TIL BOTH SAEM VAR AN 10\n\tVISIBLE SUM OF VAR AN 1\nIM OUTTA YR LOOPY\n");
+		inputUser.setText(inputUser.getText()+"\n\nI HAS A VAR ITZ 0\nI HAS A VAR2 ITZ 0\nIM IN YR LOOPY UPPIN YR VAR TIL BOTH SAEM VAR AN 10"
+				+ "\n\tVISIBLE SUM OF VAR AN 1\n\tIM IN YR LOOPY2 UPPIN YR VAR2 TIL BOTH SAEM VAR2 AN 3\n\t\tVISIBLE \"this is inner\"\n\tIM OUTTA YR LOOPY2\n\tVAR2 R 0\nIM OUTTA YR LOOPY\n");
 //		inputUser.setText(inputUser.getText() + "SUM OF 10 AN 10\nWTF?\nOMG 20\n\tVISIBLE \"first choice\"\nOMG 30\n\tVISIBLE \"2nd choice\"\nOMG 40\n\tVISIBLE \"3rd choice\"\nOMGWTF\n\tVISIBLE \"default choice\" \nOIC");
 		inputUser.setText(inputUser.getText() + "\n\n\tOBTW dsadsda\ndsdasdasadas\nsadasdsdasd\n\tTLDR");
 		inputUser.setText(inputUser.getText() + "\nKTHXBYE");		
@@ -193,6 +194,8 @@ public class GameStage{
 	    displayResult.setStyle("-fx-control-inner-background:#000000; -fx-font-family: Consolas; -fx-highlight-fill: #00ff00; -fx-highlight-text-fill: #000000; -fx-text-fill: #00ff00; -fx-font-size: 1.5em;");
 	    displayResult.setPrefSize(GameStage.WINDOW_WIDTH, GameStage.WINDOW_HEIGHT/2);
 	    displayResult.setEditable(false);
+	    
+	    
 	    
 	    lexemeTable.setStyle("-fx-control-inner-background:#000000; -fx-font-family: Consolas; -fx-highlight-fill: #9ACD32; -fx-highlight-text-fill: #9ACD32; -fx-text-fill: #9ACD32; ");
 	    symbolTable.setStyle("-fx-control-inner-background:#000000; -fx-font-family: Consolas; -fx-highlight-fill: #9ACD32; -fx-highlight-text-fill: #9ACD32; -fx-text-fill: #9ACD32; ");
@@ -1108,12 +1111,18 @@ public class GameStage{
 		}
 		
 		//find where IM OUTTA YR
-		for(int a=0;i<tokensProgram.size();a++) {
-			if(tokensProgram.get(a)[0].matches(Lexeme.IM_OUTTA_YR)) {
+		int numLoop = 1; //this is for nested loop 
+		for(int a=i+1;i<tokensProgram.size();a++) {
+			if(tokensProgram.get(a)[0].matches(Lexeme.IM_OUTTA_YR)) numLoop--;
+			else if(tokensProgram.get(a)[0].matches(Lexeme.IM_IN_YR)) numLoop++;
+			if(numLoop==0) {
 				end = a;
 				break;
 			}
 		}
+
+		
+		
 		if(end==-1) return -1;
 		
 		//loop identifer must be paired/must
@@ -1126,6 +1135,9 @@ public class GameStage{
 		//getting the blockStatement to be executed
 		ArrayList<String[]> blockStatements = new ArrayList<String[]>();
 		for(int c=start+1;c<end;c++) blockStatements.add(tokensProgram.get(c));
+		
+		System.out.println(Arrays.deepToString(blockStatements.toArray()));
+		
 		
 		//getting the condition statement: outputs WIN breakk, FAIL continue
 		ArrayList<String> conditionStatement = new ArrayList<String>();
@@ -1394,7 +1406,7 @@ public class GameStage{
 //BONUS DONE:
 //	1.) a!
 //	2.) SMOOSH
-
+//	3.) loop
 
 
 
