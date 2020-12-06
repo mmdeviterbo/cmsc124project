@@ -171,7 +171,7 @@ public class GameStage{
 		inputUser.setText("HAI\n");
 		inputUser.setText(inputUser.getText()+"DIFFRINT 2 AN 2");
 //		inputUser.setText(inputUser.getText() + "SUM OF 10 AN 10\nWTF?\nOMG 20\n\tVISIBLE \"first choice\"\nOMG 30\n\tVISIBLE \"2nd choice\"\nOMG 40\n\tVISIBLE \"3rd choice\"\nOMGWTF\n\tVISIBLE \"default choice\" \nOIC");
-//		inputUser.setText(inputUser.getText() + "\nOBTW dsadsda\ndsdasdasadas\nsadasdsdasd\nTLDR");
+		inputUser.setText(inputUser.getText() + "\n\tOBTW dsadsda\ndsdasdasadas\nsadasdsdasd\n\tTLDR");
 		inputUser.setText(inputUser.getText() + "\nKTHXBYE");		
 		String str = "hello" + "\n" + "hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n";
 		str = str + str + str; //sample string lang if magsscroll yung window ng "Lexeme" at "Symbol Table"
@@ -686,7 +686,15 @@ public class GameStage{
 		symbolTable.getItems().clear();
 	}
 
-	private void storeIT(String answer) {
+	private void storeIT(String answer, String[] operands) {
+		String operand = operands[0];
+		
+		String expOp = Lexeme.mathOperator+Lexeme.boolOperator+Lexeme.concat.substring(0,Lexeme.concat.length()-1);
+		if(operand.matches(Lexeme.VISIBLE)) {
+			operand = operands[1];
+			if(operand.matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3)+"|"+Lexeme.VARIDENT) && !operand.matches(expOp)) return;
+		}else if(operand.matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3)+"|"+Lexeme.VARIDENT) && !operand.matches(expOp)) return;
+
 		for(SymbolTable row : symbolTable.getItems()) {
 			row.setValue(answer);		
 			break;
@@ -901,7 +909,7 @@ public class GameStage{
 					 String val = getValueVarident(lexList[i]);
 					 if(val.length()>0) {
 						 outputPrint.add(val); 
-					 }else outputPrint.add("");
+					 }else return null; //if variable has NOOB value (no value assigned)
 					 continue;
 				 }else return null;
 			}
@@ -1016,30 +1024,16 @@ public class GameStage{
 		return increment-1;
 	}
 	
-	private String doRemoveComments() {
+	private String doRemoveComments() { //removes all comments before it goes to syntax analyzer
 		String removeComment = this.inputUser.getText();
-		if(removeComment.contains("TLDR")) {
-			
-			if(removeComment.matches(".*[\\s]*TLDR[\\s]*[a-zA-Z0-9_]+.*")) {
-				return null;
-			}
-		}
-		Pattern pattern = Pattern.compile("TLDR[ ]*[\\w]++");
+		Pattern pattern = Pattern.compile("[\\s]*TLDR[ ]*[\\w]+"); //if TLDR has succeeding chars (excluding whitespaces)
 		Matcher match = pattern.matcher(removeComment);
 		if (match.find()) return null;
 		
-		pattern = Pattern.compile("[\\w]+[ ]*TLDR");
+		pattern = Pattern.compile("[\\s]*OBTW[\\s\\w\\W]*TLDR[\\s]*");
 		match = pattern.matcher(removeComment);
-		if (match.find()) return null;
+		while(match.find()) removeComment = removeComment.replaceAll("[\\s]*OBTW[\\s\\w\\W]*TLDR[\\s]*", "\n");
 		
-		
-		while(removeComment.contains("OBTW")==true || removeComment.contains("\nOBTW")==true) {
-			if(removeComment.contains("\nOBTW")==true) {
-				removeComment = removeComment.replaceAll("[\\n]OBTW.*[\\n\\s]*.*[\\n\\s]*.*[\\n\\s]*TLDR[\\n\\s]*", "\n");
-			}else if(removeComment.contains("OBTW")) {
-				removeComment = removeComment.replaceAll("OBTW.*[\\n\\s]*.*[\\n\\s]*.*[\\n\\s]*TLDR[\\n\\s]*", "\n");
-			}
-		}
 		return removeComment;
 	}
 	
@@ -1139,7 +1133,7 @@ public class GameStage{
 			
 			//syntax for all operations (math, boolean, comparison, relational) and its result is not stored to a variable (then it must be stored to IT)
 			String storeIt = allOperations(tokenArrLine);
-			if(storeIt!=null) storeIT(storeIt);
+			if(storeIt!=null) storeIT(storeIt,tokenArrLine);
 			
 			//syntax for I HAS
 			if(Arrays.toString(tokenArrLine).contains("I HAS A")) {
