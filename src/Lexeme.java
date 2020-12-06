@@ -86,6 +86,13 @@ public class Lexeme{
 	//single quote
 	public static final String QUOTE = "\"";
 
+	//loop
+	public static final String IM_IN_YR = "\\bIM IN YR\\b";
+	public static final String IM_OUTTA_YR = "\\bIM OUTTA YR\\b";
+	public static final String YR = "\\bYR\\b";
+	public static final String UPPIN = "\\bUPPIN\\b";
+	public static final String NERFIN = "\\bNERFIN\\b";
+	public static final String TIL = "\\bTIL\\b";
 	
 	
 	//not included in Project specification
@@ -115,6 +122,10 @@ public class Lexeme{
 	public static final String CONCATENATION_KEYWORD  = "Concatenation Identifier";
 	public static final String CONDITIONAL_KEYWORD  = "Conditional Identifier";
 	public static final String BREAK_IDENTIFIER = "Break Identifier";
+	public static final String LOOP_IDENTIFIER = "Loop Identifier";
+	public static final String INCREMENT_IDENTIFIER = "Increment Identifier";
+	public static final String DECREMENT_IDENTIFIER = "Decrement Identifier";
+	
 	
 	//literal
 	public static final String LITERAL = "Literal";
@@ -125,8 +136,8 @@ public class Lexeme{
 	public static final String COMPARISON_OPERATOR  = "Comparison Operator";
 
 	//compiled regex in every catergory (input/output, expression, comments, conditional statements)
-	
-	public static final String startEnd = Lexeme.HAI + "|" + Lexeme.KTHXBYE + Lexeme.GTFO + "|";
+	public static final String loopOperator = Lexeme.IM_IN_YR +"|" + Lexeme.IM_OUTTA_YR + "|" + Lexeme.YR + "|" + Lexeme.UPPIN + "|" + Lexeme.NERFIN + "|" + Lexeme.TIL + "|";
+	public static final String startEnd = Lexeme.loopOperator + Lexeme.HAI + "|" + Lexeme.KTHXBYE + Lexeme.GTFO + "|";
 	public static final String inputOutput = Lexeme.VISIBLE + "|" + Lexeme.GIMMEH + "|";
 	public static final String itz = Lexeme.ITZ + "|";
 	public static final String comments = Lexeme.BTW + "|" + Lexeme.OBTW + "|" + Lexeme.TLDR + "|";
@@ -236,6 +247,13 @@ public class Lexeme{
 		ArrayList<String> variable = new ArrayList<String>();
 		variable.add(Lexeme.VARIDENT);
 		Lexeme.TOKENS.put(Lexeme.VARIABLE_IDENTIFIER,variable);
+
+		ArrayList<String> loop_keyword = new ArrayList<String>();
+		loop_keyword.add(Lexeme.YR);loop_keyword.add(Lexeme.IM_OUTTA_YR);loop_keyword.add(Lexeme.IM_IN_YR);
+		Lexeme.TOKENS.put(Lexeme.LOOP_IDENTIFIER,loop_keyword);
+		
+		
+		
 		
 	}
 	

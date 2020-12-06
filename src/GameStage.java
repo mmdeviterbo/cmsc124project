@@ -169,9 +169,9 @@ public class GameStage{
 		
 		//sample input for test only
 		inputUser.setText("HAI\n");
-		inputUser.setText(inputUser.getText()+"SMOOSH 5 AN 3 AN \"das\" AN SUM OF 10 AN 4");
+		inputUser.setText(inputUser.getText()+"\n\nI HAS A VAR ITZ 0\nIM IN YR LOOPY UPPIN YR VAR TIL BOTH SAEM VAR AN 10\n\tVISIBLE SUM OF VAR AN 1\nIM OUTTA YR LOOPY\n");
 //		inputUser.setText(inputUser.getText() + "SUM OF 10 AN 10\nWTF?\nOMG 20\n\tVISIBLE \"first choice\"\nOMG 30\n\tVISIBLE \"2nd choice\"\nOMG 40\n\tVISIBLE \"3rd choice\"\nOMGWTF\n\tVISIBLE \"default choice\" \nOIC");
-		inputUser.setText(inputUser.getText() + "\n\tOBTW dsadsda\ndsdasdasadas\nsadasdsdasd\n\tTLDR");
+		inputUser.setText(inputUser.getText() + "\n\n\tOBTW dsadsda\ndsdasdasadas\nsadasdsdasd\n\tTLDR");
 		inputUser.setText(inputUser.getText() + "\nKTHXBYE");		
 		String str = "hello" + "\n" + "hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n";
 		str = str + str + str; //sample string lang if magsscroll yung window ng "Lexeme" at "Symbol Table"
@@ -191,7 +191,7 @@ public class GameStage{
 	    inputUser.setStyle("-fx-control-inner-background:#000000; -fx-font-family: Consolas; -fx-highlight-fill: #00ff00; -fx-highlight-text-fill: #000000; -fx-text-fill: #00ff00; -fx-font-size: 1.2em;");
 	    
 	    displayResult.setStyle("-fx-control-inner-background:#000000; -fx-font-family: Consolas; -fx-highlight-fill: #00ff00; -fx-highlight-text-fill: #000000; -fx-text-fill: #00ff00; -fx-font-size: 1.5em;");
-	    displayResult.setPrefSize(GameStage.WINDOW_WIDTH, GameStage.WINDOW_HEIGHT);
+	    displayResult.setPrefSize(GameStage.WINDOW_WIDTH, GameStage.WINDOW_HEIGHT/2);
 	    displayResult.setEditable(false);
 	    
 	    lexemeTable.setStyle("-fx-control-inner-background:#000000; -fx-font-family: Consolas; -fx-highlight-fill: #9ACD32; -fx-highlight-text-fill: #9ACD32; -fx-text-fill: #9ACD32; ");
@@ -541,6 +541,15 @@ public class GameStage{
 		return false;
 	}
 
+	private void updateVar(String var, String newVal) {
+		for(SymbolTable row : symbolTable.getItems()) {
+			if(row.getIdentifier().equals(var)) {
+				row.setValue(newVal);
+			}
+			
+		}
+	}
+	
 	private String checkGFTO(ArrayList<String[]> tokensPerLine) {
 		//check if there's unreachable code after GTFO keyword
 		int index=0;
@@ -1082,6 +1091,77 @@ public class GameStage{
 		return removeComment;
 	}
 	
+	private int doLoop(ArrayList<String[]> tokensProgram, int i) {
+		String[] loopStartArr = tokensProgram.get(i); //array of where IM IN YR belongs
+		int start = i, end = -1, updateVal = 0;
+		String literals = Lexeme.NUMBR+"|"+Lexeme.NUMBAR+"|"+Lexeme.TROOF[0]+"|"+Lexeme.TROOF[1];
+
+		if(!loopStartArr[1].matches(Lexeme.VARIDENT)) return -1;
+		if(loopStartArr.length<10) return -1; //10 is the minimum length of the array of where IM IN YR array belongs
+				
+		//check if valid data type to be incremented/decremented (check if var has data type of numbar, numbr, or troof, else error)
+		if(checkIfVarExist(loopStartArr[4])) {
+			String variable = getValueVarident(loopStartArr[4]);
+			if(variable.length()==0 || !variable.matches(literals)) return -1; //must have valid data type (numbr, numbar, troof only)
+			if(variable.matches(Lexeme.TROOF[1])) updateVar(loopStartArr[4],"0");
+			else if(variable.matches(Lexeme.TROOF[0])) updateVar(loopStartArr[4],"1");
+		}
+		
+		//find where IM OUTTA YR
+		for(int a=0;i<tokensProgram.size();a++) {
+			if(tokensProgram.get(a)[0].matches(Lexeme.IM_OUTTA_YR)) {
+				end = a;
+				break;
+			}
+		}
+		if(end==-1) return -1;
+		
+		//loop identifer must be paired/must
+		if(tokensProgram.get(end).length!=2 || !loopStartArr[1].contentEquals(tokensProgram.get(end)[1])) return -1;
+		
+		//increment or decrement based if UPPIN/NERFIN respectively
+		if(!tokensProgram.get(start)[2].matches(Lexeme.UPPIN+"|"+Lexeme.NERFIN)) return -1;
+		updateVal = loopStartArr[2].matches(Lexeme.UPPIN)? 1:-1;
+		
+		//getting the blockStatement to be executed
+		ArrayList<String[]> blockStatements = new ArrayList<String[]>();
+		for(int c=start+1;c<end;c++) blockStatements.add(tokensProgram.get(c));
+		
+		//getting the condition statement: outputs WIN breakk, FAIL continue
+		ArrayList<String> conditionStatement = new ArrayList<String>();
+		if(!tokensProgram.get(start)[6].matches(Lexeme.BOTH_SAEM+"|"+Lexeme.DIFFRINT)) return -1; //BOTH SAEM because if: WIN - stop loop, FAIL = continue loop
+		for(int b=6;b<loopStartArr.length;b++) { //6 because 6 is the constant value of index in an array of where the condition checking begins
+			conditionStatement.add(tokensProgram.get(start)[b]);
+		}
+		String isContinueLoop;
+		
+		int checkerInfiniteLoop = 0; //this stops if it exceeds 1,000 iterations assuming 1,000 is the maximum statck size (ideal) -- to avoid infinite loop
+		while(true) {
+			String[] conditionStatementArr = new String[conditionStatement.size()];
+			for(int b=0;b<conditionStatement.size();b++) conditionStatementArr[b] = conditionStatement.get(b);
+			isContinueLoop = allOperations(conditionStatementArr);	
+			if(isContinueLoop.contentEquals(Lexeme.TROOF[0])) break; //if WINL : break the loop
+			
+			//if WIN
+			doSyntaxAnalysis(blockStatements);
+			
+			if(getValueVarident(loopStartArr[4]).matches(Lexeme.NUMBAR)) {
+				Float newval = Float.parseFloat(getValueVarident(loopStartArr[4]))+ updateVal;
+				updateVar(loopStartArr[4],Float.toString(newval));
+			}else if(getValueVarident(loopStartArr[4]).matches(Lexeme.NUMBR)) {
+				int newval = Integer.parseInt(getValueVarident(loopStartArr[4]))+updateVal;
+				updateVar(loopStartArr[4],Integer.toString(newval));
+			}
+			
+			if(checkerInfiniteLoop>=1000) return -2;
+			
+			checkerInfiniteLoop++;
+		}
+		
+		
+		return end-1;
+	}
+	
 	private ArrayList<String[]> doLexicalAnalysis() { 
 		clearTables();
 		this.symbolTable.getItems().add(new SymbolTable(Lexeme.IT,""));
@@ -1255,6 +1335,25 @@ public class GameStage{
 					displayResult.setText("1100 - SWITCH Catch Syntax Error."); return;
 				}
 			}else if(storeIt!=null) {	
+			}else if(tokenArrLine[0].matches(Lexeme.IM_IN_YR)) {
+				try {
+					int ans = doLoop(tokensPerLine,i);
+					if(ans!=-1 && ans!=-2) {
+						System.out.println("1268 LOOP - Successful");
+						i+=ans;
+					}else if(ans==-2) {
+						displayResult.setText("Infinite loop! Maximum call stack exceeded");
+						clearTables();
+						return;
+					}
+					else {
+						clearTables();
+						displayResult.setText("1272 - LOOP Syntax Error."); return;
+					}
+				}catch(Exception e) {
+					clearTables();
+					displayResult.setText("1276 - LOOP Catch Syntax Error."); return;
+				}
 			}else {
 				clearTables();
 				displayResult.setText("487 Syntax Error.");
