@@ -169,7 +169,7 @@ public class GameStage{
 		
 		//sample input for test only
 		inputUser.setText("HAI\n");
-		inputUser.setText(inputUser.getText()+"DIFFRINT 2 AN 2");
+		inputUser.setText(inputUser.getText()+"SMOOSH 5 AN 3 AN \"das\" AN SUM OF 10 AN 4");
 //		inputUser.setText(inputUser.getText() + "SUM OF 10 AN 10\nWTF?\nOMG 20\n\tVISIBLE \"first choice\"\nOMG 30\n\tVISIBLE \"2nd choice\"\nOMG 40\n\tVISIBLE \"3rd choice\"\nOMGWTF\n\tVISIBLE \"default choice\" \nOIC");
 		inputUser.setText(inputUser.getText() + "\n\tOBTW dsadsda\ndsdasdasadas\nsadasdsdasd\n\tTLDR");
 		inputUser.setText(inputUser.getText() + "\nKTHXBYE");		
@@ -636,7 +636,46 @@ public class GameStage{
 	
 	private String solveSmooshOperation(String[] lexList) {		
 		if(checkInvalidNest(lexList)) return null;
-		String ans = doVISIBLE(lexList);
+		
+		ArrayList<String> removeAN = new ArrayList<String>();
+		String regexOperation = Lexeme.mathOperator+Lexeme.boolOperator.substring(0,Lexeme.boolOperator.length()-1);
+		String literalsVar = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-2)+Lexeme.VARIDENT;
+
+		if(lexList[lexList.length-1].matches("AN")) return null;
+		
+		for(int i=1;i<lexList.length;i++) { //1 because smoosh keyword itself is not included
+			if(lexList[i].matches(regexOperation)) {
+				int numOperation = 0; int numOperand = 0;
+				while(numOperation+1!=numOperand) {
+					if(lexList[i].matches(literalsVar) && !lexList[i].matches("AN") && !lexList[i].matches(regexOperation)) {
+						removeAN.add(lexList[i]);
+						numOperand++;
+					}else if(lexList[i].matches(regexOperation)) {
+						removeAN.add(lexList[i]);
+						numOperation++;
+					}else if(lexList[i].matches("AN")) {
+						if(i+1<lexList.length && lexList[i+1].matches("AN")) return null;
+						removeAN.add(lexList[i]);
+					}
+					i++;
+				}
+				i--;
+			}else if(lexList[i].matches("\\bAN\\b")) {
+				if(i+1<lexList.length && lexList[i+1].matches("AN")) return null;
+				if(i==1) return null;
+				continue;
+			}else {
+				if(i+1<lexList.length && lexList[i+1].matches(literalsVar) && !lexList[i+1].matches(regexOperation) && !lexList[i+1].matches("AN")) {
+					return null;
+				}
+				removeAN.add(lexList[i]);
+			}
+		}
+		String[] lexListNew = new String[removeAN.size()];
+		for(int a=0;a<removeAN.size();a++) {
+			lexListNew[a] = removeAN.get(a);
+		}
+		String ans = doVISIBLE(lexListNew);
 		if(ans!=null) return ans;
 		else return null;
 	}
@@ -861,16 +900,24 @@ public class GameStage{
 	
 		if(lexList.length==1) return null; //must contain atleast one operand
 		String combinedOp = Lexeme.mathOperator + Lexeme.boolOperator+"\\bAN\\b";
-		String combinedVal = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3)+"|"+Lexeme.VARIDENT;
+		String combinedVal = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3);
 		
 		ArrayList<String> outputPrint = new ArrayList<String>();
 		
 		for(int i=1;i<lexList.length;i++) { //1 because VISIBLE keyword is excluded
 			//literals only
-			if(lexList[i].matches(Lexeme.ALL_LITERALS)) {
-				outputPrint.add(lexList[i]); continue; //outputPrint list will collect all operands (arity) before it prints/displays to the textarea
+			if(lexList[i].matches(Lexeme.ALL_LITERALS) && !lexList[i].matches("AN")) {
+				outputPrint.add(lexList[i]); 
+				continue; //outputPrint list will collect all operands (arity) before it prints/displays to the textarea
 			}
 			
+			//smoosh operation
+			else if(lexList[i].matches(Lexeme.SMOOSH)) {
+				String smooshArr[] = new String[lexList.length-1];
+				for(int a=1;a<lexList.length;a++) smooshArr[a-1] = lexList[a];
+				return solveSmooshOperation(smooshArr);
+			}
+		
 			//math,comparison, boolean
 			else if(lexList[i].matches(combinedOp)) {
 				ArrayList<String> tempStore = new ArrayList<String>();
@@ -899,12 +946,9 @@ public class GameStage{
 				continue;
 			}
 			
-			//smoosh operation
-			else if(lexList[i].matches(Lexeme.SMOOSH)) continue;
-			
 			
 			//variable
-			else if(lexList[i].matches(Lexeme.VARIDENT)) {
+			else if(lexList[i].matches(Lexeme.VARIDENT) && !lexList[i].matches("AN")) {
 				 if(checkIfVarExist(lexList[i])) {
 					 String val = getValueVarident(lexList[i]);
 					 if(val.length()>0) {
