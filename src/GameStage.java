@@ -1247,6 +1247,12 @@ public class GameStage{
 //all testcases passed
 
 
+//BONUS DONE:
+//	1.) a!
+//	2.) SMOOSH
+
+
+
 
 
 
