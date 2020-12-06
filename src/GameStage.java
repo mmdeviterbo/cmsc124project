@@ -660,6 +660,7 @@ public class GameStage{
 					i++;
 				}
 				i--;
+				if(i+1<lexList.length && lexList[i+1].matches(literalsVar) && !lexList[i+1].matches("AN")) return null;
 			}else if(lexList[i].matches("\\bAN\\b")) {
 				if(i+1<lexList.length && lexList[i+1].matches("AN")) return null;
 				if(i==1) return null;
