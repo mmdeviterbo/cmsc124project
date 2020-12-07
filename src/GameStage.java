@@ -1236,23 +1236,12 @@ public class GameStage{
 		
 		if(checkHaiKthxbye(programInput)==null) return null;
 		
-		int HAIcount = 0, KTXBYEcount = 0;
 		for(int i=0;i<programInput.length;i++) {
 			//check if HAI/KTHXBYE are valid		
 			Matcher regexMatcher = regex.matcher(programInput[i]);	
 			ArrayList<String> tokenizedLine = new ArrayList<String>();
 			while (regexMatcher.find()) {
 				String match = regexMatcher.group();
-				if(match.matches(Lexeme.HAI)) {
-					HAIcount++;
-					if(HAIcount>1) return null;
-					break;
-				}
-				if(match.matches(Lexeme.KTHXBYE)) {
-					KTXBYEcount++;
-					if(KTXBYEcount>1) return null;
-					break;
-				}
 				tokenizedLine.add(match);
 			}
 			String[] arrResult = new String[tokenizedLine.size()];
@@ -1306,7 +1295,8 @@ public class GameStage{
 			if(storeIt!=null) storeIT(storeIt,tokenArrLine);
 			
 			//syntax for I HAS
-			if(Arrays.toString(tokenArrLine).contains("I HAS A")) {
+			if(tokenArrLine[0].matches(Lexeme.HAI+"|"+Lexeme.KTHXBYE)) {continue;}
+			else if(Arrays.toString(tokenArrLine).contains("I HAS A")) {
 				try {
 					String ans = setIHAS(tokenArrLine);
 					if(ans!=null) {
