@@ -385,12 +385,14 @@ public class GameStage{
 				break;
 			}
 		}
+		//if all literals/varident only
 		String arrStr = Arrays.toString(operand.toArray()).replaceAll("\\[|\\]|,", "");
 		if(isAllTroof && lexList[0].matches("\\bANY OF\\b") && arrStr.contains("WIN")) return Lexeme.TROOF[0];
 		else if(isAllTroof && lexList[0].matches("\\bANY OF\\b") && !arrStr.contains("WIN")) return Lexeme.TROOF[1];
 		else if(isAllTroof && lexList[0].matches("\\bALL OF\\b") && arrStr.contains("FAIL")) return Lexeme.TROOF[1];
 		else if(isAllTroof && lexList[0].matches("\\bALL OF\\b") && !arrStr.contains("FAIL")) return Lexeme.TROOF[0];
 		
+		//if there's nested operations
 		String answer = solveBooleanOperation(operand,0,true).replaceAll("\\[|\\]|,", "");
 		if(lexList[0].matches("\\bANY OF\\b") && answer.contains("WIN")) return Lexeme.TROOF[0];
 		else if(lexList[0].matches("\\bANY OF\\b") && !answer.contains("WIN")) return Lexeme.TROOF[1];
