@@ -1417,9 +1417,7 @@ public class GameStage{
 //	1.) a!
 //	2.) SMOOSH
 //	3.) loop (without nesting)
-
-
-
+//  4.) loop (with nesting)
 
 
 
