@@ -169,13 +169,12 @@ public class GameStage{
 		
 		//sample input for test only
 		inputUser.setText("HAI\n");
-		inputUser.setText(inputUser.getText()+"\n\nI HAS A VAR ITZ 0\nI HAS A VAR2 ITZ 0\nI HAS A VAR3 ITZ 0\nIM IN YR LOOPY UPPIN YR VAR TIL BOTH SAEM VAR AN 10"
-				+ "\n\tVISIBLE SUM OF VAR AN 1\n\tIM IN YR LOOPY2 UPPIN YR VAR2 TIL BOTH SAEM VAR2 AN 3\n\t\tVISIBLE \"this is inner-1\"\n\tIM OUTTA YR LOOPY2\n\tVAR2 R 0"
-				+ "\n\n\tIM IN YR LOOPY2 UPPIN YR VAR3 TIL BOTH SAEM VAR3 AN 3\n\t\tVISIBLE \"this is inner-2\"\n\tIM OUTTA YR LOOPY2\n\tVAR3 R 0\n"
-				+ "\tVISIBLE \"is deadcode\"\n"
-				+ "IM OUTTA YR LOOPY\n");
-		
-		
+//		inputUser.setText(inputUser.getText()+"\n\nI HAS A VAR ITZ 0\nI HAS A VAR2 ITZ 0\nI HAS A VAR3 ITZ 0\nIM IN YR LOOPY UPPIN YR VAR TIL BOTH SAEM VAR AN 10"
+//				+ "\n\tVISIBLE SUM OF VAR AN 1\n\tIM IN YR LOOPY2 UPPIN YR VAR2 TIL BOTH SAEM VAR2 AN 3\n\t\tVISIBLE \"this is inner-1\"\n\tIM OUTTA YR LOOPY2\n\tVAR2 R 0"
+//				+ "\n\n\tIM IN YR LOOPY2 UPPIN YR VAR3 TIL BOTH SAEM VAR3 AN 3\n\t\tVISIBLE \"this is inner-2\"\n\tIM OUTTA YR LOOPY2\n\tVAR3 R 0\n"
+//				+ "\tVISIBLE \"is deadcode\"\n"
+//				+ "IM OUTTA YR LOOPY\n");
+		 inputUser.setText(inputUser.getText() + "I HAS A choice\nchoice R 1 HAI");
 //		inputUser.setText(inputUser.getText() + "SUM OF 10 AN 10\nWTF?\nOMG 20\n\tVISIBLE \"first choice\"\nOMG 30\n\tVISIBLE \"2nd choice\"\nOMG 40\n\tVISIBLE \"3rd choice\"\nOMGWTF\n\tVISIBLE \"default choice\" \nOIC");
 		inputUser.setText(inputUser.getText() + "\n\n\tOBTW dsadsda\ndsdasdasadas\nsadasdsdasd\n\tTLDR");
 		inputUser.setText(inputUser.getText() + "\nKTHXBYE");		
@@ -724,6 +723,7 @@ public class GameStage{
 		//check if RHS is literals
 		String newVal = null;
 		
+		
 		//if literals
 		if(lexList[2].matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3))) {
 			if(lexList.length!=3) return null;
@@ -1205,9 +1205,7 @@ public class GameStage{
 		clearTables();
 		this.symbolTable.getItems().add(new SymbolTable(Lexeme.IT,""));
 		this.displayResult.setText("");
-		
-		
-		
+
 		String removeComment = doRemoveComments();
 		if(removeComment==null) return null;
 		
@@ -1238,15 +1236,23 @@ public class GameStage{
 		
 		if(checkHaiKthxbye(programInput)==null) return null;
 		
+		int HAIcount = 0, KTXBYEcount = 0;
 		for(int i=0;i<programInput.length;i++) {
 			//check if HAI/KTHXBYE are valid		
 			Matcher regexMatcher = regex.matcher(programInput[i]);	
 			ArrayList<String> tokenizedLine = new ArrayList<String>();
 			while (regexMatcher.find()) {
 				String match = regexMatcher.group();
-				if(match.matches(Lexeme.BTW)) break;
-				if(match.matches(Lexeme.HAI)) break;
-				if(match.matches(Lexeme.KTHXBYE)) break;
+				if(match.matches(Lexeme.HAI)) {
+					HAIcount++;
+					if(HAIcount>1) return null;
+					break;
+				}
+				if(match.matches(Lexeme.KTHXBYE)) {
+					KTXBYEcount++;
+					if(KTXBYEcount>1) return null;
+					break;
+				}
 				tokenizedLine.add(match);
 			}
 			String[] arrResult = new String[tokenizedLine.size()];
