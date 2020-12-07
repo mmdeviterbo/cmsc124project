@@ -669,7 +669,9 @@ public class GameStage{
 			else if(lexList[i].matches(regexOperation)) {
 				int numOperation = 0; int numOperand = 0;
 				while(numOperation+1!=numOperand) {
-					if(lexList[i].matches(literalsVar) && !lexList[i].matches("AN") && !lexList[i].matches(regexOperation)) {
+					if(lexList[i].matches(Lexeme.NOT)) {
+						removeAN.add(lexList[i]);
+					}else if(lexList[i].matches(literalsVar) && !lexList[i].matches("AN") && !lexList[i].matches(regexOperation)) {
 						removeAN.add(lexList[i]);
 						numOperand++;
 					}else if(lexList[i].matches(regexOperation)) {
@@ -939,7 +941,6 @@ public class GameStage{
 			else if(lexList[i].matches(Lexeme.SMOOSH)) {
 				String smooshArr[] = new String[lexList.length-1];
 				for(int a=1;a<lexList.length;a++) smooshArr[a-1] = lexList[a];
-				System.out.println("941: "+Arrays.deepToString(smooshArr));
 				return solveSmooshOperation(smooshArr);
 			}
 		
@@ -951,7 +952,9 @@ public class GameStage{
 				
 				int numOperation = 0; int numOperand = 0;
 				while(numOperation+1!=numOperand) {
-					if(lexList[i].matches(literalsVar) && !lexList[i].matches("AN") && !lexList[i].matches(regexOperation)) {
+					if(lexList[i].matches(Lexeme.NOT)) {
+						tempStore.add(lexList[i]);
+					}else if(lexList[i].matches(literalsVar) && !lexList[i].matches("AN") && !lexList[i].matches(regexOperation)) {
 						tempStore.add(lexList[i]);
 						numOperand++;
 					}else if(lexList[i].matches(regexOperation)) {
@@ -964,7 +967,7 @@ public class GameStage{
 					i++;
 				}
 				i--;
-				if(tempStore.size()>3) {
+				if(tempStore.size()>1) { //NOT unary has at least 2 operands
 					System.out.println("961:" + Arrays.deepToString(tempStore.toArray()));
 					String[] passToOp = new String[tempStore.size()];
 					for(int a=0;a<tempStore.size();a++) passToOp[a] = tempStore.get(a);
