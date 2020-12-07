@@ -652,6 +652,8 @@ public class GameStage{
 	}
 	
 	private String solveSmooshOperation(String[] lexList) {		
+		System.out.println(Arrays.deepToString(lexList));
+		
 		if(checkInvalidNest(lexList)) return null;
 		
 		ArrayList<String> removeAN = new ArrayList<String>();
@@ -660,8 +662,11 @@ public class GameStage{
 
 		if(lexList[lexList.length-1].matches("AN")) return null;
 		
-		for(int i=1;i<lexList.length;i++) { //1 because smoosh keyword itself is not included
-			if(lexList[i].matches(regexOperation)) {
+		for(int i=1;i<lexList.length;i++) { 
+			if(lexList[i].matches(Lexeme.SMOOSH)) {
+				continue;
+			}
+			else if(lexList[i].matches(regexOperation)) {
 				int numOperation = 0; int numOperand = 0;
 				while(numOperation+1!=numOperand) {
 					if(lexList[i].matches(literalsVar) && !lexList[i].matches("AN") && !lexList[i].matches(regexOperation)) {
@@ -689,10 +694,12 @@ public class GameStage{
 				removeAN.add(lexList[i]);
 			}
 		}
+		removeAN.add(0,"VISIBLE");
 		String[] lexListNew = new String[removeAN.size()];
 		for(int a=0;a<removeAN.size();a++) {
 			lexListNew[a] = removeAN.get(a);
 		}
+		
 		String ans = doVISIBLE(lexListNew);
 		if(ans!=null) return ans;
 		else return null;
@@ -718,7 +725,7 @@ public class GameStage{
 			if(lexList.length!=3) return null;
 			newVal = lexList[2];
 		}
-		else if(lexList.length>5) { //math,
+		else if(lexList.length>3) { //math,
 			for(int i=2;i<lexList.length;i++) operands.add(lexList[i]);
 			String[] operandsArr =  new String[operands.size()];
 			for(int i=0;i<operands.size();i++) operandsArr[i] = operands.get(i);
@@ -820,12 +827,10 @@ public class GameStage{
 		}else if(tokenArrLine[0].matches(Lexeme.VISIBLE)) {
 			try {
 				if(tokenArrLine[tokenArrLine.length-1].contentEquals("a!")) {
-					tokenArrLine[tokenArrLine.length-1]="";
 					isNewLine=false;
 				}
 				String ans = doVISIBLE(tokenArrLine);	
 				if(ans!=null) {
-//					System.out.println("VISIBLE - Correct syntax");					
 					printFormatVisible(ans);					
 					return ans;
 				}else {
@@ -841,8 +846,9 @@ public class GameStage{
 		return null;
 	}
 	
-	private void printFormatVisible(String ans){
+	private void printFormatVisible(String temp){
 		//bonus#1
+		String ans = temp.replace("a!","");
 		if(isNewLine) displayResult.setText(displayResult.getText()+ans+"\n");
 		else displayResult.setText(displayResult.getText()+ans);
 		this.isNewLine=true;
@@ -933,6 +939,7 @@ public class GameStage{
 			else if(lexList[i].matches(Lexeme.SMOOSH)) {
 				String smooshArr[] = new String[lexList.length-1];
 				for(int a=1;a<lexList.length;a++) smooshArr[a-1] = lexList[a];
+				System.out.println("941: "+Arrays.deepToString(smooshArr));
 				return solveSmooshOperation(smooshArr);
 			}
 		
@@ -1142,12 +1149,7 @@ public class GameStage{
 		ArrayList<String[]> blockStatements = new ArrayList<String[]>();
 		for(int c=start+1;c<end;c++) blockStatements.add(tokensProgram.get(c));
 		
-//		System.out.println(Arrays.deepToString(blockStatements.toArray()));
-		
-		System.out.println("Start: " + start);
-		System.out.println("End: " + end);
 
-		
 		//getting the condition statement: outputs WIN breakk, FAIL continue
 		ArrayList<String> conditionStatement = new ArrayList<String>();
 		if(!tokensProgram.get(start)[6].matches(Lexeme.boolOperator.substring(0,Lexeme.boolOperator.length()-1))) return -1; //BOTH SAEM because if: WIN - stop loop, FAIL = continue loop
@@ -1164,7 +1166,7 @@ public class GameStage{
 			if(isContinueLoop!=null && isContinueLoop.equals(Lexeme.TROOF[0])) break; //if WINL : break the loop
 			
 			//if WIN
-//			System.out.println(Arrays.deepToString(blockStatements.toArray()));
+			System.out.println("1162: "+Arrays.deepToString(blockStatements.toArray()));
 			doSyntaxAnalysis(blockStatements);
 			
 			String varUpdate = getValueVarident(loopStartArr[4]);
@@ -1175,8 +1177,6 @@ public class GameStage{
 				int newval = Integer.parseInt(getValueVarident(loopStartArr[4]))+updateVal;
 				updateVar(loopStartArr[4],Integer.toString(newval));
 			}
-			System.out.println(loopStartArr[4] + " " + getValueVarident(loopStartArr[4]));
-			
 			if(checkerInfiniteLoop>=20) return -2;
 			checkerInfiniteLoop++;
 		}
@@ -1364,7 +1364,7 @@ public class GameStage{
 //						System.out.println("1268 LOOP - Successful");
 						i=ans;continue;
 					}else if(ans==-2) {
-						displayResult.setText("Infinite loop! Maximum call stack exceeded");
+						displayResult.setText("Loop Syntax Error");
 						clearTables();
 						return;
 					}
