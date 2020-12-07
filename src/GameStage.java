@@ -169,8 +169,13 @@ public class GameStage{
 		
 		//sample input for test only
 		inputUser.setText("HAI\n");
-		inputUser.setText(inputUser.getText()+"\n\nI HAS A VAR ITZ 0\nI HAS A VAR2 ITZ 0\nIM IN YR LOOPY UPPIN YR VAR TIL BOTH SAEM VAR AN 10"
-				+ "\n\tVISIBLE SUM OF VAR AN 1\n\tIM IN YR LOOPY2 UPPIN YR VAR2 TIL BOTH SAEM VAR2 AN 3\n\t\tVISIBLE \"this is inner\"\n\tIM OUTTA YR LOOPY2\n\tVAR2 R 0\nIM OUTTA YR LOOPY\n");
+		inputUser.setText(inputUser.getText()+"\n\nI HAS A VAR ITZ 0\nI HAS A VAR2 ITZ 0\nI HAS A VAR3 ITZ 0\nIM IN YR LOOPY UPPIN YR VAR TIL BOTH SAEM VAR AN 10"
+				+ "\n\tVISIBLE SUM OF VAR AN 1\n\tIM IN YR LOOPY2 UPPIN YR VAR2 TIL BOTH SAEM VAR2 AN 3\n\t\tVISIBLE \"this is inner-1\"\n\tIM OUTTA YR LOOPY2\n\tVAR2 R 0"
+				+ "\n\n\tIM IN YR LOOPY2 UPPIN YR VAR3 TIL BOTH SAEM VAR3 AN 3\n\t\tVISIBLE \"this is inner-2\"\n\tIM OUTTA YR LOOPY2\n\tVAR3 R 0\n"
+				+ "\tVISIBLE \"is deadcode\"\n"
+				+ "IM OUTTA YR LOOPY\n");
+		
+		
 //		inputUser.setText(inputUser.getText() + "SUM OF 10 AN 10\nWTF?\nOMG 20\n\tVISIBLE \"first choice\"\nOMG 30\n\tVISIBLE \"2nd choice\"\nOMG 40\n\tVISIBLE \"3rd choice\"\nOMGWTF\n\tVISIBLE \"default choice\" \nOIC");
 		inputUser.setText(inputUser.getText() + "\n\n\tOBTW dsadsda\ndsdasdasadas\nsadasdsdasd\n\tTLDR");
 		inputUser.setText(inputUser.getText() + "\nKTHXBYE");		
@@ -694,28 +699,32 @@ public class GameStage{
 	}
 	
 	private String makeRreassignment(String[] lexList) {
-		//check if LHS varident is existing
-		System.out.println(Arrays.toString(lexList));
-		
-		
+		//check if LHS varident is existing		
 		if(lexList[0].matches(Lexeme.VARIDENT)) {
 			if(getValueVarident(lexList[0])==null) {
 				System.out.println("Variable does not exist!");
 				return null;
 			}
 		}		
+		//check if RHS is expression
 		ArrayList<String> operands = new ArrayList<String>();
 		String ifOperations = null;
 		
 		//check if RHS is literals
 		String newVal = null;
-		if(lexList[2].matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3))) newVal = lexList[2];
+		
+		//if literals
+		if(lexList[2].matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3))) {
+			if(lexList.length!=3) return null;
+			newVal = lexList[2];
+		}
 		else if(lexList.length>5) { //math,
 			for(int i=2;i<lexList.length;i++) operands.add(lexList[i]);
 			String[] operandsArr =  new String[operands.size()];
 			for(int i=0;i<operands.size();i++) operandsArr[i] = operands.get(i);
 			ifOperations = allOperations(operandsArr);
 		}else if(lexList[2].matches(Lexeme.VARIDENT)) { //check if RHS is varident and exisiting
+			if(lexList.length!=3) return null;
 			newVal = getValueVarident(lexList[2]);
 			if(newVal==null) return null;
 			
@@ -723,14 +732,10 @@ public class GameStage{
 		if(ifOperations!=null) newVal = ifOperations;
 		
 		//reassigning after checking/solving if literals/varident/expression
-		for(SymbolTable row : symbolTable.getItems()) {
-			if(row.getIdentifier().equals(lexList[0])) {
-				newVal = newVal.replace("\"", "");
-				row.setValue(newVal);
-				return "success";
-			}
-		}
-		return null;
+		
+		newVal = newVal.replaceAll("\"", "");
+		updateVar(lexList[0], newVal);
+		return "success";
 	}
 	
 	private void clearTables() {
@@ -758,7 +763,7 @@ public class GameStage{
 			try {
 				String ans = setArithmeticOperation(tokenArrLine);
 				if(ans!=null) {
-					System.out.println("Temporary print of ans: " + ans);  
+//					System.out.println("Temporary print of ans: " + ans);  
 					return ans;
 				}else {
 					clearTables();
@@ -820,7 +825,7 @@ public class GameStage{
 				}
 				String ans = doVISIBLE(tokenArrLine);	
 				if(ans!=null) {
-					System.out.println("VISIBLE - Correct syntax");					
+//					System.out.println("VISIBLE - Correct syntax");					
 					printFormatVisible(ans);					
 					return ans;
 				}else {
@@ -1120,9 +1125,6 @@ public class GameStage{
 				break;
 			}
 		}
-
-		
-		
 		if(end==-1) return -1;
 		
 		//loop identifer must be paired/must
@@ -1155,6 +1157,7 @@ public class GameStage{
 			if(isContinueLoop.contentEquals(Lexeme.TROOF[0])) break; //if WINL : break the loop
 			
 			//if WIN
+			System.out.println(Arrays.deepToString(blockStatements.toArray()));
 			doSyntaxAnalysis(blockStatements);
 			
 			if(getValueVarident(loopStartArr[4]).matches(Lexeme.NUMBAR)) {
@@ -1279,14 +1282,13 @@ public class GameStage{
 					if(ans!=null) {
 //						System.out.println("I HAS syntax successful!");
 					}else {
-						System.out.println("668 IHAS ERROR");
 						clearTables();
-						displayResult.setText("669 I HAS - Syntax Error."); return;
+						displayResult.setText("I HAS-Syntax Error"); return;
 					}
 					
 				}catch(Exception e) {
 					clearTables();
-					displayResult.setText("688 I HAS - Catch Syntax Error."); return;
+					displayResult.setText("I HAS-Syntax Error."); return;
 				}
 				
 			}else if(tokenArrLine[0].matches(Lexeme.VARIDENT) && tokenArrLine.length>1 && tokenArrLine[1].matches(Lexeme.R)) {
@@ -1295,11 +1297,11 @@ public class GameStage{
 					if(ans!=null) {}
 					else {
 						clearTables();
-						displayResult.setText("R - Syntax Error."); return;
+						displayResult.setText("R-Reassignment Syntax Error"); return;
 					}
 				}catch(Exception e) {
 					clearTables();
-					displayResult.setText("809 Catch - R Syntax Error."); return;
+					displayResult.setText("R-Reassignment Syntax Error."); return;
 				}
 			}else if(tokenArrLine[0].matches(Lexeme.GIMMEH)) {
 				try{
@@ -1313,45 +1315,45 @@ public class GameStage{
 					}
 				}catch(Exception e) {
 					clearTables();
-					displayResult.setText("889 Catch - GIMMEH Syntax Error."); return;
+					displayResult.setText("GIMMEH Syntax Error."); return;
 				}
 				break;
 			}else if(tokenArrLine[0].matches(Lexeme.O_RLY)) {
 				try {
 					int ans = doIFELSE(tokensPerLine,i);
 					if(ans!=-1) {
-						System.out.println("1051 IF ELSE ORLY - Successful");
+//						System.out.println("1051 IF ELSE ORLY - Successful");
 						i+=ans;
 					}
 					else {
 						clearTables();
-						displayResult.setText("1044 - IF ELSE Syntax Error."); return;
+						displayResult.setText("IF-ELSE Syntax Error"); return;
 					}
 				}catch(Exception e) {
 					clearTables();
-					displayResult.setText("1048 Catch- IF ELSE Syntax Error."); return;	
+					displayResult.setText("IF ELSE Syntax Error."); return;	
 				}
 			}else if(tokenArrLine[0].matches(Lexeme.GTFO)) {}
 			else if(tokenArrLine[0].matches(Lexeme.WTF)) {
 				try {
 					int ans = doSWITCH(tokensPerLine,i);
 					if(ans!=-1) {
-						System.out.println("1102 SWITCH - Successful");
+//						System.out.println("1102 SWITCH - Successful");
 						i+=ans;
 					}else {
 						clearTables();
-						displayResult.setText("1106 - SWITCH Syntax Error."); return;
+						displayResult.setText("Switch Case Syntax Error"); return;
 					}
 				}catch(Exception e) {
 					clearTables();
-					displayResult.setText("1100 - SWITCH Catch Syntax Error."); return;
+					displayResult.setText("Switch Case Syntax Error."); return;
 				}
 			}else if(storeIt!=null) {	
 			}else if(tokenArrLine[0].matches(Lexeme.IM_IN_YR)) {
-				try {
+//				try {
 					int ans = doLoop(tokensPerLine,i);
 					if(ans!=-1 && ans!=-2) {
-						System.out.println("1268 LOOP - Successful");
+//						System.out.println("1268 LOOP - Successful");
 						i+=ans;
 					}else if(ans==-2) {
 						displayResult.setText("Infinite loop! Maximum call stack exceeded");
@@ -1360,12 +1362,12 @@ public class GameStage{
 					}
 					else {
 						clearTables();
-						displayResult.setText("1272 - LOOP Syntax Error."); return;
+						displayResult.setText("Loop Syntax Error."); return;
 					}
-				}catch(Exception e) {
-					clearTables();
-					displayResult.setText("1276 - LOOP Catch Syntax Error."); return;
-				}
+//				}catch(Exception e) {
+//					clearTables();
+//					displayResult.setText("Loop Syntax Error"); return;
+//				}
 			}else {
 				clearTables();
 				displayResult.setText("487 Syntax Error.");
