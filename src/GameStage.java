@@ -938,31 +938,35 @@ public class GameStage{
 		
 			//math,comparison, boolean
 			else if(lexList[i].matches(combinedOp)) {
+				String regexOperation = Lexeme.mathOperator+Lexeme.boolOperator.substring(0,Lexeme.boolOperator.length()-1);
+				String literalsVar = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-2)+Lexeme.VARIDENT;
 				ArrayList<String> tempStore = new ArrayList<String>();
-				while(i<lexList.length && lexList[i].matches(Lexeme.ALL_LITERALS+"|"+Lexeme.VARIDENT+"|"+combinedOp)) {
-					if(Arrays.deepToString(lexList).contains("MKAY")) {}
-					else if((i+2<lexList.length && lexList[i].matches(combinedVal) && !lexList[i].matches("AN") && lexList[i+1].matches("AN")  && lexList[i+2].matches(combinedVal) && !lexList[i+2].matches("AN"))) {
-						if(i+3==lexList.length) {
-							tempStore.add(lexList[i]); tempStore.add(lexList[i+1]);tempStore.add(lexList[i+2]);i++;
-							break;
-						}else if(!lexList[i+3].matches("AN")) {
-							tempStore.add(lexList[i]);tempStore.add(lexList[i+1]);tempStore.add(lexList[i+2]);i++;
-							break;
-						}
+				
+				int numOperation = 0; int numOperand = 0;
+				while(numOperation+1!=numOperand) {
+					if(lexList[i].matches(literalsVar) && !lexList[i].matches("AN") && !lexList[i].matches(regexOperation)) {
+						tempStore.add(lexList[i]);
+						numOperand++;
+					}else if(lexList[i].matches(regexOperation)) {
+						tempStore.add(lexList[i]);
+						numOperation++;
+					}else if(lexList[i].matches("AN")) {
+						if(i+1<lexList.length && lexList[i+1].matches("AN")) return null;
+						tempStore.add(lexList[i]);
 					}
-					tempStore.add(lexList[i]);
-					i++;					
+					i++;
 				}
+				i--;
 				if(tempStore.size()>3) {
+					System.out.println("961:" + Arrays.deepToString(tempStore.toArray()));
 					String[] passToOp = new String[tempStore.size()];
 					for(int a=0;a<tempStore.size();a++) passToOp[a] = tempStore.get(a);
 					String ans = allOperations(passToOp);
 					if(ans!=null) outputPrint.add(ans);
 					else return null;
 				}else return null;
-				i++;
 				continue;
-			}
+			} //end of expression
 			
 			
 			//variable
@@ -1138,43 +1142,45 @@ public class GameStage{
 		ArrayList<String[]> blockStatements = new ArrayList<String[]>();
 		for(int c=start+1;c<end;c++) blockStatements.add(tokensProgram.get(c));
 		
-		System.out.println(Arrays.deepToString(blockStatements.toArray()));
+//		System.out.println(Arrays.deepToString(blockStatements.toArray()));
 		
+		System.out.println("Start: " + start);
+		System.out.println("End: " + end);
+
 		
 		//getting the condition statement: outputs WIN breakk, FAIL continue
 		ArrayList<String> conditionStatement = new ArrayList<String>();
-		if(!tokensProgram.get(start)[6].matches(Lexeme.BOTH_SAEM+"|"+Lexeme.DIFFRINT)) return -1; //BOTH SAEM because if: WIN - stop loop, FAIL = continue loop
+		if(!tokensProgram.get(start)[6].matches(Lexeme.boolOperator.substring(0,Lexeme.boolOperator.length()-1))) return -1; //BOTH SAEM because if: WIN - stop loop, FAIL = continue loop
 		for(int b=6;b<loopStartArr.length;b++) { //6 because 6 is the constant value of index in an array of where the condition checking begins
 			conditionStatement.add(tokensProgram.get(start)[b]);
 		}
-		String isContinueLoop;
-		
+	
 		int checkerInfiniteLoop = 0; //this stops if it exceeds 1,000 iterations assuming 1,000 is the maximum statck size (ideal) -- to avoid infinite loop
-		while(true) {
+		while(true) {	
+			//gettinig the expression resulting to: WIN/FAIL
 			String[] conditionStatementArr = new String[conditionStatement.size()];
 			for(int b=0;b<conditionStatement.size();b++) conditionStatementArr[b] = conditionStatement.get(b);
-			isContinueLoop = allOperations(conditionStatementArr);	
-			if(isContinueLoop.contentEquals(Lexeme.TROOF[0])) break; //if WINL : break the loop
+			String isContinueLoop = allOperations(conditionStatementArr);	
+			if(isContinueLoop!=null && isContinueLoop.equals(Lexeme.TROOF[0])) break; //if WINL : break the loop
 			
 			//if WIN
-			System.out.println(Arrays.deepToString(blockStatements.toArray()));
+//			System.out.println(Arrays.deepToString(blockStatements.toArray()));
 			doSyntaxAnalysis(blockStatements);
 			
-			if(getValueVarident(loopStartArr[4]).matches(Lexeme.NUMBAR)) {
+			String varUpdate = getValueVarident(loopStartArr[4]);
+			if(varUpdate!=null && varUpdate.matches(Lexeme.NUMBAR)) {
 				Float newval = Float.parseFloat(getValueVarident(loopStartArr[4]))+ updateVal;
 				updateVar(loopStartArr[4],Float.toString(newval));
-			}else if(getValueVarident(loopStartArr[4]).matches(Lexeme.NUMBR)) {
+			}else if(varUpdate!=null && varUpdate.matches(Lexeme.NUMBR)) {
 				int newval = Integer.parseInt(getValueVarident(loopStartArr[4]))+updateVal;
 				updateVar(loopStartArr[4],Integer.toString(newval));
 			}
+			System.out.println(loopStartArr[4] + " " + getValueVarident(loopStartArr[4]));
 			
-			if(checkerInfiniteLoop>=1000) return -2;
-			
+			if(checkerInfiniteLoop>=20) return -2;
 			checkerInfiniteLoop++;
 		}
-		
-		
-		return end-1;
+		return end;
 	}
 	
 	private ArrayList<String[]> doLexicalAnalysis() { 
@@ -1294,7 +1300,9 @@ public class GameStage{
 			}else if(tokenArrLine[0].matches(Lexeme.VARIDENT) && tokenArrLine.length>1 && tokenArrLine[1].matches(Lexeme.R)) {
 				try {
 					String ans = makeRreassignment(tokenArrLine);
-					if(ans!=null) {}
+					if(ans!=null) {
+						System.out.println("Reassigned!");
+					}
 					else {
 						clearTables();
 						displayResult.setText("R-Reassignment Syntax Error"); return;
@@ -1354,7 +1362,7 @@ public class GameStage{
 					int ans = doLoop(tokensPerLine,i);
 					if(ans!=-1 && ans!=-2) {
 //						System.out.println("1268 LOOP - Successful");
-						i+=ans;
+						i=ans;continue;
 					}else if(ans==-2) {
 						displayResult.setText("Infinite loop! Maximum call stack exceeded");
 						clearTables();
@@ -1408,7 +1416,7 @@ public class GameStage{
 //BONUS DONE:
 //	1.) a!
 //	2.) SMOOSH
-//	3.) loop
+//	3.) loop (without nesting)
 
 
 
