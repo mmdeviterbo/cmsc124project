@@ -970,7 +970,6 @@ public class GameStage{
 				}
 				i--;
 				if(tempStore.size()>1) { //NOT unary has at least 2 operands
-					System.out.println("961:" + Arrays.deepToString(tempStore.toArray()));
 					String[] passToOp = new String[tempStore.size()];
 					for(int a=0;a<tempStore.size();a++) passToOp[a] = tempStore.get(a);
 					String ans = allOperations(passToOp);
@@ -1108,11 +1107,25 @@ public class GameStage{
 		Matcher match = pattern.matcher(removeComment);
 		if (match.find()) return null;
 		
-		pattern = Pattern.compile("[\\s]*OBTW[\\s\\w\\W]*TLDR[\\s]*");
-		match = pattern.matcher(removeComment);
-		while(match.find()) removeComment = removeComment.replaceAll("[\\s]*OBTW[\\s\\w\\W]*TLDR[\\s]*", "\n");
 		
-		return removeComment;
+		String newRemovedComments="";
+		String[] tempLines = removeComment.split("\n");
+
+		
+		for(int i=0;i<tempLines.length;i++) {
+			if(tempLines[i].matches("[\\s]*OBTW[\\s\\w]*")) {
+				boolean isFoundTLDR = false;
+				while(i<tempLines.length) {
+					if(tempLines[i].matches("[\\s\\w]*TLDR")) {
+						isFoundTLDR = true;
+						break;
+					}
+					i++;
+				}
+				if(!isFoundTLDR) return null;
+			}else newRemovedComments = newRemovedComments +"\n" + tempLines[i];
+		}
+		return newRemovedComments;
 	}
 	
 	private int doLoop(ArrayList<String[]> tokensProgram, int i) {
