@@ -1105,13 +1105,14 @@ public class GameStage{
 		String removeComment = this.inputUser.getText();
 		Pattern pattern = Pattern.compile("[\\s]*TLDR[ ]*[\\w]+"); //if TLDR has succeeding chars (excluding whitespaces)
 		Matcher match = pattern.matcher(removeComment);
-		if (match.find()) return null;
-		
+		if(match.find()) return null;
+	
+		Pattern pattern2 = Pattern.compile("[\\w]+[ ]*OBTW.*"); 
+		Matcher match2 = pattern2.matcher(removeComment);
+		if(match2.find()) return null;
 		
 		String newRemovedComments="";
 		String[] tempLines = removeComment.split("\n");
-
-		
 		for(int i=0;i<tempLines.length;i++) {
 			if(tempLines[i].matches("[\\s]*OBTW[\\s\\w]*")) {
 				boolean isFoundTLDR = false;
