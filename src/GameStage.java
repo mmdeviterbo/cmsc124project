@@ -15,9 +15,10 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableColumn.CellEditEvent;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextFormatter;
+import javafx.scene.control.TextFormatter.Change;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -49,6 +50,7 @@ public class GameStage{
 	
     TableView<Lexeme> lexemeTable; TableColumn<Lexeme, String> columnLexeme; TableColumn<Lexeme, String> columnClassification;
     TableView<SymbolTable> symbolTable; TableColumn<SymbolTable, String> columnIdentifier; TableColumn<SymbolTable, String> columnValue;
+
 
 	public static final int WINDOW_HEIGHT = 1070;
 	public static final int WINDOW_WIDTH= 1890;
@@ -86,7 +88,6 @@ public class GameStage{
         btnSelectFile.setOnAction(e -> {
             File selectedFile = fileChooser.showOpenDialog(stage);
             if(selectedFile==null) {
-            	inputUser.setText("No file is selected.");
             }else {
             	try(BufferedReader reader = new BufferedReader(new FileReader(selectedFile))) {
             		if(selectedFile.toString().matches(".+\\.lol$")==false) {
@@ -174,9 +175,9 @@ public class GameStage{
 //				+ "\n\n\tIM IN YR LOOPY2 UPPIN YR VAR3 TIL BOTH SAEM VAR3 AN 3\n\t\tVISIBLE \"this is inner-2\"\n\tIM OUTTA YR LOOPY2\n\tVAR3 R 0\n"
 //				+ "\tVISIBLE \"is deadcode\"\n"
 //				+ "IM OUTTA YR LOOPY\n");
-		 inputUser.setText(inputUser.getText() + "I HAS A choice\nchoice R 1 HAI");
+		 inputUser.setText(inputUser.getText() + "I HAS A choice\nVISIBLE \"Enter your choice:\"\nGIMMEH choice");
 //		inputUser.setText(inputUser.getText() + "SUM OF 10 AN 10\nWTF?\nOMG 20\n\tVISIBLE \"first choice\"\nOMG 30\n\tVISIBLE \"2nd choice\"\nOMG 40\n\tVISIBLE \"3rd choice\"\nOMGWTF\n\tVISIBLE \"default choice\" \nOIC");
-		inputUser.setText(inputUser.getText() + "\n\n\tOBTW dsadsda\ndsdasdasadas\nsadasdsdasd\n\tTLDR");
+//		inputUser.setText(inputUser.getText() + "\n\n\tOBTW dsadsda\ndsdasdasadas\nsadasdsdasd\n\tTLDR");
 		inputUser.setText(inputUser.getText() + "\nKTHXBYE");		
 		String str = "hello" + "\n" + "hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n";
 		str = str + str + str; //sample string lang if magsscroll yung window ng "Lexeme" at "Symbol Table"
@@ -344,6 +345,8 @@ public class GameStage{
 					if(regexBOTH_OF) ans = Abool&&Bbool==true? Lexeme.TROOF[0] : Lexeme.TROOF[1];
 					else if(regexEITHER_OF) ans = Abool||Bbool==true? Lexeme.TROOF[0] : Lexeme.TROOF[1];
 					else if(regexWON_OF) ans = Abool==Bbool==true? Lexeme.TROOF[1] : Lexeme.TROOF[0];
+					
+					
 					stackOperation.remove(index);
 					stackOperation.add(index,ans);
 					solveBooleanOperation(stackOperation,0,isArity);	
@@ -858,45 +861,51 @@ public class GameStage{
 		this.isNewLine=true;
 	}
 	
-	private void storeGIMMEH(String variable, String literal, ArrayList<String[]> continueLine) {
-		String typedCastNum= literal;
-		typedCastNum = typedCastNum.replace("\"","");
-		if(typedCastNum.matches(Lexeme.NUMBR+"|"+Lexeme.NUMBAR)) {
-			literal = typedCastNum;
-		}else literal = "\"" + literal + "\"";
-
-		for(SymbolTable row : symbolTable.getItems()) {
-			if(row.getIdentifier().equals(variable)) {
-				row.setValue(literal);
-				symbolTable.refresh();
-				doSyntaxAnalysis(continueLine);
-				return;
+	private void storeGIMMEH(String variable, String newStr, String oldStr, ArrayList<String[]> continueLine) {
+		boolean isSuccessInput=false;
+		if(newStr.contains(oldStr)) {
+			for(SymbolTable row : symbolTable.getItems()) {
+				if(row.getIdentifier().equals(variable)) {
+					newStr = newStr.replace(oldStr,"").replaceAll("[\"\n]",""); 
+					row.setValue(newStr);
+					symbolTable.refresh(); //update instantly the symboltable (tableview on the right)
+					isSuccessInput=true;
+					displayResult.setEditable(false);
+					displayResult.setText(displayResult.getText()+"\n");
+					if(displayResult.getText().charAt(0)=='\n') displayResult.setText(displayResult.getText().substring(1)); //printing format only
+					doSyntaxAnalysis(continueLine);
+					return;
+				}
 			}
+		}
+		if(!isSuccessInput) {
+			clearTables();
+			displayResult.setText("Input Error!");
+			displayResult.setEditable(false);
 		}
 	}
 	
 	private String doGIMMEH(String[] lexList, ArrayList<String[]> continueLine) {
-		if(!checkIfVarExist(lexList[1])) return null;
-
-		
+		if(lexList.length!=2) return null;
 		String variable = lexList[1];
+		if(!checkIfVarExist(variable)) return null; //lexList[1] contains the varident/variable that user want to store, if not existing then return null (error)
+		
+		if(displayResult.getText().charAt(0)=='\n') displayResult.setText(displayResult.getText().substring(1)); //printing format only
+		
     	displayResult.setEditable(true);
-    	displayResult.setText(displayResult.getText()+"\n");
+    	
+    	//old string input from terminal
+    	String oldStr = displayResult.getText();    	
+    	
     	displayResult.setOnKeyPressed(new EventHandler<KeyEvent>(){
     	   @Override
     	   public void handle(KeyEvent ke){
     	     if(ke.getCode().equals(KeyCode.ENTER)){
-    	    	//store this input to new variable
-    	    	String[] ans = displayResult.getText().split("\n");
-				storeGIMMEH(variable,ans[ans.length-1],continueLine);
-				
-				displayResult.setText(displayResult.getText()+"\n");
-				displayResult.setEditable(false);
+    	    	 String newStr = displayResult.getText();
+    	    	 storeGIMMEH(variable,newStr,oldStr,continueLine);
     	     }
     	   }
-    	  
     	});
-    	
     	return "success";
 	}
 	
@@ -995,8 +1004,7 @@ public class GameStage{
 		String finalOutput="";
 		if(outputPrint.size()!=0) {
 			for(String output : outputPrint) {
-				finalOutput = finalOutput + output.replace("\"","");
-//				
+				finalOutput = finalOutput + output.replace("\"","");		
 			}
 			return finalOutput;
 		}
@@ -1327,6 +1335,7 @@ public class GameStage{
 					displayResult.setText("R-Reassignment Syntax Error."); return;
 				}
 			}else if(tokenArrLine[0].matches(Lexeme.GIMMEH)) {
+				if(displayResult.getText().charAt(0)=='\n') displayResult.setText(displayResult.getText().substring(1)); //printing format only (nothing to do with syntax analyzer)
 				try{
 					ArrayList<String[]> continueAfterInput = new ArrayList<String[]>();
 					for(int a=i+1;a<tokensPerLine.size();a++) continueAfterInput.add(tokensPerLine.get(a));
