@@ -1422,7 +1422,7 @@ public class GameStage{
 				}
 			}else if(storeIt!=null) {	
 			}else if(tokenArrLine[0].matches(Lexeme.IM_IN_YR)) {
-//				try {
+				try {
 					int ans = doLoop(tokensPerLine,i);
 					if(ans!=-1 && ans!=-2) {
 						i=ans;continue;
@@ -1435,10 +1435,10 @@ public class GameStage{
 						clearTables();
 						displayResult.setText("Loop Syntax Error."); return;
 					}
-//				}catch(Exception e) {
-//					clearTables();
-//					displayResult.setText("Loop Syntax Error"); return;
-//				}
+				}catch(Exception e) {
+					clearTables();
+					displayResult.setText("Loop Syntax Error"); return;
+				}
 			}else {
 				clearTables();
 				displayResult.setText("487 Syntax Error.");
