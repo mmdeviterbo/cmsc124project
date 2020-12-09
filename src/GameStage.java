@@ -448,8 +448,13 @@ public class GameStage{
 		
 
 	}
+	
 	@SuppressWarnings("unused")
 	private String setComparisonOperation(String[] lexList) {
+		
+		System.out.println("Given: "+Arrays.deepToString(lexList));
+		
+		
 		String regexNum = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3);
 		String regexMath = Lexeme.boolOperator + Lexeme.mathOperator.substring(0,Lexeme.mathOperator.length()-1);
 		String isRelationOp = null; //-1 means false, 1 means biggr of, 2 means smallr
@@ -457,17 +462,16 @@ public class GameStage{
 		ArrayList<String> operandA = new ArrayList<String>();
 		ArrayList<String> operandB = new ArrayList<String>();
 		
-		if(lexList[0].contentEquals("BOTH SAEM") || lexList[0].contentEquals("DIFFRINT")) {			
+		if(lexList[0].matches(Lexeme.BOTH_SAEM) || lexList[0].matches(Lexeme.DIFFRINT)) {			
 			int i=1;
 			for(i=1;i<lexList.length;i++) { //getting operandA
 				if(lexList[i].matches(regexNum+"|"+Lexeme.VARIDENT) && !lexList[i].matches(regexMath+"|AN")) {
-					lexList[i] = lexList[i].replaceAll("\"","");
-					if(lexList[i].matches(regexNum)) {
-						if(lexList[i].matches(Lexeme.NUMBAR) && lexList[i].matches("[0-9]+[.]0+")) {
-							lexList[i] = lexList[i].split("\\.")[0];
-						}
+					if(lexList[i].matches(regexNum)) { //literal operand
+//						if(lexList[i].matches(Lexeme.NUMBAR) && lexList[i].matches("[0-9]+[.]0+")) {
+//							lexList[i] = lexList[i].split("\\.")[0];
+//						}
 						operandA.add(lexList[i]);
-					}else if(lexList[i].matches(Lexeme.VARIDENT)) {
+					}else if(lexList[i].matches(Lexeme.VARIDENT)) { //varident operand
 						String temp = getValueVarident(lexList[i]);
 						if(temp==null) return null;
 						lexList[i] = temp;
@@ -496,11 +500,7 @@ public class GameStage{
 			
 			for(int j=i;j<lexList.length;j++) { //getting operandB
 				if(lexList[j].matches(regexNum+"|"+Lexeme.VARIDENT) && !lexList[j].matches(regexMath+"|AN")) {
-					lexList[j] = lexList[j].replaceAll("\"","");
 					if(lexList[j].matches(regexNum)) {
-						if(lexList[j].matches(Lexeme.NUMBAR) && lexList[j].matches("[0-9]+[.]0+")) {
-							lexList[j] = lexList[j].split("\\.")[0];
-						}
 						operandB.add(lexList[j]);
 					}
 					else if(lexList[j].matches(Lexeme.VARIDENT)) {
@@ -530,11 +530,24 @@ public class GameStage{
 			for(int a=0;a<operandA.size();a++) operandAtemp[a] = operandA.get(a);
 			String[] operandBtemp = new String[operandB.size()];
 			for(int b=0;b<operandB.size();b++) operandBtemp[b] = operandB.get(b);
+			
+			//if list has more than one size, then it has expression (to be solved), else it has only literal/variables
 			String valueA = operandA.size()==1? operandA.get(0) : allOperations(operandAtemp);
 			String valueB = operandB.size()==1? operandB.get(0) : allOperations(operandBtemp);
+			
 			if(valueA==null || valueB==null) return null;
-
-		
+			
+			System.out.println("ValueA: " + valueA);
+			System.out.println("ValueB: " + valueB);
+			
+			//if operand has literal/varident but has TROOF values, it must result FAIL if BOTH SAEM, Error if diffrint
+			if(!valueA.matches(Lexeme.NUMBAR+"|"+Lexeme.NUMBR)) return Lexeme.TROOF[1];
+			if(!valueB.matches(Lexeme.NUMBAR+"|"+Lexeme.NUMBR)) return Lexeme.TROOF[1];
+			
+			if(valueA.matches("[0-9]+[.]0+")) valueA = valueA.split("\\.")[0];
+			if(valueB.matches("[0-9]+[.]0+")) valueB = valueB.split("\\.")[0];
+			
+						
 			if(lexList[0].matches(Lexeme.DIFFRINT) && !valueA.contentEquals(valueB)) return Lexeme.TROOF[0];
 			else if(lexList[0].matches(Lexeme.DIFFRINT) && valueA.contentEquals(valueB)) return Lexeme.TROOF[1];
 			if(lexList[0].matches(Lexeme.BOTH_SAEM) && valueA.contentEquals(valueB)) return Lexeme.TROOF[0];
@@ -580,11 +593,19 @@ public class GameStage{
 		return "succes";
 	}
 	
-	private String setIHAS(String[] lexList) {
-		if(lexList.length==2) {
-			if(!lexList[1].matches(Lexeme.VARIDENT)) return null;	
-			if(checkIfVarExist(lexList[1])) return null;
-			else {
+	private String setIHAS(String[] lexList) {		
+		if(lexList.length==1 || lexList.length==3 || (lexList.length>3 && !lexList[2].matches(Lexeme.ITZ))) {
+			displayResult.setText("Variable assignment error!");
+			return null;
+		}else if(lexList.length>=2) {
+			if(checkIfVarExist(lexList[1])) {
+				displayResult.setText("Variable already exists, error!");
+				return null;
+			}else if(lexList[1].matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3))) {
+				displayResult.setText("Variable is invalid, error!");
+				return null;
+			}
+			else if(lexList.length==2) {
 				this.symbolTable.getItems().add(new SymbolTable(lexList[1],""));
 				return "success";
 			}
@@ -593,29 +614,20 @@ public class GameStage{
 		//this is for operations eg "I HAS A var ITZ SUM OF 10 AN 5"
 		ArrayList<String> operands = new ArrayList<String>();
 		String ifOperations = null;
-		if(lexList.length>=5) { //math,
+		if(lexList.length>=5) { //expression
 			for(int i=3;i<lexList.length;i++) operands.add(lexList[i]);
 			String[] operandsArr =  new String[operands.size()];
 			for(int i=0;i<operands.size();i++) operandsArr[i] = operands.get(i);
-			
 			ifOperations = allOperations(operandsArr);
 		}
 		//====end of i has with operations=====		
 		
-		if(!lexList[0].matches(Lexeme.I_HAS_A)) return null;
-		if(lexList.length==3) return null;
-		if(!lexList[2].matches(Lexeme.ITZ)) return null; 
-		if(!lexList[1].matches(Lexeme.VARIDENT)) return null;
-		for(SymbolTable rowData : symbolTable.getItems()) {
-			if(lexList[1].contentEquals(rowData.getIdentifier())) {
-				System.out.println("Variable identifier already exist!");
-				return null;
-			}
-		}
-		
 		
 		if(lexList[3].matches(Lexeme.ALL_LITERALS)) {
-			if(lexList.length!=4) return null;
+			if(lexList.length!=4) {
+				displayResult.setText("Variable assignment error!");
+				return null;
+			}
 			lexList[3] = lexList[3].replace("\"", "");
 			this.symbolTable.getItems().add(new SymbolTable(lexList[1],lexList[3]));	
 			return "Success";
@@ -624,7 +636,6 @@ public class GameStage{
 			this.symbolTable.getItems().add(new SymbolTable(lexList[1],ifOperations));		
 			return "Success";
 		}else if(lexList[3].matches(Lexeme.VARIDENT)) { //varident
-			if(lexList.length!=4) return null;
 			boolean isFound = false;
 			for(SymbolTable row : symbolTable.getItems()) {
 				if(lexList[3].contentEquals(row.getIdentifier())) {
@@ -634,10 +645,11 @@ public class GameStage{
 				}
 			}
 			if(!isFound) {
-				System.out.println("Variable identifier not found");
+				displayResult.setText(lexList[3]+ " variable not found, error!");
 				return null;
 			}else return "Success";
 		}
+		displayResult.setText("I HAS statement error!");
 		return null;
 	}
 	
@@ -1143,7 +1155,7 @@ public class GameStage{
 		String literals = Lexeme.NUMBR+"|"+Lexeme.NUMBAR+"|"+Lexeme.TROOF[0]+"|"+Lexeme.TROOF[1];
 
 		if(!loopStartArr[1].matches(Lexeme.VARIDENT)) return -1;
-		if(loopStartArr.length<10) return -1; //10 is the minimum length of the array of where IM IN YR array belongs
+		if(loopStartArr.length<8) return -1; //8 is the minimum length of the array of where IM IN YR array belongs
 				
 		//check if valid data type to be incremented/decremented (check if var has data type of numbar, numbr, or troof, else error)
 		if(checkIfVarExist(loopStartArr[4])) {
@@ -1185,6 +1197,7 @@ public class GameStage{
 		}
 	
 		int checkerInfiniteLoop = 0; //this stops if it exceeds 1,000 iterations assuming 1,000 is the maximum statck size (ideal) -- to avoid infinite loop
+		
 		while(true) {	
 			//gettinig the expression resulting to: WIN/FAIL
 			String[] conditionStatementArr = new String[conditionStatement.size()];
@@ -1243,7 +1256,10 @@ public class GameStage{
 		for(int a=0;a<programInputList.size();a++) programInput[a] = programInputList.get(a);
 //		System.out.println("894: " + Arrays.toString(programInput));
 		
-		if(checkHaiKthxbye(programInput)==null) return null;
+		if(checkHaiKthxbye(programInput)==null) {
+			displayResult.setText("HAI/KTHXBYE has error!");
+			return null;
+		}
 		
 		for(int i=0;i<programInput.length;i++) {
 			//check if HAI/KTHXBYE are valid		
@@ -1309,10 +1325,10 @@ public class GameStage{
 				try {
 					String ans = setIHAS(tokenArrLine);
 					if(ans!=null) {
-//						System.out.println("I HAS syntax successful!");
 					}else {
 						clearTables();
-						displayResult.setText("I HAS-Syntax Error"); return;
+//						displayResult.setText("I HAS-Syntax Error"); 
+						return;
 					}
 					
 				}catch(Exception e) {
@@ -1419,7 +1435,7 @@ public class GameStage{
                 		if(tokensPerLine!=null) doSyntaxAnalysis(tokensPerLine);
                 		else {
                 			clearTables();
-                			displayResult.setText(displayResult.getText()+"\n"+" 499 Syntax Error.");
+                			displayResult.setText(displayResult.getText()+"\n"+"499 Syntax Error.");
                 		}
             		}
 //            	}catch(Exception e1) {
@@ -1442,7 +1458,8 @@ public class GameStage{
 //	2.) SMOOSH
 //	3.) loop (without nesting)
 //  4.) loop (with nesting)
-
+//	5.) typecast in arithmetic operation, "124" to 124
+//  6.) typecast from numbr to numba,   2.0 to 2	(no specs related to this, we follow the rule in online interpreter) and they are equal/WIN
 
 
 

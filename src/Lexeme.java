@@ -12,11 +12,11 @@ public class Lexeme{
 		
 	
 	//variable
-	public static final String VARIDENT = "[a-zA-Z][0-9a-zA-Z_]*";
+	public static final String VARIDENT = "\\b[a-zA-Z][0-9a-zA-Z_]*\\b";
 
 	//literals
-	public static final String NUMBR = "-?[0-9]+";
-	public static final String NUMBAR = "-?[0-9]*\\.[0-9]+";
+	public static final String NUMBR = "\\b-?[0-9]+\\b";
+	public static final String NUMBAR = "\\b-?[0-9]*\\.[0-9]+\\b";
 	public static final String YARN = "\"[^\"]+\""; 
 	public static final String[] TROOF = {"WIN","FAIL"};
 	public static final String[] TYPE = {"NUMBR","NUMBAR","YARN","TROOF"};
@@ -128,7 +128,11 @@ public class Lexeme{
 	
 	
 	//literal
-	public static final String LITERAL = "Literal";
+	public static final String NUMBR_LITERAL = "NUMBR Literal";
+	public static final String NUMBAR_LITERAL = "NUMBAR Literal";
+	public static final String YARN_LITERAL = "YARN Literal";
+	public static final String NOOB_LITERAL = "NOOB Literal";
+	public static final String TROOF_LITERAL = "TROOF Literal";
 	
 	//operator
 	public static final String ARITHMETIC_OPERATOR = "Arithmetic Operator";
@@ -237,12 +241,26 @@ public class Lexeme{
 		ArrayList<String> comparison_operator = new ArrayList<String>();
 		comparison_operator.add(BOTH_SAEM);comparison_operator.add(DIFFRINT);
 		Lexeme.TOKENS.put(COMPARISON_OPERATOR,comparison_operator);	
+
+		//for specific type of literals
+		ArrayList<String> literal_NUMBR = new ArrayList<String>();
+		ArrayList<String> literal_NUMBAR = new ArrayList<String>();
+		ArrayList<String> literal_YARN = new ArrayList<String>();
+		ArrayList<String> literal_TROOF = new ArrayList<String>();
 		
-		ArrayList<String> literalValues = new ArrayList<String>();
-		literalValues.add(Lexeme.NUMBR); literalValues.add(Lexeme.NUMBAR);literalValues.add(Lexeme.TROOF[0]);literalValues.add(Lexeme.TROOF[1]);
-		literalValues.add(Lexeme.TYPE[0]);literalValues.add(Lexeme.TYPE[1]);literalValues.add(Lexeme.TYPE[2]);literalValues.add(Lexeme.TYPE[3]);
-		literalValues.add(Lexeme.YARN);
-		Lexeme.TOKENS.put(Lexeme.LITERAL, literalValues);	
+		literal_NUMBR.add(Lexeme.NUMBR); literal_NUMBAR.add(Lexeme.NUMBAR);
+		literal_TROOF.add(Lexeme.TROOF[0]);literal_TROOF.add(Lexeme.TROOF[1]);
+		literal_YARN.add(Lexeme.YARN);
+
+
+		Lexeme.TOKENS.put(Lexeme.NUMBR_LITERAL, literal_NUMBR);
+		Lexeme.TOKENS.put(Lexeme.NUMBAR_LITERAL, literal_NUMBAR);
+		Lexeme.TOKENS.put(Lexeme.TROOF_LITERAL, literal_TROOF);	
+		Lexeme.TOKENS.put(Lexeme.YARN_LITERAL, literal_YARN);	
+	
+		
+		
+		
 		
 		ArrayList<String> variable = new ArrayList<String>();
 		variable.add(Lexeme.VARIDENT);
