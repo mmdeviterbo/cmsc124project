@@ -452,8 +452,7 @@ public class GameStage{
 	@SuppressWarnings("unused")
 	private String setComparisonOperation(String[] lexList) {
 		
-		System.out.println("Given: "+Arrays.deepToString(lexList));
-		
+//		System.out.println("Given: "+Arrays.deepToString(lexList));
 		
 		String regexNum = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3);
 		String regexMath = Lexeme.boolOperator + Lexeme.mathOperator.substring(0,Lexeme.mathOperator.length()-1);
@@ -467,9 +466,6 @@ public class GameStage{
 			for(i=1;i<lexList.length;i++) { //getting operandA
 				if(lexList[i].matches(regexNum+"|"+Lexeme.VARIDENT) && !lexList[i].matches(regexMath+"|AN")) {
 					if(lexList[i].matches(regexNum)) { //literal operand
-//						if(lexList[i].matches(Lexeme.NUMBAR) && lexList[i].matches("[0-9]+[.]0+")) {
-//							lexList[i] = lexList[i].split("\\.")[0];
-//						}
 						operandA.add(lexList[i]);
 					}else if(lexList[i].matches(Lexeme.VARIDENT)) { //varident operand
 						String temp = getValueVarident(lexList[i]);
@@ -537,8 +533,6 @@ public class GameStage{
 			
 			if(valueA==null || valueB==null) return null;
 			
-			System.out.println("ValueA: " + valueA);
-			System.out.println("ValueB: " + valueB);
 			
 			//if operand has literal/varident but has TROOF values, it must result FAIL if BOTH SAEM, Error if diffrint
 			if(!valueA.matches(Lexeme.NUMBAR+"|"+Lexeme.NUMBR)) return Lexeme.TROOF[1];
@@ -579,9 +573,9 @@ public class GameStage{
 		//check if there's unreachable code after GTFO keyword
 		int index=0;
 		for(String[] row : tokensPerLine) {
-			if(row[0].matches("GTFO")) {
+			if(row[0].matches(Lexeme.GTFO)) {
 				if(index+1<tokensPerLine.size()) {
-					if(!tokensPerLine.get(index+1)[0].matches(Lexeme.OMG+"|"+Lexeme.OMGWTF+"|"+Lexeme.OIC)) {
+					if(!tokensPerLine.get(index+1)[0].matches(Lexeme.OMG+"|"+Lexeme.OMGWTF+"|"+Lexeme.OIC+"|"+Lexeme.IM_OUTTA_YR)) {
 						return null;
 					}
 				}
@@ -724,16 +718,21 @@ public class GameStage{
 	}
 	
 	private String makeRreassignment(String[] lexList) {
-		//check if LHS varident is existing		
+		//check if LHS varident is existing or not		
 		if(lexList[0].matches(Lexeme.VARIDENT)) {
 			if(getValueVarident(lexList[0])==null) {
-				System.out.println("Variable does not exist!");
+				displayResult.setText(lexList[0]+" is not found, error!");
 				return null;
 			}
 		}		
+		if(lexList.length<=2) {
+			displayResult.setText("Reassignment syntax error!");
+			return null;
+		}
+		
 		//check if RHS is expression
 		ArrayList<String> operands = new ArrayList<String>();
-		String ifOperations = null;
+		String ifOperations = "";
 		
 		//check if RHS is literals
 		String newVal = null;
@@ -741,24 +740,45 @@ public class GameStage{
 		
 		//if literals
 		if(lexList[2].matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3))) {
-			if(lexList.length!=3) return null;
+			if(lexList.length!=3) {
+				displayResult.setText("Reassignment error!");
+				return null;
+			}
 			newVal = lexList[2];
 		}
 		else if(lexList.length>3) { //math,
 			for(int i=2;i<lexList.length;i++) operands.add(lexList[i]);
 			String[] operandsArr =  new String[operands.size()];
 			for(int i=0;i<operands.size();i++) operandsArr[i] = operands.get(i);
+			if(operandsArr[0].matches(Lexeme.NOT) && operandsArr.length<2) {
+				displayResult.setText("761: Reassignment of expression error!");
+				return null;
+			}else if(!operandsArr[0].matches(Lexeme.NOT) && operandsArr.length<4) {
+				displayResult.setText("Reassignment of expression error!");
+				return null;
+			}
 			ifOperations = allOperations(operandsArr);
 		}else if(lexList[2].matches(Lexeme.VARIDENT)) { //check if RHS is varident and exisiting
-			if(lexList.length!=3) return null;
+			if(lexList.length!=3) {
+				displayResult.setText("Reassignment error!");
+				return null;
+			}
 			newVal = getValueVarident(lexList[2]);
-			if(newVal==null) return null;
-			
+			if(newVal==null) {
+				displayResult.setText(lexList[2] +" is not found, error!");
+				return null;
+			}else if(lexList[2].contentEquals(lexList[0])) {
+				displayResult.setText("Warning due to self-reassignment!");
+				return null;
+			}
 		}
-		if(ifOperations!=null) newVal = ifOperations;
+		if(ifOperations==null) {
+			displayResult.setText("Reassignment of expression error!");
+			return null;
+		}else if(ifOperations.length()==0) {}
+		else newVal = ifOperations;
 		
 		//reassigning after checking/solving if literals/varident/expression
-		
 		newVal = newVal.replaceAll("\"", "");
 		updateVar(lexList[0], newVal);
 		return "success";
@@ -892,17 +912,26 @@ public class GameStage{
 		}
 		if(!isSuccessInput) {
 			clearTables();
-			displayResult.setText("Input Error!");
+			displayResult.setText("Error input, enter on last line!");
 			displayResult.setEditable(false);
 		}
 	}
 	
 	private String doGIMMEH(String[] lexList, ArrayList<String[]> continueLine) {
-		if(lexList.length!=2) return null;
+		if(lexList.length==1) {
+			displayResult.setText("GIMMEH has no variable, error!");
+			return null;
+		}else if(lexList.length>2) {
+			displayResult.setText("GIMMEH cannot store on more than one variable, error!");
+			return  null;
+		}
 		String variable = lexList[1];
-		if(!checkIfVarExist(variable)) return null; //lexList[1] contains the varident/variable that user want to store, if not existing then return null (error)
+		if(!checkIfVarExist(variable)) {
+			displayResult.setText(variable +" does not exist!");
+			return null; //lexList[1] contains the varident/variable that user want to store, if not existing then return null (error)
+		}
 		
-		if(displayResult.getText().charAt(0)=='\n') displayResult.setText(displayResult.getText().substring(1)); //printing format only
+		if(displayResult.getLength()!=0 && displayResult.getText().charAt(0)=='\n') displayResult.setText(displayResult.getText().substring(1)); //printing format only
 		
     	displayResult.setEditable(true);
     	
@@ -1150,6 +1179,7 @@ public class GameStage{
 	}
 	
 	private int doLoop(ArrayList<String[]> tokensProgram, int i) {
+		
 		String[] loopStartArr = tokensProgram.get(i); //array of where IM IN YR belongs
 		int start = i, end = -1, updateVal = 0;
 		String literals = Lexeme.NUMBR+"|"+Lexeme.NUMBAR+"|"+Lexeme.TROOF[0]+"|"+Lexeme.TROOF[1];
@@ -1187,6 +1217,7 @@ public class GameStage{
 		//getting the blockStatement to be executed
 		ArrayList<String[]> blockStatements = new ArrayList<String[]>();
 		for(int c=start+1;c<end;c++) blockStatements.add(tokensProgram.get(c));
+
 		
 
 		//getting the condition statement: outputs WIN breakk, FAIL continue
@@ -1206,7 +1237,6 @@ public class GameStage{
 			if(isContinueLoop!=null && isContinueLoop.equals(Lexeme.TROOF[0])) break; //if WINL : break the loop
 			
 			//if WIN
-			System.out.println("1162: "+Arrays.deepToString(blockStatements.toArray()));
 			doSyntaxAnalysis(blockStatements);
 			
 			String varUpdate = getValueVarident(loopStartArr[4]);
@@ -1327,10 +1357,8 @@ public class GameStage{
 					if(ans!=null) {
 					}else {
 						clearTables();
-//						displayResult.setText("I HAS-Syntax Error"); 
 						return;
 					}
-					
 				}catch(Exception e) {
 					clearTables();
 					displayResult.setText("I HAS-Syntax Error."); return;
@@ -1339,19 +1367,17 @@ public class GameStage{
 			}else if(tokenArrLine[0].matches(Lexeme.VARIDENT) && tokenArrLine.length>1 && tokenArrLine[1].matches(Lexeme.R)) {
 				try {
 					String ans = makeRreassignment(tokenArrLine);
-					if(ans!=null) {
-						System.out.println("Reassigned!");
-					}
+					if(ans!=null) {}
 					else {
 						clearTables();
-						displayResult.setText("R-Reassignment Syntax Error"); return;
+						return;
 					}
 				}catch(Exception e) {
 					clearTables();
-					displayResult.setText("R-Reassignment Syntax Error."); return;
+					displayResult.setText("Reassignment error."); return;
 				}
 			}else if(tokenArrLine[0].matches(Lexeme.GIMMEH)) {
-				if(displayResult.getText().charAt(0)=='\n') displayResult.setText(displayResult.getText().substring(1)); //printing format only (nothing to do with syntax analyzer)
+				if(displayResult.getLength()!=0 && displayResult.getText().charAt(0)=='\n') displayResult.setText(displayResult.getText().substring(1)); //printing format only (nothing to do with syntax analyzer)
 				try{
 					ArrayList<String[]> continueAfterInput = new ArrayList<String[]>();
 					for(int a=i+1;a<tokensPerLine.size();a++) continueAfterInput.add(tokensPerLine.get(a));
@@ -1359,7 +1385,7 @@ public class GameStage{
 					String ans = doGIMMEH(tokenArrLine,continueAfterInput);
 					if(ans==null) {
 						clearTables();
-						displayResult.setText(displayResult.getText()+"\n"+"895 GIMMEH Syntax Error."); return;						
+						return;						
 					}
 				}catch(Exception e) {
 					clearTables();
@@ -1370,7 +1396,6 @@ public class GameStage{
 				try {
 					int ans = doIFELSE(tokensPerLine,i);
 					if(ans!=-1) {
-//						System.out.println("1051 IF ELSE ORLY - Successful");
 						i+=ans;
 					}
 					else {
@@ -1386,7 +1411,6 @@ public class GameStage{
 				try {
 					int ans = doSWITCH(tokensPerLine,i);
 					if(ans!=-1) {
-//						System.out.println("1102 SWITCH - Successful");
 						i+=ans;
 					}else {
 						clearTables();
@@ -1401,7 +1425,6 @@ public class GameStage{
 //				try {
 					int ans = doLoop(tokensPerLine,i);
 					if(ans!=-1 && ans!=-2) {
-//						System.out.println("1268 LOOP - Successful");
 						i=ans;continue;
 					}else if(ans==-2) {
 						displayResult.setText("Loop Syntax Error");
@@ -1461,7 +1484,7 @@ public class GameStage{
 //	5.) typecast in arithmetic operation, "124" to 124
 //  6.) typecast from numbr to numba,   2.0 to 2	(no specs related to this, we follow the rule in online interpreter) and they are equal/WIN
 
-
+// 7.) deadcode in switch, after gtfo
 
 
 
