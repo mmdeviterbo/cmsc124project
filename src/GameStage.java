@@ -174,7 +174,7 @@ public class GameStage{
 //				+ "\n\n\tIM IN YR LOOPY2 UPPIN YR VAR3 TIL BOTH SAEM VAR3 AN 3\n\t\tVISIBLE \"this is inner-2\"\n\tIM OUTTA YR LOOPY2\n\tVAR3 R 0\n"
 //				+ "\tVISIBLE \"is deadcode\"\n"
 //				+ "IM OUTTA YR LOOPY\n");
-		 inputUser.setText(inputUser.getText() + "VISIBLE BOTH OF WIN AN WIN");
+		 inputUser.setText(inputUser.getText() + "VISIBLE ALL OF WIN AN FAIL AN WIN AN WIN MKAY");
 //		inputUser.setText(inputUser.getText() + "SUM OF 10 AN 10\nWTF?\nOMG 20\n\tVISIBLE \"first choice\"\nOMG 30\n\tVISIBLE \"2nd choice\"\nOMG 40\n\tVISIBLE \"3rd choice\"\nOMGWTF\n\tVISIBLE \"default choice\" \nOIC");
 //		inputUser.setText(inputUser.getText() + "\n\n\tOBTW dsadsda\ndsdasdasadas\nsadasdsdasd\n\tTLDR");
 		inputUser.setText(inputUser.getText() + "\nKTHXBYE");		
@@ -359,52 +359,19 @@ public class GameStage{
 		return null;
 	}
 	
-	private String setBooleanOperationArity(String[] lexList) {
-		ArrayList<String> operand = new ArrayList<String>();		
-		String regexOperation = Lexeme.mathOperator+Lexeme.boolOperator;
-		String allLiterals = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3);
-		
-		for(int i=1;i<lexList.length-1;i++) { //start at 1 since any/all of is not included, length-1 since mkay is not included: only between ANs are included
-			if(lexList[i].matches(regexOperation+allLiterals)) {
-				operand.add(0,lexList[i]);
-				if(lexList[i].matches(Lexeme.ALL_LITERALS) && i!=0){
-					if(lexList[i-1].matches(Lexeme.ALL_LITERALS) && !lexList[i-1].matches("\\bAN\\b")) {
-						return null;
-					}
-				}
-			}else if(lexList[i].matches("\\bAN\\b")) {
-				if(i!=0 && lexList[i-1].matches("\\bAN\\b")) return null;
-				if(i==lexList.length-2) return null;
-			}else if(lexList[i].matches(Lexeme.VARIDENT)) {
-				String value = getValueVarident(lexList[i]);
-				if(value!=null) operand.add(0,value); //if variable is not found on symboltable (or not decalred)
-				else return null;
-			}else return null;
-			
-		}
-		boolean isAllTroof = true;
-		for(String bool : operand) {
-			if(bool.matches("\\b"+Lexeme.TROOF[0]+"\\b|\\b"+Lexeme.TROOF[1]+"\\b")==false) {
-				isAllTroof = false;
-				break;
-			}
-		}
-		
-		//if all literals/varident only
-		String arrStr = Arrays.toString(operand.toArray()).replaceAll("\\[|\\]|,", "");
-		if(isAllTroof && lexList[0].matches(Lexeme.ANY_OF) && arrStr.contains("WIN")) return Lexeme.TROOF[0];
-		else if(isAllTroof && lexList[0].matches(Lexeme.ANY_OF) && !arrStr.contains("WIN")) return Lexeme.TROOF[1];
-		else if(isAllTroof && lexList[0].matches(Lexeme.ALL_OF) && arrStr.contains("FAIL")) return Lexeme.TROOF[1];
-		else if(isAllTroof && lexList[0].matches(Lexeme.ALL_OF) && !arrStr.contains("FAIL")) return Lexeme.TROOF[0];
-		
-		//if there's nested expressions
-		String answer = solveBooleanOperation(operand,0).replaceAll("\\[|\\]|,", "");
-		if(lexList[0].matches(Lexeme.ANY_OF) && answer.contains("WIN")) return Lexeme.TROOF[0];
-		else if(lexList[0].matches(Lexeme.ANY_OF) && !answer.contains("WIN")) return Lexeme.TROOF[1];
-		else if(lexList[0].matches(Lexeme.ALL_OF) && answer.contains("FAIL")) return Lexeme.TROOF[1];
-		else if(lexList[0].matches(Lexeme.ALL_OF) && !answer.contains("FAIL")) return Lexeme.TROOF[0];
+	private String setBooleanOperationArity(String[] lexList) {	
+		System.out.println("Arity: "+Arrays.deepToString(lexList));
+		String[] tempArr = new String[lexList.length-1]; //without mkay at the end
+		for(int i=0;i<lexList.length-1;i++) tempArr[i] = lexList[i];
+		tempArr[0]="SMOOSH";
+		String ans = solveSmooshOperation(tempArr);
+		if(lexList[0].matches(Lexeme.ANY_OF) && ans.contains("WIN")) return Lexeme.TROOF[0];
+		else if(lexList[0].matches(Lexeme.ANY_OF) && !ans.contains("WIN")) return Lexeme.TROOF[1];
+		else if(lexList[0].matches(Lexeme.ALL_OF) && !ans.contains("FAIL")) return Lexeme.TROOF[0];
+		else if(lexList[0].matches(Lexeme.ALL_OF) && ans.contains("FAIL")) return Lexeme.TROOF[1];
 		return null;
 	}
+	
 	
 	private String setBooleanOperation(String[] lexList){
 		ArrayList<String> stackOperation = new ArrayList<String>();
