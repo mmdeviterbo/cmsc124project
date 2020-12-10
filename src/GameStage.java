@@ -44,7 +44,7 @@ public class GameStage{
 	
 	Text displayLexeme; Text displaySymbolTable;
 	TextArea displayResult; ScrollPane scrollResult; VBox paneResult; 
-	boolean isNewLine;
+	boolean isNewLine, isDeadCode;
 	
 	Button btnExecute;
 	
@@ -164,6 +164,7 @@ public class GameStage{
 	}
 	private void initializeElements() {
 		isNewLine=true;
+		isDeadCode=false;
 		
 		inputUser.setPrefWidth(GameStage.WINDOW_WIDTH/3);
 		inputUser.setWrapText(true);
@@ -576,14 +577,13 @@ public class GameStage{
 			if(row[0].matches(Lexeme.GTFO)) {
 				if(index+1<tokensPerLine.size()) {
 					if(!tokensPerLine.get(index+1)[0].matches(Lexeme.OMG+"|"+Lexeme.OMGWTF+"|"+Lexeme.OIC+"|"+Lexeme.IM_OUTTA_YR)) {
+						isDeadCode=true;
 						return null;
 					}
 				}
 			}
 			index++;
 		}
-		
-
 		return "succes";
 	}
 	
@@ -1236,7 +1236,7 @@ public class GameStage{
 			String isContinueLoop = allOperations(conditionStatementArr);	
 			if(isContinueLoop!=null && isContinueLoop.equals(Lexeme.TROOF[0])) break; //if WINL : break the loop
 			
-			//if WIN
+			//if FAIL, execute
 			doSyntaxAnalysis(blockStatements);
 			
 			String varUpdate = getValueVarident(loopStartArr[4]);
@@ -1247,7 +1247,7 @@ public class GameStage{
 				int newval = Integer.parseInt(getValueVarident(loopStartArr[4]))+updateVal;
 				updateVar(loopStartArr[4],Integer.toString(newval));
 			}
-			if(checkerInfiniteLoop>=20) return -2;
+			if(checkerInfiniteLoop>=1000) return -2; //ideal scenario (online interpreter only allowed at most 1,000 iterations, else infinite loop error)
 			checkerInfiniteLoop++;
 		}
 		return end;
@@ -1306,6 +1306,7 @@ public class GameStage{
 			if(arrResult.length!=0) tokenizedOutput.add(arrResult);
 		}
 		if(checkGFTO(tokenizedOutput)==null) return null; 
+		
 		
 //		for(String[] arr : tokenizedOutput) {
 //			System.out.print(Arrays.toString(arr)+ " ");
@@ -1427,11 +1428,10 @@ public class GameStage{
 					if(ans!=-1 && ans!=-2) {
 						i=ans;continue;
 					}else if(ans==-2) {
-						displayResult.setText("Loop Syntax Error");
+						displayResult.setText("Infinite loop encountered, error!");
 						clearTables();
 						return;
-					}
-					else {
+					}else {
 						clearTables();
 						displayResult.setText("Loop Syntax Error."); return;
 					}
@@ -1456,6 +1456,11 @@ public class GameStage{
             		if(inputUser.getText().replaceAll("[\\s]*","").length()>0) {
                 		ArrayList<String[]> tokensPerLine = doLexicalAnalysis();
                 		if(tokensPerLine!=null) doSyntaxAnalysis(tokensPerLine);
+                		else if(tokensPerLine==null && isDeadCode) {
+                			clearTables();
+                			displayResult.setText("Dead code found after GTFO, error!");
+                			isDeadCode=false;
+                		}
                 		else {
                 			clearTables();
                 			displayResult.setText(displayResult.getText()+"\n"+"499 Syntax Error.");
