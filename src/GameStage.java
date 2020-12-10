@@ -17,8 +17,6 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.TextFormatter;
-import javafx.scene.control.TextFormatter.Change;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -176,7 +174,7 @@ public class GameStage{
 //				+ "\n\n\tIM IN YR LOOPY2 UPPIN YR VAR3 TIL BOTH SAEM VAR3 AN 3\n\t\tVISIBLE \"this is inner-2\"\n\tIM OUTTA YR LOOPY2\n\tVAR3 R 0\n"
 //				+ "\tVISIBLE \"is deadcode\"\n"
 //				+ "IM OUTTA YR LOOPY\n");
-		 inputUser.setText(inputUser.getText() + "I HAS A choice\nVISIBLE \"Enter your choice:\"\nGIMMEH choice");
+		 inputUser.setText(inputUser.getText() + "VISIBLE ALL OF WIN AN WIN MKAY");
 //		inputUser.setText(inputUser.getText() + "SUM OF 10 AN 10\nWTF?\nOMG 20\n\tVISIBLE \"first choice\"\nOMG 30\n\tVISIBLE \"2nd choice\"\nOMG 40\n\tVISIBLE \"3rd choice\"\nOMGWTF\n\tVISIBLE \"default choice\" \nOIC");
 //		inputUser.setText(inputUser.getText() + "\n\n\tOBTW dsadsda\ndsdasdasadas\nsadasdsdasd\n\tTLDR");
 		inputUser.setText(inputUser.getText() + "\nKTHXBYE");		
@@ -275,19 +273,19 @@ public class GameStage{
 		String regexNum = "^"+Lexeme.NUMBR+"$"+"|"+"^"+Lexeme.NUMBAR+"$"+"|"+"^\""+Lexeme.NUMBR+"\"$" +"|"+ "^\""+Lexeme.NUMBAR+"\"$";
 		
 		for(int i=0;i<lexList.length;i++) {
-			if(lexList[i].matches("SUM OF")) stackOperation.add(0,"SUM OF");
-			else if(lexList[i].matches("DIFF OF")) stackOperation.add(0,"DIFF OF");
-			else if(lexList[i].matches("PRODUKT OF")) stackOperation.add(0,"PRODUKT OF");
-			else if(lexList[i].equals("QUOSHUNT OF")) stackOperation.add(0,"QUOSHUNT OF");
-			else if(lexList[i].equals("MOD OF")) stackOperation.add(0,"MOD OF");
-			else if(lexList[i].equals("BIGGR OF")) stackOperation.add(0,"BIGGR OF");
-			else if(lexList[i].equals("SMALLR OF")) stackOperation.add(0,"SMALLR OF");
+			if(lexList[i].matches(Lexeme.SUM_OF)) stackOperation.add(0,"SUM OF");
+			else if(lexList[i].matches(Lexeme.DIFF_OF)) stackOperation.add(0,"DIFF OF");
+			else if(lexList[i].matches(Lexeme.PRODUKT_OF)) stackOperation.add(0,"PRODUKT OF");
+			else if(lexList[i].matches(Lexeme.QUOSHUNT_OF)) stackOperation.add(0,"QUOSHUNT OF");
+			else if(lexList[i].matches(Lexeme.MOD_OF)) stackOperation.add(0,"MOD OF");
+			else if(lexList[i].matches(Lexeme.BIGGR_OF)) stackOperation.add(0,"BIGGR OF");
+			else if(lexList[i].matches(Lexeme.SMALLR_OF)) stackOperation.add(0,"SMALLR OF");
 			else if(lexList[i].matches(regexNum)) {
 				stackOperation.add(0,lexList[i]);
 				if(i+1!=lexList.length && lexList[i+1].matches(regexNum)==true) return null;
-			}else if(lexList[i].matches("AN")){
+			}else if(lexList[i].matches("\\bAN\\b")){
 				if(i+1!=lexList.length) {
-					if(lexList[i+1].matches("AN")) return null;
+					if(lexList[i+1].matches("\\bAN\\b")) return null;
 				}else if(i+1==lexList.length && lexList[i].matches(regexNum)==false) return null;
 			}else if(lexList[i].matches(Lexeme.VARIDENT) && !lexList[i].matches("\\bAN\\b")) { //kulang pa: check if it exists in symbol table, if yes: get its value, else error/not existing
 				String valueVar = getValueVarident(lexList[i]);
@@ -302,53 +300,65 @@ public class GameStage{
 
 	private String solveBooleanOperation(ArrayList<String> stackOperation, int index, boolean isArity) {
 		String tempA,tempB;
-//		System.out.println(Arrays.toString(stackOperation.toArray()));
+//		System.out.println("boooool: "+Arrays.toString(stackOperation.toArray()));
 		
 		//for arity - any of/all of
 		boolean isAllTroof=true;
 		for(String lexeme : stackOperation) {
-			if(lexeme.matches("\\bBOTH OF\\b|\\bEITHER OF\\b|\\bNOT\\b|\\bWON OF\\b") && isArity) 
+			String notArityOp = Lexeme.BOTH_OF+"|"+Lexeme.EITHER_OF+"|"+Lexeme.NOT+"|"+Lexeme.WON_OF;
+			if(lexeme.matches(notArityOp) && isArity) 
 				isAllTroof = false;
 		}
 		if(isAllTroof && isArity) return Arrays.toString(stackOperation.toArray());
 		
-		if(stackOperation.size()==1 && !isArity) return stackOperation.get(0);
+		if(stackOperation.size()==1 && !isArity) return stackOperation.get(0); //final answer then return the value
 		else {
 			tempA = stackOperation.get(index);
 			tempB = stackOperation.get(index+1); 
 		}
 		String ans="";
-		boolean regexTROOF_A=true,regexTROOF_B=true, regexBOTH_OF = true, regexEITHER_OF=true,regexWON_OF=true,regexNOT=true;
+		boolean regexTROOF_A=false,regexTROOF_B=false, regexBOTH_OF = false, regexEITHER_OF=false,regexWON_OF=false,regexBOTH_SAEM=false,regexDIFFRINT;
 		if(stackOperation.size()==2 && (stackOperation.get(index+1)).matches(Lexeme.NOT)) { //not operator - need one operand
+			if(!stackOperation.get(index).matches(Lexeme.TROOF[0]+"|"+Lexeme.TROOF[1])) return null;
 			ans = stackOperation.remove(index).matches(Lexeme.TROOF[0])? Lexeme.TROOF[1] : Lexeme.TROOF[0];
 			stackOperation.remove(index);
 			stackOperation.add(index,ans);
 		}else if(stackOperation.size()>2) { //two or more operands
 			String A,B; 
 			if(tempB.matches(Lexeme.NOT)) {
+				if(!tempA.matches(Lexeme.TROOF[0]+"|"+Lexeme.TROOF[1])) return null;
 				A = stackOperation.remove(index).matches(Lexeme.TROOF[0])? Lexeme.TROOF[1]: Lexeme.TROOF[0];
 				stackOperation.remove(index);
 				stackOperation.add(index,A);
 				solveBooleanOperation(stackOperation,0,isArity);	
-			}else if(tempB.matches("^"+Lexeme.TROOF[0]+"$|^"+Lexeme.TROOF[1]+"$")){
-				regexTROOF_A = tempA.matches("^"+Lexeme.TROOF[0]+"$|^"+Lexeme.TROOF[1]+"$");
-				regexTROOF_B = tempB.matches("^"+Lexeme.TROOF[0]+"$|^"+Lexeme.TROOF[1]+"$");
+			}else if(tempB.matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3))){
+				regexTROOF_A = tempA.matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3));
+				regexTROOF_B = tempB.matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3));
 				regexBOTH_OF = (stackOperation.get(index+2)).matches(Lexeme.BOTH_OF);
 				regexEITHER_OF = (stackOperation.get(index+2)).matches(Lexeme.EITHER_OF);
 				regexWON_OF = (stackOperation.get(index+2)).matches(Lexeme.WON_OF);	
+				regexBOTH_SAEM = (stackOperation.get(index+2)).matches(Lexeme.BOTH_SAEM);
+				regexDIFFRINT = (stackOperation.get(index+2)).matches(Lexeme.DIFFRINT);
 				
-				boolean regexBool= (stackOperation.get(index+2)).matches("^"+Lexeme.BOTH_OF+"$|^"+Lexeme.EITHER_OF+"$|^"+Lexeme.WON_OF+"$");	
+				
+				boolean regexBool= (stackOperation.get(index+2)).matches(Lexeme.BOTH_OF+"|"+Lexeme.EITHER_OF+"|"+Lexeme.WON_OF+"|"+Lexeme.BOTH_SAEM+"|"+Lexeme.DIFFRINT);	
 				if(stackOperation.size()>2 && (regexTROOF_A && regexTROOF_B) && regexBool) {
 					A = stackOperation.remove(index);
 					B = stackOperation.remove(index);
-					boolean Abool = A.matches("^"+Lexeme.TROOF[0]+"$")? true : false;
-					boolean Bbool = B.matches("^"+Lexeme.TROOF[0]+"$")? true : false;
-					if(regexBOTH_OF) ans = Abool&&Bbool==true? Lexeme.TROOF[0] : Lexeme.TROOF[1];
+					boolean Abool = A.matches("\\b"+Lexeme.TROOF[0]+"\\b")? true : false;
+					boolean Bbool = B.matches("\\b"+Lexeme.TROOF[0]+"\\b")? true : false;
+					if(regexBOTH_SAEM) {
+						String lexList[] = {"BOTH SAEM",B,"AN",A};
+						ans = setComparisonOperation(lexList);
+					}else if(regexDIFFRINT) {
+						String lexList[] = {"DIFFRINT",B,"AN",A};
+						ans = setComparisonOperation(lexList);
+					}
+					else if(regexBOTH_OF) ans = Abool&&Bbool==true? Lexeme.TROOF[0] : Lexeme.TROOF[1];
 					else if(regexEITHER_OF) ans = Abool||Bbool==true? Lexeme.TROOF[0] : Lexeme.TROOF[1];
 					else if(regexWON_OF) ans = Abool==Bbool==true? Lexeme.TROOF[1] : Lexeme.TROOF[0];
 					
-					
-					stackOperation.remove(index);
+					stackOperation.remove(index); //remove the operation used
 					stackOperation.add(index,ans);
 					solveBooleanOperation(stackOperation,0,isArity);	
 				}else solveBooleanOperation(stackOperation,index+1,isArity);
@@ -362,25 +372,33 @@ public class GameStage{
 	
 	private String setBooleanOperationArity(String[] lexList) {
 		ArrayList<String> operand = new ArrayList<String>();		
-		String regexBool = Lexeme.boolOperator.substring(0,Lexeme.boolOperator.length()-33);
+		String regexBool = Lexeme.boolOperator;
+		String allLiterals = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3);
 		
-//		System.out.println("433: " + Arrays.toString(lexList));
+		System.out.println(Arrays.deepToString(lexList));
+		
 		for(int i=1;i<lexList.length-1;i++) { //start at 1 since any/all of is not included, length-1 since mkay is not included: only between ANs are included
-			if(lexList[i].matches(regexBool+"|\\b"+Lexeme.TROOF[0]+"\\b|\\b"+Lexeme.TROOF[1]+"\\b|\\b"+Lexeme.MKAY+"\\b")) {
+			if(lexList[i].matches(regexBool+allLiterals)) {
 				operand.add(0,lexList[i]);
-				if(lexList[i].matches("\\b"+Lexeme.TROOF[0]+"\\b|\\b"+Lexeme.TROOF[1]+"\\b") && i!=0){
-					if(lexList[i-1].matches("\\b"+Lexeme.TROOF[0]+"\\b|\\b"+Lexeme.TROOF[1]+"\\b")) return null;
+				if(lexList[i].matches(Lexeme.ALL_LITERALS) && i!=0){
+					if(lexList[i-1].matches(Lexeme.ALL_LITERALS) && !lexList[i-1].matches("\\bAN\\b")) {
+						System.out.println(386);
+						return null;
+					}
 				}
 			}else if(lexList[i].matches("\\bAN\\b")) {
 				if(i!=0 && lexList[i-1].matches("\\bAN\\b")) return null;
 				if(i==lexList.length-2) return null;
 			}else if(lexList[i].matches(Lexeme.VARIDENT)) {
 				String value = getValueVarident(lexList[i]);
-				if(value!=null) operand.add(0,value);
+				if(value!=null) operand.add(0,value); //if variable is not found on symboltable (or not decalred)
 				else return null;
 			}else return null;
 			
 		}
+		
+		System.out.println("396: "+Arrays.deepToString(operand.toArray()));
+		
 		boolean isAllTroof = true;
 		for(String bool : operand) {
 			if(bool.matches("\\b"+Lexeme.TROOF[0]+"\\b|\\b"+Lexeme.TROOF[1]+"\\b")==false) {
@@ -407,33 +425,37 @@ public class GameStage{
 	private String setBooleanOperation(String[] lexList){
 //		System.out.println(Arrays.toString(lexList));
 		ArrayList<String> stackOperation = new ArrayList<String>();
-		String regexBool= "^"+Lexeme.TROOF[0]+"$"+"|"+"^"+Lexeme.TROOF[1]+"$";
+		String regexLiteral= Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3);
 		
-		if(lexList[0].matches("\\bALL OF\\b") || lexList[0].matches("\\bANY OF\\b")) {
+		if(lexList[0].matches(Lexeme.ALL_OF) || lexList[0].matches(Lexeme.ANY_OF)) {
 			if(checkInvalidNest(lexList)) return null;
-			if(lexList[0].matches("\\bALL OF\\b")) stackOperation.add(0,"ALL OF");
-			else if(lexList[0].matches("\\bANY OF\\b")) stackOperation.add(0,"ANY OF");
-			if(lexList[lexList.length-1].matches("\\bMKAY\\b")==false) return null;
+			if(lexList[0].matches(Lexeme.ALL_OF)) stackOperation.add(0,"ALL OF");
+			else if(lexList[0].matches(Lexeme.ANY_OF)) stackOperation.add(0,"ANY OF");
+			if(lexList[lexList.length-1].matches(Lexeme.MKAY)==false) return null;
 			else return setBooleanOperationArity(lexList);
 		}
 		
 		for(int i=0;i<lexList.length;i++) {
-			if(lexList[i].matches("BOTH OF")) {
+			if(lexList[i].matches(Lexeme.BOTH_OF)) {
 				stackOperation.add(0,"BOTH OF");
-			}else if(lexList[i].matches("EITHER OF")){
+			}else if(lexList[i].matches(Lexeme.EITHER_OF)){
 				stackOperation.add(0,"EITHER OF");
-			}else if(lexList[i].matches("WON OF"))  {
+			}else if(lexList[i].matches(Lexeme.WON_OF))  {
 				stackOperation.add(0,"WON OF");
-			}else if(lexList[i].equals("NOT")) {
+			}else if(lexList[i].matches(Lexeme.NOT)) {
 				stackOperation.add(0,"NOT");
-			}else if(lexList[i].matches(regexBool)) {
+			}else if(lexList[i].matches(Lexeme.BOTH_SAEM)) {
+				stackOperation.add(0,"BOTH SAEM");
+			}else if(lexList[i].matches(Lexeme.DIFFRINT)) {
+				stackOperation.add(0,"DIFFRINT");
+			}else if(lexList[i].matches(regexLiteral)) {
 				stackOperation.add(0,lexList[i]);
-				if(i+1!=lexList.length && lexList[i+1].matches(regexBool)==true) return null;
-			}else if(lexList[i].matches("AN")){
+				if(i+1!=lexList.length && lexList[i+1].matches(regexLiteral)==true) return null;
+			}else if(lexList[i].matches("\\bAN\\b")){
 				if(i+1!=lexList.length) if(lexList[i+1].matches("AN")) return null;
-			}else if(lexList[i].matches("\\bMKAY\\b")) {
+			}else if(lexList[i].matches(Lexeme.MKAY)) {
 				if(i+1==lexList.length) return null;
-				if(lexList[i].matches("\\bANY OF\\b")==false && lexList[i].matches("\\bALL OF\\b")==false) return null;
+				if(lexList[i].matches(Lexeme.ANY_OF)==false && lexList[i].matches(Lexeme.ALL_OF)==false) return null;
 			}else if(lexList[i].matches(Lexeme.VARIDENT)) { //check if variable is exist in symbol table and if type is troof type
 				String value = getValueVarident(lexList[i]);
 				if(value!=null) stackOperation.add(0,value);
@@ -808,8 +830,7 @@ public class GameStage{
 		if(tokenArrLine[0].matches(Lexeme.mathOperator.substring(0, Lexeme.mathOperator.length()-1))) {
 			try {
 				String ans = setArithmeticOperation(tokenArrLine);
-				if(ans!=null) {
-//					System.out.println("Temporary print of ans: " + ans);  
+				if(ans!=null) { 
 					return ans;
 				}else {
 					clearTables();
@@ -819,8 +840,7 @@ public class GameStage{
 				clearTables();
 				displayResult.setText("475 Syntax Error."); return null;
 			}
-			//continue coding here,  add return value to symbol table and update it
-		}else if(tokenArrLine[0].matches(Lexeme.boolOperator.substring(0, Lexeme.boolOperator.length()-37))) { 
+		}else if(tokenArrLine[0].matches(Lexeme.boolOperator.substring(0, Lexeme.boolOperator.length()-37))) {  //both of, either of, won of, not, all of, any of, mkay
 			try {
 				String ans = setBooleanOperation(tokenArrLine);
 				if(ans!=null) {
@@ -835,7 +855,7 @@ public class GameStage{
 				clearTables();
 				displayResult.setText("484 Syntax Error."); return null;
 			}
-		}else if(tokenArrLine[0].matches(Lexeme.boolOperator.substring(67,93))){
+		}else if(tokenArrLine[0].matches(Lexeme.boolOperator.substring(67,93))){ //both saem, diffrint
 			try {
 			String ans = setComparisonOperation(tokenArrLine);
 			if(ans!=null) {
@@ -865,9 +885,7 @@ public class GameStage{
 			}
 		}else if(tokenArrLine[0].matches(Lexeme.VISIBLE)) {
 			try {
-				if(tokenArrLine[tokenArrLine.length-1].contentEquals("a!")) {
-					isNewLine=false;
-				}
+				if(tokenArrLine[tokenArrLine.length-1].contentEquals("a!")) isNewLine=false;
 				String ans = doVISIBLE(tokenArrLine);	
 				if(ans!=null) {
 					printFormatVisible(ans);					
@@ -975,7 +993,7 @@ public class GameStage{
 	}
 	
 	private String doVISIBLE(String[] lexList) {
-	
+		
 		if(lexList.length==1) return null; //must contain atleast one operand
 		String combinedOp = Lexeme.mathOperator + Lexeme.boolOperator+"\\bAN\\b";
 		String combinedVal = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3);
@@ -995,30 +1013,52 @@ public class GameStage{
 				for(int a=1;a<lexList.length;a++) smooshArr[a-1] = lexList[a];
 				return solveSmooshOperation(smooshArr);
 			}
-		
+			
+			//any of, all of, mkay
+			else if(lexList[1].matches(Lexeme.ANY_OF+"|"+Lexeme.ALL_OF)) {
+				ArrayList<String> tempStore = new ArrayList<String>();
+				if(!lexList[lexList.length-1].matches(Lexeme.MKAY)) return null;//if mkay is not the last item
+				while(!lexList[i].matches(Lexeme.MKAY)) {
+					tempStore.add(lexList[i]);
+					i++;
+				}
+				tempStore.add(lexList[lexList.length-1]); //insert mkay
+				if(tempStore.size()>2) { 
+					String[] passToOp = new String[tempStore.size()];
+					for(int a=0;a<tempStore.size();a++) passToOp[a] = tempStore.get(a);
+					String ans = allOperations(passToOp); //if fail to evaluate the expression, throw syntax error
+					if(ans!=null) {
+						outputPrint.add(ans);
+					}
+					else return null;
+				}else return null;
+			}
+			
+			
+			
 			//math,comparison, boolean
 			else if(lexList[i].matches(combinedOp)) {
 				String regexOperation = Lexeme.mathOperator+Lexeme.boolOperator.substring(0,Lexeme.boolOperator.length()-1);
-				String literalsVar = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-2)+Lexeme.VARIDENT;
+				String literalsVar = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-2)+"|"+Lexeme.VARIDENT;
 				ArrayList<String> tempStore = new ArrayList<String>();
 				
 				int numOperation = 0; int numOperand = 0;
 				while(numOperation+1!=numOperand) {
 					if(lexList[i].matches(Lexeme.NOT)) {
 						tempStore.add(lexList[i]);
-					}else if(lexList[i].matches(literalsVar) && !lexList[i].matches("AN") && !lexList[i].matches(regexOperation)) {
+					}else if(lexList[i].matches(literalsVar) && !lexList[i].matches("\\bAN\\b") && !lexList[i].matches(regexOperation)) {
 						tempStore.add(lexList[i]);
 						numOperand++;
 					}else if(lexList[i].matches(regexOperation)) {
 						tempStore.add(lexList[i]);
 						numOperation++;
-					}else if(lexList[i].matches("AN")) {
+					}else if(lexList[i].matches("\\bAN\\b")) {
 						if(i+1<lexList.length && lexList[i+1].matches("AN")) return null;
 						tempStore.add(lexList[i]);
 					}
 					i++;
 				}
-				i--;
+				i--;	
 				if(tempStore.size()>1) { //NOT unary has at least 2 operands
 					String[] passToOp = new String[tempStore.size()];
 					for(int a=0;a<tempStore.size();a++) passToOp[a] = tempStore.get(a);
