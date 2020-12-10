@@ -40,9 +40,10 @@ public class GameStage{
 	
 	TextArea inputUser; VBox paneUser; Button btnSelectFile; FileChooser fileChooser;
 	
-	Text displayLexeme; Text displaySymbolTable;
+	Text displayLexeme,displaySymbolTable;String errorMessage;
 	TextArea displayResult; ScrollPane scrollResult; VBox paneResult; 
 	boolean isNewLine, isDeadCode;
+	
 	
 	Button btnExecute;
 	
@@ -310,15 +311,15 @@ public class GameStage{
 		}
 		String ans="";
 		if(stackOperation.size()==2 && (stackOperation.get(index+1)).matches(Lexeme.NOT)) { //not operator - need one operand
-			if(!stackOperation.get(index).matches(Lexeme.TROOF[0]+"|"+Lexeme.TROOF[1])) return null;
-			ans = stackOperation.remove(index).matches(Lexeme.TROOF[0])? Lexeme.TROOF[1] : Lexeme.TROOF[0];
+			if(!stackOperation.get(index).matches("\\b"+Lexeme.TROOF[0]+"\\b|\\b"+Lexeme.TROOF[1]+"\\b")) return null;
+			ans = stackOperation.remove(index).matches("\\b"+Lexeme.TROOF[0]+"\\b")? Lexeme.TROOF[1] : Lexeme.TROOF[0];
 			stackOperation.remove(index);
 			stackOperation.add(index,ans);
 		}else if(stackOperation.size()>2) { //may valid expression
 			String A,B;
 			if(tempB.matches(Lexeme.NOT)) {
-				if(!tempA.matches(Lexeme.TROOF[0]+"|"+Lexeme.TROOF[1])) return null;
-				A = stackOperation.remove(index).matches(Lexeme.TROOF[0])? Lexeme.TROOF[1]: Lexeme.TROOF[0];
+				if(!tempA.matches("\\b"+Lexeme.TROOF[0]+"\\b|\\b"+Lexeme.TROOF[1]+"\\b")) return null;
+				A = stackOperation.remove(index).matches("\\b"+Lexeme.TROOF[0]+"\\b")? Lexeme.TROOF[1]: Lexeme.TROOF[0];
 				stackOperation.remove(index);
 				stackOperation.add(index,A);
 				solveBooleanOperation(stackOperation,0);	
@@ -360,7 +361,28 @@ public class GameStage{
 	}
 	
 	private String setBooleanOperationArity(String[] lexList) {	
-		System.out.println("Arity: "+Arrays.deepToString(lexList));
+		String literals = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3);
+		if(!lexList[lexList.length-1].matches(Lexeme.MKAY)) {
+			this.errorMessage="Invalid MKAY in expression! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return null;
+		}
+		for(int i=0;i<lexList.length;i++) {
+			if(i+1<lexList.length) {
+				if(lexList[i].matches(literals) && lexList[i+1].matches(literals)) {
+					this.errorMessage="Invalid expression! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+					return null;
+				}else if(lexList[i].matches("\\bAN\\b") && lexList[i+1].matches("\\bAN\\b")) {
+					this.errorMessage="Invalid AN in expression! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+					return null;
+				}else if(lexList[i].matches(Lexeme.mathOperator+Lexeme.boolOperator) && lexList[i+1].matches(Lexeme.mathOperator+Lexeme.boolOperator)) {
+					this.errorMessage="Invalid AN in expression! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+					return null;
+				}				
+			}
+		}
+		
+		
+		
 		String[] tempArr = new String[lexList.length-1]; //without mkay at the end
 		for(int i=0;i<lexList.length-1;i++) tempArr[i] = lexList[i];
 		tempArr[0]="SMOOSH";
@@ -372,12 +394,13 @@ public class GameStage{
 		return null;
 	}
 	
-	
 	private String setBooleanOperation(String[] lexList){
 		ArrayList<String> stackOperation = new ArrayList<String>();
 		if(lexList[0].matches(Lexeme.ALL_OF+"|"+Lexeme.ANY_OF)) {
-			if(checkInvalidNest(lexList)) return null;
-			if(!lexList[lexList.length-1].matches(Lexeme.MKAY)) return null;
+			if(checkInvalidNest(lexList)) {
+				this.errorMessage="Invalid nesting, error!";
+				return null;
+			}
 			else return setBooleanOperationArity(lexList);
 		}
 		
@@ -397,20 +420,40 @@ public class GameStage{
 			if(isOperator) isOperator=false;			
 			else if(lexList[i].matches(regexLiteral)) {
 				stackOperation.add(0,lexList[i]);
-				if(i+1<lexList.length && lexList[i+1].matches(regexLiteral)) return null;
+				if(i+1<lexList.length && lexList[i+1].matches(regexLiteral)) {
+					this.errorMessage="Syntax error!";
+					return null;
+				}
 			}else if(lexList[i].matches("\\bAN\\b")) {
-				if(i+1<lexList.length) if(lexList[i+1].matches("\\bAN\\b")) return null;
+				if(i+1<lexList.length) if(lexList[i+1].matches("\\bAN\\b")) {
+					this.errorMessage="Syntax error!";
+					return null;
+				}
 			}
 			else if(lexList[i].matches(Lexeme.MKAY)) {
-				if(i+1!=lexList.length) return null;
-				if(!lexList[0].matches(Lexeme.ANY_OF) || !lexList[0].matches(Lexeme.ALL_OF)) return null;
+				if(i+1!=lexList.length) {
+					this.errorMessage="Invalid MKAY!";
+					return null;
+				}else if(!lexList[0].matches(Lexeme.ANY_OF) || !lexList[0].matches(Lexeme.ALL_OF)) {
+					this.errorMessage="ANY OF/ALL OF not found, error!";
+					return null;
+				}
 			}else if(lexList[i].matches(Lexeme.VARIDENT)) { //check if variable is exist in symbol table and if type is troof type
 				String value = getValueVarident(lexList[i]);
 				if(value!=null) stackOperation.add(0,value);
-				else return null;
-			}else return null;
+				else {
+					this.errorMessage="Kindly check the expression, error!";
+					return null;
+				}
+			}else {
+				this.errorMessage="Syntax error!";
+				return null;
+			}
 		}
-		if(stackOperation.size()<=1) return null;
+		if(stackOperation.size()<=1) {
+			this.errorMessage="Kindly check the expression, error!";
+			return null;
+		}
 		String ans = solveBooleanOperation(stackOperation,0); 
 		return ans;
 	}
@@ -430,7 +473,7 @@ public class GameStage{
 		if(lexList[0].matches(Lexeme.BOTH_SAEM) || lexList[0].matches(Lexeme.DIFFRINT)) {			
 			int i=1;
 			for(i=1;i<lexList.length;i++) { //getting operandA
-				if(lexList[i].matches(regexNum+"|"+Lexeme.VARIDENT) && !lexList[i].matches(regexMath+"|AN")) {
+				if(lexList[i].matches(regexNum+"|"+Lexeme.VARIDENT) && !lexList[i].matches(regexMath+"|\\bAN\\b")) {
 					if(lexList[i].matches(regexNum)) { //literal operand
 						operandA.add(lexList[i]);
 					}else if(lexList[i].matches(Lexeme.VARIDENT)) { //varident operand
@@ -440,10 +483,10 @@ public class GameStage{
 						operandA.add(lexList[i]);
 					}
 					if(i==1) {
-						if(!lexList[i+1].matches("AN")) return null;
+						if(!lexList[i+1].matches("\\bAN\\b")) return null;
 						i+=2;
 						break;
-					}else if(i+2<lexList.length && lexList[i+1].matches("AN") && lexList[i+2].matches(regexNum+"|"+Lexeme.VARIDENT)) {
+					}else if(i+2<lexList.length && lexList[i+1].matches("\\bAN\\b") && lexList[i+2].matches(regexNum+"|"+Lexeme.VARIDENT)) {
 						operandA.add(lexList[i+1]);
 						if(lexList[i+2].matches(Lexeme.NUMBAR) && lexList[i+2].matches("[0-9]+[.]0+")) {
 							lexList[i+2] = lexList[i].split("\\.")[0];
@@ -455,13 +498,13 @@ public class GameStage{
 						operandA.add(lexList[i+2]);i+=4; break;
 
 					}
-				}else if(lexList[i].matches(regexMath+"|AN")) {
+				}else if(lexList[i].matches(regexMath+"|\\bAN\\b")) {
 					operandA.add(lexList[i]);
 				}else return null;
 			}
 			
 			for(int j=i;j<lexList.length;j++) { //getting operandB
-				if(lexList[j].matches(regexNum+"|"+Lexeme.VARIDENT) && !lexList[j].matches(regexMath+"|AN")) {
+				if(lexList[j].matches(regexNum+"|"+Lexeme.VARIDENT) && !lexList[j].matches(regexMath+"|\\bAN\\b")) {
 					if(lexList[j].matches(regexNum)) {
 						operandB.add(lexList[j]);
 					}
@@ -470,7 +513,7 @@ public class GameStage{
 						if(temp==null) return null;
 						lexList[j] = temp;
 						operandB.add(lexList[j]);
-					}else if(j+2<lexList.length && lexList[j+1].matches("AN") && lexList[j+2].matches(regexNum+"|"+Lexeme.VARIDENT)) {
+					}else if(j+2<lexList.length && lexList[j+1].matches("\\bAN\\b") && lexList[j+2].matches(regexNum+"|"+Lexeme.VARIDENT)) {
 						operandB.add(lexList[j+1]);
 						if(lexList[j+2].matches(Lexeme.NUMBAR) && lexList[j+2].matches("[0-9]+[.]0+")) {
 							lexList[j+2] = lexList[j+2].split("\\.")[0];
@@ -481,7 +524,7 @@ public class GameStage{
 						}
 						operandB.add(lexList[j+2]);
 					}
-				}else if(lexList[j].matches(regexMath+"|AN")) operandB.add(lexList[j]);
+				}else if(lexList[j].matches(regexMath+"|\\bAN\\b")) operandB.add(lexList[j]);
 				else return null;
 
 			}
@@ -554,14 +597,15 @@ public class GameStage{
 	
 	private String setIHAS(String[] lexList) {		
 		if(lexList.length==1 || lexList.length==3 || (lexList.length>3 && !lexList[2].matches(Lexeme.ITZ))) {
-			displayResult.setText("Variable assignment error!");
+			displayResult.setText("Variable assignment error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", ""));
 			return null;
 		}else if(lexList.length>=2) {
 			if(checkIfVarExist(lexList[1])) {
 				displayResult.setText("Variable already exists, error!");
+				displayResult.setText("Variable assignment error! --> " + lexList[1]);
 				return null;
 			}else if(lexList[1].matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3))) {
-				displayResult.setText("Variable is invalid, error!");
+				displayResult.setText("Variable is invalid, error! -->" + lexList[1]);
 				return null;
 			}
 			else if(lexList.length==2) {
@@ -584,7 +628,7 @@ public class GameStage{
 		
 		if(lexList[3].matches(Lexeme.ALL_LITERALS)) {
 			if(lexList.length!=4) {
-				displayResult.setText("Variable assignment error!");
+				displayResult.setText("Variable assignment error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", ""));
 				return null;
 			}
 			lexList[3] = lexList[3].replace("\"", "");
@@ -620,8 +664,7 @@ public class GameStage{
 		String patternString = "SMOOSH|ALL OF|ANY OF";
 		Pattern pattern = Pattern.compile(patternString);
 		Matcher matcher = pattern.matcher(lexListStr);
-
-//		System.out.println(lexListStr);
+		
 		while(matcher.find()) return true;
 		return false;
 	}
@@ -632,7 +675,7 @@ public class GameStage{
 		String regexOperation = Lexeme.mathOperator+Lexeme.boolOperator.substring(0,Lexeme.boolOperator.length()-1);
 		String literalsVar = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-2)+Lexeme.VARIDENT;
 
-		if(lexList[lexList.length-1].matches("AN")) return null;
+		if(lexList[lexList.length-1].matches("\\bAN\\b")) return null;
 		
 		for(int i=1;i<lexList.length;i++) { 
 			if(lexList[i].matches(Lexeme.SMOOSH)) {
@@ -643,26 +686,26 @@ public class GameStage{
 				while(numOperation+1!=numOperand) {
 					if(lexList[i].matches(Lexeme.NOT)) {
 						removeAN.add(lexList[i]);
-					}else if(lexList[i].matches(literalsVar) && !lexList[i].matches("AN") && !lexList[i].matches(regexOperation)) {
+					}else if(lexList[i].matches(literalsVar) && !lexList[i].matches("\\bAN\\b") && !lexList[i].matches(regexOperation)) {
 						removeAN.add(lexList[i]);
 						numOperand++;
 					}else if(lexList[i].matches(regexOperation)) {
 						removeAN.add(lexList[i]);
 						numOperation++;
-					}else if(lexList[i].matches("AN")) {
-						if(i+1<lexList.length && lexList[i+1].matches("AN")) return null;
+					}else if(lexList[i].matches("\\bAN\\b")) {
+						if(i+1<lexList.length && lexList[i+1].matches("\\bAN\\b")) return null;
 						removeAN.add(lexList[i]);
 					}
 					i++;
 				}
 				i--;
-				if(i+1<lexList.length && lexList[i+1].matches(literalsVar) && !lexList[i+1].matches("AN")) return null;
+				if(i+1<lexList.length && lexList[i+1].matches(literalsVar) && !lexList[i+1].matches("\\bAN\\b")) return null;
 			}else if(lexList[i].matches("\\bAN\\b")) {
-				if(i+1<lexList.length && lexList[i+1].matches("AN")) return null;
+				if(i+1<lexList.length && lexList[i+1].matches("\\bAN\\b")) return null;
 				if(i==1) return null;
 				continue;
 			}else {
-				if(i+1<lexList.length && lexList[i+1].matches(literalsVar) && !lexList[i+1].matches(regexOperation) && !lexList[i+1].matches("AN")) {
+				if(i+1<lexList.length && lexList[i+1].matches(literalsVar) && !lexList[i+1].matches(regexOperation) && !lexList[i+1].matches("\\bAN\\b")) {
 					return null;
 				}
 				removeAN.add(lexList[i]);
@@ -688,7 +731,7 @@ public class GameStage{
 			}
 		}		
 		if(lexList.length<=2) {
-			displayResult.setText("Reassignment syntax error!");
+			displayResult.setText("Reassignment syntax error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", ""));
 			return null;
 		}
 		
@@ -703,7 +746,7 @@ public class GameStage{
 		//if literals
 		if(lexList[2].matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3))) {
 			if(lexList.length!=3) {
-				displayResult.setText("Reassignment error!");
+				displayResult.setText("Reassignment error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", ""));
 				return null;
 			}
 			newVal = lexList[2];
@@ -713,16 +756,16 @@ public class GameStage{
 			String[] operandsArr =  new String[operands.size()];
 			for(int i=0;i<operands.size();i++) operandsArr[i] = operands.get(i);
 			if(operandsArr[0].matches(Lexeme.NOT) && operandsArr.length<2) {
-				displayResult.setText("761: Reassignment of expression error!");
+				displayResult.setText("Reassignment of expression error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", ""));
 				return null;
 			}else if(!operandsArr[0].matches(Lexeme.NOT) && operandsArr.length<4) {
-				displayResult.setText("Reassignment of expression error!");
+				displayResult.setText("Reassignment of expression error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", ""));
 				return null;
 			}
 			ifOperations = allOperations(operandsArr);
 		}else if(lexList[2].matches(Lexeme.VARIDENT)) { //check if RHS is varident and exisiting
 			if(lexList.length!=3) {
-				displayResult.setText("Reassignment error!");
+				displayResult.setText("Reassignment error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", ""));
 				return null;
 			}
 			newVal = getValueVarident(lexList[2]);
@@ -735,7 +778,7 @@ public class GameStage{
 			}
 		}
 		if(ifOperations==null) {
-			displayResult.setText("Reassignment of expression error!");
+			displayResult.setText("Reassignment of expression error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", ""));
 			return null;
 		}else if(ifOperations.length()==0) {}
 		else newVal = ifOperations;
@@ -942,7 +985,7 @@ public class GameStage{
 		
 		for(int i=1;i<lexList.length;i++) { //1 because VISIBLE keyword is excluded
 			//literals only
-			if(lexList[i].matches(Lexeme.ALL_LITERALS) && !lexList[i].matches("AN")) {
+			if(lexList[i].matches(Lexeme.ALL_LITERALS) && !lexList[i].matches("\\bAN\\b")) {
 				outputPrint.add(lexList[i]); 
 				continue; //outputPrint list will collect all operands (arity) before it prints/displays to the textarea
 			}
@@ -993,7 +1036,7 @@ public class GameStage{
 						tempStore.add(lexList[i]);
 						numOperation++;
 					}else if(lexList[i].matches("\\bAN\\b")) {
-						if(i+1<lexList.length && lexList[i+1].matches("AN")) return null;
+						if(i+1<lexList.length && lexList[i+1].matches("\\bAN\\b")) return null;
 						tempStore.add(lexList[i]);
 					}
 					i++;
@@ -1011,7 +1054,7 @@ public class GameStage{
 			
 			
 			//variable
-			else if(lexList[i].matches(Lexeme.VARIDENT) && !lexList[i].matches("AN")) {
+			else if(lexList[i].matches(Lexeme.VARIDENT) && !lexList[i].matches("\\bAN\\b")) {
 				 if(checkIfVarExist(lexList[i])) {
 					 String val = getValueVarident(lexList[i]);
 					 if(val.length()>0) {
@@ -1055,7 +1098,7 @@ public class GameStage{
 		ArrayList<String[]> blockStatement = new ArrayList<String[]>();
 		int start=0;
 		int end=0;
-		if(ITval.matches(Lexeme.TROOF[0]+"|"+"\""+Lexeme.TROOF[0]+"\"")) {
+		if(ITval.matches("\\b"+Lexeme.TROOF[0]+"\\b|"+"\""+Lexeme.TROOF[0]+"\"")) {
 			start=isYA_RLY+1;
 			end=isNO_WAI;
 		}else { //FAIL, or cannot be typecast to WIN
@@ -1162,7 +1205,7 @@ public class GameStage{
 		
 		String[] loopStartArr = tokensProgram.get(i); //array of where IM IN YR belongs
 		int start = i, end = -1, updateVal = 0;
-		String literals = Lexeme.NUMBR+"|"+Lexeme.NUMBAR+"|"+Lexeme.TROOF[0]+"|"+Lexeme.TROOF[1];
+		String literals = Lexeme.NUMBR+"|"+Lexeme.NUMBAR+"|\\b"+Lexeme.TROOF[0]+"\\b|\\b"+Lexeme.TROOF[1]+"\\b";
 
 		if(!loopStartArr[1].matches(Lexeme.VARIDENT)) return -1;
 		if(loopStartArr.length<8) return -1; //8 is the minimum length of the array of where IM IN YR array belongs
@@ -1171,8 +1214,8 @@ public class GameStage{
 		if(checkIfVarExist(loopStartArr[4])) {
 			String variable = getValueVarident(loopStartArr[4]);
 			if(variable.length()==0 || !variable.matches(literals)) return -1; //must have valid data type (numbr, numbar, troof only)
-			if(variable.matches(Lexeme.TROOF[1])) updateVar(loopStartArr[4],"0");
-			else if(variable.matches(Lexeme.TROOF[0])) updateVar(loopStartArr[4],"1");
+			if(variable.matches("\\b"+Lexeme.TROOF[1]+"\\b")) updateVar(loopStartArr[4],"0");
+			else if(variable.matches("\\b"+Lexeme.TROOF[0]+"\\b")) updateVar(loopStartArr[4],"1");
 		}
 		
 		//find where IM OUTTA YR
@@ -1311,7 +1354,7 @@ public class GameStage{
 						if(!checkIfLexemeExist(arrLexeme[a])) this.lexemeTable.getItems().add(new Lexeme(arrLexeme[a],classification));
 					}
 				}else {
-					System.out.println("615 Lexeme not found");
+					this.errorMessage="Lexeme not found, error!";
 					return null;
 				}
 			}
@@ -1332,7 +1375,7 @@ public class GameStage{
 			
 			//syntax for I HAS
 			if(tokenArrLine[0].matches(Lexeme.HAI+"|"+Lexeme.KTHXBYE)) {continue;}
-			else if(Arrays.toString(tokenArrLine).contains("I HAS A")) {
+			else if(tokenArrLine[0].matches(Lexeme.I_HAS_A)) {
 				try {
 					String ans = setIHAS(tokenArrLine);
 					if(ans!=null) {
@@ -1421,11 +1464,13 @@ public class GameStage{
 				}
 			}else {
 				clearTables();
-				displayResult.setText("487 Syntax Error.");
+				displayResult.setText("Syntax Error\n");
+				if(this.errorMessage==null) this.errorMessage="";
+				displayResult.setText(displayResult.getText() + this.errorMessage);
 				return;				
 			}
 		}
-
+		this.errorMessage="";
 	}
 
 	private void btnExecuteHandle() { //get and process the code input by user from texarea named "inputUser"
@@ -1443,7 +1488,8 @@ public class GameStage{
                 		}
                 		else {
                 			clearTables();
-                			displayResult.setText(displayResult.getText()+"\n"+"499 Syntax Error.");
+                			if(errorMessage==null) errorMessage="";
+                			displayResult.setText("499 Syntax Error."+"\n"+errorMessage);
                 		}
             		}
 //            	}catch(Exception e1) {
@@ -1468,8 +1514,7 @@ public class GameStage{
 //  4.) loop (with nesting)
 //	5.) typecast in arithmetic operation, "124" to 124
 //  6.) typecast from numbr to numba,   2.0 to 2	(no specs related to this, we follow the rule in online interpreter) and they are equal/WIN
-
-// 7.) deadcode in switch, after gtfo
+//  7.) deadcode in switch, after gtfo
 
 
 

@@ -21,7 +21,7 @@ public class Lexeme{
 	public static final String[] TROOF = {"WIN","FAIL"};
 	public static final String[] TYPE = {"NUMBR","NUMBAR","YARN","TROOF"};
 	public static final String[] LITERALS = {NUMBR,NUMBAR,YARN,TROOF[0],TROOF[1],TYPE[0],TYPE[1],TYPE[2],TYPE[3]};
-	public static final String ALL_LITERALS = NUMBAR+"|"+NUMBR +"|"+YARN+"|"+TROOF[0]+"|"+TROOF[1]+"|"+TYPE[0]+"|"+TYPE[1]+"|"+TYPE[2]+"|"+TYPE[3] + "|AN";
+	public static final String ALL_LITERALS = NUMBAR+"|"+NUMBR +"|"+YARN+"|"+TROOF[0]+"|"+TROOF[1]+"|"+TYPE[0]+"|"+TYPE[1]+"|"+TYPE[2]+"|"+TYPE[3] + "|\\bAN\\b";
 	
 	//file naming and formatting
 	public static final String HAI =  "\\bHAI\\b";
