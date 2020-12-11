@@ -361,6 +361,8 @@ public class GameStage{
 		String literals = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-6)+Lexeme.VARIDENT;
 		String opCombined = Lexeme.mathOperator+Lexeme.boolOperator;
 		
+		if(checkInvalidNest(lexList)) return null;
+		
 		//if any of/all of does not end with MKAY, error
 		if(!lexList[lexList.length-1].matches(Lexeme.MKAY)) return null;
 		
@@ -644,6 +646,13 @@ public class GameStage{
 	}
 	
 	private boolean checkInvalidNest(String[] lexList) {
+		
+		if(!lexList[lexList.length-1].matches(Lexeme.MKAY)) {
+			this.errorMessage = "MKAY is not found, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return true;
+		}
+		
+		
 		String[] removeOp = new String[lexList.length-1];
  		for(int i=0;i<lexList.length-1;i++) removeOp[i] = lexList[i+1];
 
