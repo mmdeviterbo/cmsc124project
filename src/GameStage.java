@@ -390,7 +390,6 @@ public class GameStage{
 		ArrayList<String> stackOperation = new ArrayList<String>();
 		if(lexList[0].matches(Lexeme.ALL_OF+"|"+Lexeme.ANY_OF)) {
 			if(checkInvalidNest(lexList)) {
-				this.errorMessage="Invalid nesting, error!";
 				return null;
 			}
 			else return setBooleanOperationArity(lexList);
@@ -398,45 +397,40 @@ public class GameStage{
 		
 		//boolean expression may contain any of the other expressions
 		String regexLiteral= Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7);
+		String[] validExpressions = (Lexeme.mathOperator+Lexeme.boolOperator).split("\\|");
 		for(int i=0;i<lexList.length;i++) {
-			String[] validExpressions = (Lexeme.mathOperator+Lexeme.boolOperator).split("\\|");
 			boolean isOperator=false;
 			for(int a=0;a<validExpressions.length-1;a++) {
 				String actualOperator = validExpressions[a].replace("\\b","");
-				if(actualOperator.matches(Lexeme.ANY_OF+"|"+Lexeme.ALL_OF)) continue;
+				if(lexList[i].matches(Lexeme.ANY_OF+"|"+Lexeme.ALL_OF+"|"+Lexeme.MKAY)) {
+					if(lexList[i].matches(Lexeme.MKAY)) this.errorMessage="Invalid MKAY in non-arity expression, error!";
+					else if(lexList[i].matches(Lexeme.ALL_OF)) this.errorMessage="Invalid nesting of ALL OF, error!";
+					else if(lexList[i].matches(Lexeme.ANY_OF)) this.errorMessage="IInvalid nesting of ANY OF, error!";
+					return null;	
+				}
 				if(actualOperator.matches(lexList[i])) {
 					stackOperation.add(0,actualOperator);
 					isOperator=true;	
+					break;
 				}
 			}
 			if(isOperator) isOperator=false;			
 			else if(lexList[i].matches(regexLiteral)) {
 				stackOperation.add(0,lexList[i]);
 				if(i+1<lexList.length && lexList[i+1].matches(regexLiteral)) {
-					this.errorMessage="Syntax error!";
+					this.errorMessage="No AN between literals, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 					return null;
 				}
 			}else if(lexList[i].matches("\\bAN\\b")) {
 				if(i+1<lexList.length) if(lexList[i+1].matches("\\bAN\\b")) {
-					this.errorMessage="Syntax error!";
-					return null;
-				}
-			}
-			else if(lexList[i].matches(Lexeme.MKAY)) {
-				if(i+1!=lexList.length) {
-					this.errorMessage="Invalid MKAY!";
-					return null;
-				}else if(!lexList[0].matches(Lexeme.ANY_OF) || !lexList[0].matches(Lexeme.ALL_OF)) {
-					this.errorMessage="ANY OF/ALL OF not found, error!";
+					this.errorMessage="No operand between AN AN, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", ""); 
 					return null;
 				}
 			}else if(lexList[i].matches(Lexeme.VARIDENT)) { //check if variable is exist in symbol table and if type is troof type
 				String value = getValueVarident(lexList[i]);
 				if(value!=null) stackOperation.add(0,value);
-				else {
-					this.errorMessage="Kindly check the expression, error!";
-					return null;
-				}
+				else return null;
+				
 			}else {
 				this.errorMessage="Syntax error!";
 				return null;
@@ -578,6 +572,7 @@ public class GameStage{
 				if(index+1<tokensPerLine.size()) {
 					if(!tokensPerLine.get(index+1)[0].matches(Lexeme.OMG+"|"+Lexeme.OMGWTF+"|"+Lexeme.OIC+"|"+Lexeme.IM_OUTTA_YR)) {
 						isDeadCode=true;
+						this.errorMessage="Deadcode found, error ---> " +  Arrays.deepToString(tokensPerLine.get(index+1)).replaceAll("[\\[\\]\\,]", "");
 						return null;
 					}
 				}
@@ -653,11 +648,14 @@ public class GameStage{
  		for(int i=0;i<lexList.length-1;i++) removeOp[i] = lexList[i+1];
 
  		String lexListStr = Arrays.toString(removeOp);
-		String patternString = "SMOOSH|ALL OF|ANY OF";
+		String patternString = Lexeme.SMOOSH+"|"+Lexeme.ANY_OF+"|"+Lexeme.ALL_OF;
 		Pattern pattern = Pattern.compile(patternString);
 		Matcher matcher = pattern.matcher(lexListStr);
 		
-		while(matcher.find()) return true;
+		while(matcher.find()) {
+			this.errorMessage = "Invalid nesting in expression! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return true;
+		}
 		return false;
 	}
 	
@@ -669,6 +667,7 @@ public class GameStage{
 
 
 		if(lexList[lexList.length-1].matches("\\bAN\\b")) {
+			this.errorMessage = "MKAY is missing, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return null;
 		}
 		
@@ -693,18 +692,22 @@ public class GameStage{
 				}
 				i--;
 				if(i+1<lexList.length && lexList[i+1].matches(literalsVar) && !lexList[i+1].matches("\\bAN\\b")) {
+					this.errorMessage = "AN is missing, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 					return null;
 				}
 			}else if(lexList[i].matches("\\bAN\\b")) {
 				if(i+1<lexList.length && lexList[i+1].matches("\\bAN\\b")) {
+					this.errorMessage = "No operand in between AN AN, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 					return null;
 				}
 				if(i==1) {
+					this.errorMessage = "Invalid AN in smoosh expression --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 					return null;
 				}
 				continue;
 			}else {
 				if(i+1<lexList.length && lexList[i+1].matches(literalsVar) && !lexList[i+1].matches(regexOperation) && !lexList[i+1].matches("\\bAN\\b")) {
+					this.errorMessage = "Invalid smoosh concatenation! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 					return null;
 				}
 				removeAN.add(lexList[i]);
@@ -719,6 +722,7 @@ public class GameStage{
 		String ans = doVISIBLE(lexListNew);
 		if(ans!=null) return ans;
 		else {
+			this.errorMessage = "Invalid smoosh concatenation! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return null;
 		}
 	}
@@ -834,12 +838,12 @@ public class GameStage{
 				}
 				else {
 					clearTables();
-					this.errorMessage = "Invalid boolean expression --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
+//					this.errorMessage = "Invalid boolean expression --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
 					return null;
 				}
 			}catch(Exception e) {
 				clearTables();
-				this.errorMessage = "Invalid boolean expression --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
+//				this.errorMessage = "Invalid boolean expression --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
 				return null;
 			}
 		}else if(tokenArrLine[0].matches(Lexeme.boolOperator.substring(67,93))){ //both saem, diffrint
@@ -868,6 +872,7 @@ public class GameStage{
 					return null;
 				}
 			}catch(Exception e) {
+				clearTables();
 				this.errorMessage = "Invalid smoosh concatenation --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
 				return null;
 			}
@@ -880,12 +885,10 @@ public class GameStage{
 					return ans;
 				}else {
 					clearTables();
-					this.errorMessage = "Invalid VISIBLE statement --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
 					return null;
 				}
 			}catch(Exception e) {
 				clearTables();
-				this.errorMessage = "Invalid VISIBLE statement --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
 				return null;
 			}
 		
@@ -1027,6 +1030,7 @@ public class GameStage{
 				if(tempStore.size()>2) { 
 					String[] passToOp = new String[tempStore.size()];
 					for(int a=0;a<tempStore.size();a++) passToOp[a] = tempStore.get(a);
+					if(checkInvalidNest(passToOp)) return null;
 					String ans = allOperations(passToOp); //if fail to evaluate the expression, throw syntax error
 					if(ans!=null) {
 						outputPrint.add(ans);
@@ -1043,7 +1047,7 @@ public class GameStage{
 			
 			
 			
-			//math,comparison, boolean
+			//math,comparison, boolean (but not any of/all of/smoosh)
 			else if(lexList[i].matches(combinedOp)) {
 				String regexOperation = Lexeme.mathOperator+Lexeme.boolOperator.substring(0,Lexeme.boolOperator.length()-1);
 				String literalsVar = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7)+"|"+Lexeme.VARIDENT;
@@ -1051,7 +1055,10 @@ public class GameStage{
 				
 				int numOperation = 0; int numOperand = 0;
 				while(numOperation+1!=numOperand) {
-					if(lexList[i].matches(Lexeme.NOT)) {
+					if(i>=lexList.length) {
+						this.errorMessage="Expression has missing operands, error! --> " +  Arrays.deepToString(tempStore.toArray()).replaceAll("[\\[\\]\\,]", "");
+						return null;
+					}else if(lexList[i].matches(Lexeme.NOT)) {
 						tempStore.add(lexList[i]);
 					}else if(lexList[i].matches(literalsVar) && !lexList[i].matches("\\bAN\\b") && !lexList[i].matches(regexOperation)) {
 						tempStore.add(lexList[i]);
@@ -1060,19 +1067,31 @@ public class GameStage{
 						tempStore.add(lexList[i]);
 						numOperation++;
 					}else if(lexList[i].matches("\\bAN\\b")) {
-						if(i+1<lexList.length && lexList[i+1].matches("\\bAN\\b")) return null;
+						if(i+1<lexList.length && lexList[i+1].matches("\\bAN\\b")) {
+							this.errorMessage="No operand between AN AN -->" +  Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+							return null;
+						}
 						tempStore.add(lexList[i]);
 					}
 					i++;
 				}
 				i--;	
-				if(tempStore.size()>1) { //NOT unary has at least 2 operands
+				if(tempStore.size()>=2) { //NOT unary has at least 2 operands
 					String[] passToOp = new String[tempStore.size()];
 					for(int a=0;a<tempStore.size();a++) passToOp[a] = tempStore.get(a);
+					
+					if(checkInvalidNest(passToOp)) return null;
+					
 					String ans = allOperations(passToOp);
 					if(ans!=null) outputPrint.add(ans);
-					else return null;
-				}else return null;
+					else {
+						this.errorMessage="Invalid expression,error! -->" +  Arrays.deepToString(passToOp).replaceAll("[\\[\\]\\,]", "");
+						return null;
+					}
+				}else {
+					this.errorMessage="Expression has missing operands, error! --> " +  Arrays.deepToString(tempStore.toArray()).replaceAll("[\\[\\]\\,]", "");
+					return null;
+				}
 				continue;
 			} //end of expression
 			
@@ -1352,7 +1371,6 @@ public class GameStage{
 			if(arrResult.length!=0) tokenizedOutput.add(arrResult);
 		}
 		if(checkGFTO(tokenizedOutput)==null) {
-			this.errorMessage="Dead code found, error!";
 			return null; 
 		}
 		
@@ -1490,7 +1508,7 @@ public class GameStage{
 			}else {
 				clearTables();
 				if(this.errorMessage==null) this.errorMessage="";
-				displayResult.setText("Syntax Error\n" + this.errorMessage);
+				displayResult.setText("487 Syntax Error\n" + this.errorMessage);
 				return;				
 			}
 		}
@@ -1507,7 +1525,8 @@ public class GameStage{
                 		if(tokensPerLine!=null) doSyntaxAnalysis(tokensPerLine);
                 		else if(tokensPerLine==null && isDeadCode) {
                 			clearTables();
-                			displayResult.setText("Dead code found after GTFO, error!");
+                			if(errorMessage==null) errorMessage="";
+                			displayResult.setText(errorMessage);
                 		}else {
                 			clearTables();
                 			if(errorMessage==null) errorMessage="";
@@ -1528,13 +1547,13 @@ public class GameStage{
 } 
 
 
-//BONUS DONE:
-//	1.) a!
+//BONUSES DONE:
+//	1.) a! -- suppress newline
 //	2.) SMOOSH
 //	3.) loop (without nesting)
 //  4.) loop (with nesting)
 //	5.) typecast in arithmetic operation, "124" to 124
-//  6.) typecast from numbr to numba,   2.0 to 2	(no specs related to this, we follow the rule in online interpreter) and they are equal/WIN
+//  6.) typecast from numbr to numbar,   2.0 to 2	(no specs related to this, we follow the rule in online interpreter) and they are equal/WIN
 //  7.) deadcode in switch, after gtfo
 
 
