@@ -35,7 +35,7 @@ public class GameStage{
 	HBox hb; //window to store INPUT window -Lexeme Window-Symbol Table Window
 	VBox vb; //window MAIN layout
 
-	VBox paneLexeme; //lexeme window
+	VBox paneLexeme; //lexeme table
 	VBox paneSymbolTable; //Symbol Table
 	
 	TextArea inputUser; VBox paneUser; Button btnSelectFile; FileChooser fileChooser;
@@ -44,7 +44,7 @@ public class GameStage{
 	TextArea displayResult; ScrollPane scrollResult; VBox paneResult; 
 	boolean isNewLine, isDeadCode;
 	
-	Button btnExecute;
+	Button btnExecute; //button to execute the program
 	
     TableView<Lexeme> lexemeTable; TableColumn<Lexeme, String> columnLexeme; TableColumn<Lexeme, String> columnClassification;
     TableView<SymbolTable> symbolTable; TableColumn<SymbolTable, String> columnIdentifier; TableColumn<SymbolTable, String> columnValue;
@@ -213,7 +213,7 @@ public class GameStage{
 				return rowData.getValue();
 			}
 		}
-		this.errorMessage=variable + " not found, error!";
+		this.errorMessage=variable + " variable not found, error!";
 		return null;
 	}
 	
@@ -479,102 +479,132 @@ public class GameStage{
 	
 	@SuppressWarnings("unused")
 	private String setComparisonOperation(String[] lexList) {
-		
-//		System.out.println("Given: "+Arrays.deepToString(lexList));
-		
 		String regexNum = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7);
 		String regexMath = Lexeme.boolOperator + Lexeme.mathOperator.substring(0,Lexeme.mathOperator.length()-1);
+		String mathQuote = "\""+Lexeme.NUMBR +"\"|\"" +Lexeme.NUMBAR_LITERAL + "\"";
+		
+		if(lexList.length<4) { //comparison expression must has at least 4 operands-operator e.g DIFFRINT 1 AN 1
+			this.errorMessage= "Comparison expression has missing operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return null;
+		}else if(Arrays.deepToString(lexList).contains(Lexeme.MKAY)) {
+			this.errorMessage= "Comparison expression has found MKAY keyword, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return null;
+		}else if(Arrays.deepToString(lexList).contains("\\bAN\\b")) {
+			this.errorMessage= "Comparison expression has invalid AN in the end statement, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return null;
+		}else if(checkInvalidNest(lexList)) return null;
+		else {
+			for(int i=0;i<lexList.length-1;i++) {
+				if(lexList[i].matches("\\bAN\\b") && lexList[i+1].matches("\\bAN\\b")) {
+					this.errorMessage= "Comparison expression has invalid AN AN operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+					return null;
+				}else if(lexList[i].matches(regexNum+"|"+mathQuote+"|"+Lexeme.VARIDENT) && !lexList[i].matches(regexMath+"|\\bAN\\b")) {
+					if(lexList[i+1].matches(regexNum+"|"+mathQuote+"|"+Lexeme.VARIDENT) && !lexList[i+1].matches(regexMath+"|\\bAN\\b")) {
+						this.errorMessage= "Comparison expression has invalid operand, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+						return null;
+					}
+				}
+			}
+		}
+		
+		
 		String isRelationOp = null; //-1 means false, 1 means biggr of, 2 means smallr
 
 		ArrayList<String> operandA = new ArrayList<String>();
-		ArrayList<String> operandB = new ArrayList<String>();
-		
-		if(lexList[0].matches(Lexeme.BOTH_SAEM) || lexList[0].matches(Lexeme.DIFFRINT)) {			
-			int i=1;
-			for(i=1;i<lexList.length;i++) { //getting operandA
-				if(lexList[i].matches(regexNum+"|"+Lexeme.VARIDENT) && !lexList[i].matches(regexMath+"|\\bAN\\b")) {
-					if(lexList[i].matches(regexNum)) { //literal operand
-						operandA.add(lexList[i]);
-					}else if(lexList[i].matches(Lexeme.VARIDENT)) { //varident operand
-						String temp = getValueVarident(lexList[i]);
-						if(temp==null) return null;
-						lexList[i] = temp;
-						operandA.add(lexList[i]);
+		ArrayList<String> operandB = new ArrayList<String>();		
+		int i=1;
+		for(i=1;i<lexList.length;i++) { //getting operandA
+			if(lexList[i].matches(regexNum+"|"+mathQuote+"|"+Lexeme.VARIDENT) && !lexList[i].matches(regexMath+"|\\bAN\\b")) {
+				if(lexList[i].matches(regexNum+"|"+mathQuote)) { //literal operand
+					operandA.add(lexList[i]);
+				}else if(lexList[i].matches(Lexeme.VARIDENT)) { //varident operand
+					String temp = getValueVarident(lexList[i]);
+					if(temp==null) return null;
+					lexList[i] = temp;
+					operandA.add(lexList[i]);
+				}
+				if(i==1) {
+					if(!lexList[i+1].matches("\\bAN\\b")) {
+						this.errorMessage= "Comparison expression has missing AN operand, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+						return null;
 					}
-					if(i==1) {
-						if(!lexList[i+1].matches("\\bAN\\b")) return null;
-						i+=2;
-						break;
-					}else if(i+2<lexList.length && lexList[i+1].matches("\\bAN\\b") && lexList[i+2].matches(regexNum+"|"+Lexeme.VARIDENT)) {
-						operandA.add(lexList[i+1]);
-						if(lexList[i+2].matches(Lexeme.NUMBAR) && lexList[i+2].matches("[0-9]+[.]0+")) {
-							lexList[i+2] = lexList[i].split("\\.")[0];
+					i+=2;
+					break;
+				}else if(i+2<lexList.length && lexList[i+1].matches("\\bAN\\b") && lexList[i+2].matches(regexNum+"|"+mathQuote+"|"+Lexeme.VARIDENT)) {
+					operandA.add(lexList[i+1]);
+					if(lexList[i+2].matches(Lexeme.NUMBAR) && lexList[i+2].matches("[0-9]+[.]0+")) {
+						lexList[i+2] = lexList[i].split("\\.")[0];
 						}else if(lexList[i+2].matches(Lexeme.VARIDENT)) {
 							String temp = getValueVarident(lexList[i+2]);
 							if(temp==null) return null;
 							lexList[i+2] = temp;
 						}
 						operandA.add(lexList[i+2]);i+=4; break;
-
 					}
-				}else if(lexList[i].matches(regexMath+"|\\bAN\\b")) {
-					operandA.add(lexList[i]);
-				}else return null;
+			}else if(lexList[i].matches(regexMath+"|\\bAN\\b")) {
+				operandA.add(lexList[i]);
+			}else {
+				this.errorMessage= "Comparison expression has invalid,"+ lexList[i] +" operand, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+				return null;
 			}
-			
-			for(int j=i;j<lexList.length;j++) { //getting operandB
-				if(lexList[j].matches(regexNum+"|"+Lexeme.VARIDENT) && !lexList[j].matches(regexMath+"|\\bAN\\b")) {
-					if(lexList[j].matches(regexNum)) {
-						operandB.add(lexList[j]);
-					}
-					else if(lexList[j].matches(Lexeme.VARIDENT)) {
-						String temp = getValueVarident(lexList[j]);
-						if(temp==null) return null;
-						lexList[j] = temp;
-						operandB.add(lexList[j]);
-					}else if(j+2<lexList.length && lexList[j+1].matches("\\bAN\\b") && lexList[j+2].matches(regexNum+"|"+Lexeme.VARIDENT)) {
-						operandB.add(lexList[j+1]);
-						if(lexList[j+2].matches(Lexeme.NUMBAR) && lexList[j+2].matches("[0-9]+[.]0+")) {
-							lexList[j+2] = lexList[j+2].split("\\.")[0];
-						}else if(lexList[j+2].matches(Lexeme.VARIDENT)) {
-							String temp = getValueVarident(lexList[j+2]);
-							if(temp==null) return null;
-							lexList[j+2] = temp;
-						}
-						operandB.add(lexList[j+2]);
-					}
-				}else if(lexList[j].matches(regexMath+"|\\bAN\\b")) operandB.add(lexList[j]);
-				else return null;
-
-			}
-			
-			if(operandA.size()==0 || operandB.size()==0) return null;
-		
-			String[] operandAtemp = new String[operandA.size()];
-			for(int a=0;a<operandA.size();a++) operandAtemp[a] = operandA.get(a);
-			String[] operandBtemp = new String[operandB.size()];
-			for(int b=0;b<operandB.size();b++) operandBtemp[b] = operandB.get(b);
-			
-			//if list has more than one size, then it has expression (to be solved), else it has only literal/variables
-			String valueA = operandA.size()==1? operandA.get(0) : allOperations(operandAtemp);
-			String valueB = operandB.size()==1? operandB.get(0) : allOperations(operandBtemp);
-			
-			if(valueA==null || valueB==null) return null;
-			
-			
-			//if operand has literal/varident but has TROOF values, it must result FAIL if BOTH SAEM, Error if diffrint
-			if(!valueA.matches(Lexeme.NUMBAR+"|"+Lexeme.NUMBR)) return Lexeme.TROOF[1];
-			if(!valueB.matches(Lexeme.NUMBAR+"|"+Lexeme.NUMBR)) return Lexeme.TROOF[1];
-			
-			if(valueA.matches("[0-9]+[.]0+")) valueA = valueA.split("\\.")[0];
-			if(valueB.matches("[0-9]+[.]0+")) valueB = valueB.split("\\.")[0];
-			
-						
-			if(lexList[0].matches(Lexeme.DIFFRINT) && !valueA.contentEquals(valueB)) return Lexeme.TROOF[0];
-			else if(lexList[0].matches(Lexeme.DIFFRINT) && valueA.contentEquals(valueB)) return Lexeme.TROOF[1];
-			if(lexList[0].matches(Lexeme.BOTH_SAEM) && valueA.contentEquals(valueB)) return Lexeme.TROOF[0];
-			else if(lexList[0].matches(Lexeme.BOTH_SAEM) && !valueA.contentEquals(valueB)) return Lexeme.TROOF[1];			
 		}
+		
+		for(int j=i;j<lexList.length;j++) { //getting operandB
+			if(lexList[j].matches(regexNum+"|"+ mathQuote + "|"+ Lexeme.VARIDENT) && !lexList[j].matches(regexMath+"|\\bAN\\b")) {
+				if(lexList[j].matches(regexNum+"|"+mathQuote)) {
+					operandB.add(lexList[j]);
+					if(j+1!=lexList.length && i==j) {
+						System.out.println(lexList[j]);
+						this.errorMessage= "Comparison expression has excess operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+						return null;
+					}
+				}else if(lexList[j].matches(Lexeme.VARIDENT)) {
+					String temp = getValueVarident(lexList[j]);
+					if(temp==null) return null;
+					lexList[j] = temp;
+					operandB.add(lexList[j]);
+				}else if(j+2<lexList.length && lexList[j+1].matches("\\bAN\\b") && lexList[j+2].matches(regexNum+"|"+Lexeme.VARIDENT)) {
+					operandB.add(lexList[j+1]);
+					if(lexList[j+2].matches(Lexeme.NUMBAR) && lexList[j+2].matches("[0-9]+[.]0+")) {
+						lexList[j+2] = lexList[j+2].split("\\.")[0];
+					}else if(lexList[j+2].matches(Lexeme.VARIDENT)) {
+						String temp = getValueVarident(lexList[j+2]);
+						if(temp==null) return null;
+						lexList[j+2] = temp;
+					}
+					operandB.add(lexList[j+2]);
+				}
+			}else if(lexList[j].matches(regexMath+"|\\bAN\\b")) operandB.add(lexList[j]);
+				else return null;
+			}
+			
+		if(operandA.size()==0 || operandB.size()==0) return null;
+	
+		String[] operandAtemp = new String[operandA.size()];
+		for(int a=0;a<operandA.size();a++) operandAtemp[a] = operandA.get(a);
+		String[] operandBtemp = new String[operandB.size()];
+		for(int b=0;b<operandB.size();b++) operandBtemp[b] = operandB.get(b);
+			
+		//if list has more than one size, then it has expression (to be solved), else it has only literal/variables
+		String valueA = operandA.size()==1? operandA.get(0) : allOperations(operandAtemp);
+		String valueB = operandB.size()==1? operandB.get(0) : allOperations(operandBtemp);
+		
+		if(valueA==null || valueB==null) return null;
+		
+		
+		//if operand has literal/varident but has TROOF values, it must result FAIL if BOTH SAEM, Error if diffrint
+		if(!valueA.matches(Lexeme.NUMBAR+"|"+Lexeme.NUMBR)) return Lexeme.TROOF[1];
+		if(!valueB.matches(Lexeme.NUMBAR+"|"+Lexeme.NUMBR)) return Lexeme.TROOF[1];
+		
+		if(valueA.matches("[0-9]+[.]0+")) valueA = valueA.split("\\.")[0]; //if decimal contains 0's, then it will be then typecast to integer
+		if(valueB.matches("[0-9]+[.]0+")) valueB = valueB.split("\\.")[0]; //if decimal contains 0'sthen it will be then typecast to integer
+		
+					
+		if(lexList[0].matches(Lexeme.DIFFRINT) && !valueA.contentEquals(valueB)) return Lexeme.TROOF[0];
+		else if(lexList[0].matches(Lexeme.DIFFRINT) && valueA.contentEquals(valueB)) return Lexeme.TROOF[1];
+		if(lexList[0].matches(Lexeme.BOTH_SAEM) && valueA.contentEquals(valueB)) return Lexeme.TROOF[0];
+		else if(lexList[0].matches(Lexeme.BOTH_SAEM) && !valueA.contentEquals(valueB)) return Lexeme.TROOF[1];			
+
 		return null;
 	}
 	
@@ -855,28 +885,21 @@ public class GameStage{
 				if(ans!=null) { 
 					return ans;
 				}else {
-					clearTables();
-//					this.errorMessage = "Invalid arithmetic expression --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
-					return null;
+					clearTables(); return null;
 				}
 			}catch(Exception e) {
-				clearTables();
-//				this.errorMessage = "Invalid arithmetic expression --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
-				return null;
+				clearTables(); return null;
 			}
 		}else if(tokenArrLine[0].matches(Lexeme.boolOperator.substring(0, Lexeme.boolOperator.length()-37))) {  //both of, either of, won of, not, all of, any of, mkay
 			try {
 				String ans = setBooleanOperation(tokenArrLine);
 				if(ans!=null) {
 					return ans;
-				}
-				else {
-					clearTables();
-					return null;
+				}else {
+					clearTables(); return null;
 				}
 			}catch(Exception e) {
-				clearTables();
-				return null;
+				clearTables(); return null;
 			}
 		}else if(tokenArrLine[0].matches(Lexeme.boolOperator.substring(67,93))){ //both saem, diffrint
 			try {
@@ -885,12 +908,12 @@ public class GameStage{
 					return ans;
 				}else{
 						clearTables();
-						this.errorMessage = "Invalid comparison expression --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
+//						this.errorMessage = "Invalid comparison expression --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
 						return null;
 				}
 			}catch(Exception e) {
 				clearTables();
-				this.errorMessage = "Invalid comparison expression --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
+//				this.errorMessage = "Invalid comparison expression --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
 				return null;				
 			}
 		}else if(tokenArrLine[0].matches(Lexeme.SMOOSH)) {
