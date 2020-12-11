@@ -272,8 +272,12 @@ public class GameStage{
 
 	private String setArithmeticOperation(String[] lexList) {		
 		ArrayList<String> stackOperation = new ArrayList<String>();
-		String regexNum = "^"+Lexeme.NUMBR+"$"+"|"+"^"+Lexeme.NUMBAR+"$"+"|"+"^\""+Lexeme.NUMBR+"\"$" +"|"+ "^\""+Lexeme.NUMBAR+"\"$";
+		String regexNum = Lexeme.NUMBR+"|"+Lexeme.NUMBAR+"|"+"\""+Lexeme.NUMBR+"\"" +"|"+ "\""+Lexeme.NUMBAR+"\"";
 		
+		if(lexList.length<4) { //minimum has to be 4: SUM OF 1 AN 1
+			this.errorMessage = "Arithmetic expression has missing operands, error --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return null;
+		}
 		for(int i=0;i<lexList.length;i++) {
 			if(lexList[i].matches(Lexeme.SUM_OF)) stackOperation.add(0,"SUM OF");
 			else if(lexList[i].matches(Lexeme.DIFF_OF)) stackOperation.add(0,"DIFF OF");
@@ -284,16 +288,32 @@ public class GameStage{
 			else if(lexList[i].matches(Lexeme.SMALLR_OF)) stackOperation.add(0,"SMALLR OF");
 			else if(lexList[i].matches(regexNum)) {
 				stackOperation.add(0,lexList[i]);
-				if(i+1!=lexList.length && lexList[i+1].matches(regexNum)==true) return null;
+				if(i+1!=lexList.length && lexList[i+1].matches(regexNum)==true) {
+					this.errorMessage = "Arithmetic expression has invalid operands, error --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+					return null;
+				}
 			}else if(lexList[i].matches("\\bAN\\b")){
-				if(i+1!=lexList.length) {
-					if(lexList[i+1].matches("\\bAN\\b")) return null;
-				}else if(i+1==lexList.length && lexList[i].matches(regexNum)==false) return null;
-			}else if(lexList[i].matches(Lexeme.VARIDENT) && !lexList[i].matches("\\bAN\\b")) { //kulang pa: check if it exists in symbol table, if yes: get its value, else error/not existing
+				if(i+1<lexList.length) {
+					if(lexList[i+1].matches("\\bAN\\b")) {
+						this.errorMessage = "Invalid AN AN operands, error --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+						return null;
+					}
+				}else if(i+1==lexList.length) {
+					this.errorMessage = "Invalid AN in the end of arithmetic expression, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+					return null;
+				}
+			}else if(lexList[i].matches(Lexeme.VARIDENT) && !lexList[i].matches("\\bAN\\b") && !lexList[i].matches(Lexeme.mathOperator+Lexeme.boolOperator)) { 
+				if(i+1<lexList.length && lexList[i+1].matches(Lexeme.VARIDENT) && !lexList[i+1].matches("\\bAN\\b") && !lexList[i+1].matches(Lexeme.mathOperator)) { 
+					this.errorMessage = "Invalid varidents in arithmetic expression, error --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+					return null;
+				}
 				String valueVar = getValueVarident(lexList[i]);
 				if(valueVar!=null) stackOperation.add(0,valueVar);
 				else return null;
-			}else return null;
+			}else {
+				this.errorMessage = "Invalid operand, "+ lexList[i] + ", in arithmetic expression, error --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+				return null;
+			}
 		}
 		String answer = solveArithmeticOperation(stackOperation,0);
 		return answer;	
@@ -836,12 +856,12 @@ public class GameStage{
 					return ans;
 				}else {
 					clearTables();
-					this.errorMessage = "Invalid arithmetic expression --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
+//					this.errorMessage = "Invalid arithmetic expression --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
 					return null;
 				}
 			}catch(Exception e) {
 				clearTables();
-				this.errorMessage = "Invalid arithmetic expression --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
+//				this.errorMessage = "Invalid arithmetic expression --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
 				return null;
 			}
 		}else if(tokenArrLine[0].matches(Lexeme.boolOperator.substring(0, Lexeme.boolOperator.length()-37))) {  //both of, either of, won of, not, all of, any of, mkay
