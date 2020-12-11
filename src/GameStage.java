@@ -159,9 +159,8 @@ public class GameStage{
 		stage.show(); 
 	}
 	private void initializeElements() {
-		isNewLine=true;
-		isDeadCode=false;
-		
+		this.isNewLine=true;
+		this.isDeadCode=false;
 		inputUser.setPrefWidth(GameStage.WINDOW_WIDTH/3);
 		inputUser.setWrapText(true);
 		
@@ -207,6 +206,10 @@ public class GameStage{
 	private String getValueVarident(String variable) {
 		for(SymbolTable rowData : symbolTable.getItems()) {
 			if(variable.equals(rowData.getIdentifier())) {
+				if(rowData.getValue().length()==0) {
+					this.errorMessage = variable + "has NOOB value, error!";
+					return null;
+				}
 				return rowData.getValue();
 			}
 		}
@@ -397,10 +400,7 @@ public class GameStage{
 			if(!lexList[lexList.length-1].matches(Lexeme.MKAY)) {
 				this.errorMessage = "MKAY is not found, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 				return null;
-			}
-			
-			
-			else return setBooleanOperationArity(lexList);
+			}else return setBooleanOperationArity(lexList);
 		}
 		
 		//boolean expression may contain any of the other expressions
@@ -429,11 +429,16 @@ public class GameStage{
 					this.errorMessage="No AN between literals, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 					return null;
 				}
-			}else if(lexList[i].matches("\\bAN\\b")) {
+			}else if(lexList[i].matches("\\bAN\\b")) { //if 'AN AN' exists
 				if(i+1<lexList.length) if(lexList[i+1].matches("\\bAN\\b")) {
 					this.errorMessage="No operand between AN AN, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", ""); 
 					return null;
 				}
+				if(i+1==lexList.length) {
+					this.errorMessage="Invalid AN in the end of statement, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", ""); 
+					return null;
+				}
+					
 			}else if(lexList[i].matches(Lexeme.VARIDENT)) { //check if variable is exist in symbol table and if type is troof type
 				String value = getValueVarident(lexList[i]);
 				if(value!=null) stackOperation.add(0,value);
@@ -847,12 +852,10 @@ public class GameStage{
 				}
 				else {
 					clearTables();
-//					this.errorMessage = "Invalid boolean expression --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
 					return null;
 				}
 			}catch(Exception e) {
 				clearTables();
-//				this.errorMessage = "Invalid boolean expression --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
 				return null;
 			}
 		}else if(tokenArrLine[0].matches(Lexeme.boolOperator.substring(67,93))){ //both saem, diffrint
@@ -999,10 +1002,22 @@ public class GameStage{
 		return "success";
 	}
 	
+	private boolean checkVISIBLEnest(String[] lexList) {
+		for(int i=1;i<lexList.length;i++) {
+			if(lexList[i].matches(Lexeme.VISIBLE)) {
+				this.errorMessage = "VISIBLE cannot be nested together, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private String doVISIBLE(String[] lexList) {
-		
+		if(checkVISIBLEnest(lexList)) {
+			return null;
+		}
 		if(lexList.length==1) {
-			this.errorMessage = "Error, print something! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			this.errorMessage = "Error, VISIBLE has missing operand! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return null; //must contain atleast one operand
 		}
 		String combinedOp = Lexeme.mathOperator + Lexeme.boolOperator+"\\bAN\\b";
@@ -1065,19 +1080,26 @@ public class GameStage{
 				int numOperation = 0; int numOperand = 0;
 				while(numOperation+1!=numOperand) {
 					if(i>=lexList.length) {
-						this.errorMessage="Expression has missing operands, error! --> " +  Arrays.deepToString(tempStore.toArray()).replaceAll("[\\[\\]\\,]", "");
+						this.errorMessage="Expression has wrong operands, error! --> " +  Arrays.deepToString(tempStore.toArray()).replaceAll("[\\[\\]\\,]", "");
 						return null;
 					}else if(lexList[i].matches(Lexeme.NOT)) {
 						tempStore.add(lexList[i]);
 					}else if(lexList[i].matches(literalsVar) && !lexList[i].matches("\\bAN\\b") && !lexList[i].matches(regexOperation)) {
 						tempStore.add(lexList[i]);
 						numOperand++;
+					}else if(lexList[i].matches(Lexeme.ANY_OF+"|"+Lexeme.ALL_OF+"|"+Lexeme.MKAY)) {
+						this.errorMessage="Wrong use of operator, " + lexList[i] + ", error! --> " +  Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+						return null;
 					}else if(lexList[i].matches(regexOperation)) {
 						tempStore.add(lexList[i]);
 						numOperation++;
 					}else if(lexList[i].matches("\\bAN\\b")) {
 						if(i+1<lexList.length && lexList[i+1].matches("\\bAN\\b")) {
 							this.errorMessage="No operand between AN AN -->" +  Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+							return null;
+						}
+						if(i+1==lexList.length) {
+							this.errorMessage="Invalid AN in the end of statement --> " +  Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 							return null;
 						}
 						tempStore.add(lexList[i]);
