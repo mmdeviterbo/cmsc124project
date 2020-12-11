@@ -210,6 +210,7 @@ public class GameStage{
 				return rowData.getValue();
 			}
 		}
+		this.errorMessage=variable + " not found, error!";
 		return null;
 	}
 	
@@ -297,7 +298,6 @@ public class GameStage{
 	}
 
 	private String solveBooleanOperation(ArrayList<String> stackOperation, int index) {
-		System.out.println(Arrays.deepToString(stackOperation.toArray()));
 		if(stackOperation.size()==1) return stackOperation.get(0);
 		
 		String tempA,tempB;
@@ -358,27 +358,22 @@ public class GameStage{
 	}
 	
 	private String setBooleanOperationArity(String[] lexList) {	
-		String literals = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7);
-		if(!lexList[lexList.length-1].matches(Lexeme.MKAY)) {
-			this.errorMessage="Invalid MKAY in expression! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
-			return null;
-		}
+		String literals = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-6)+Lexeme.VARIDENT;
+		String opCombined = Lexeme.mathOperator+Lexeme.boolOperator;
+		
+		//if any of/all of does not end with MKAY, error
+		if(!lexList[lexList.length-1].matches(Lexeme.MKAY)) return null;
+		
+		//error detection
 		for(int i=0;i<lexList.length;i++) {
 			if(i+1<lexList.length) {
-				if(lexList[i].matches(literals) && lexList[i+1].matches(literals)) {
-					this.errorMessage="Invalid expression! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+				if(lexList[i].matches(literals) && lexList[i+1].matches(literals) && !lexList[i].matches("\\bAN\\b") && !lexList[i+1].matches("\\bAN\\b")&& !lexList[i].matches(opCombined) && !lexList[i+1].matches(opCombined)) {
 					return null;
 				}else if(lexList[i].matches("\\bAN\\b") && lexList[i+1].matches("\\bAN\\b")) {
-					this.errorMessage="Invalid AN in expression! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
-					return null;
-				}else if(lexList[i].matches(Lexeme.mathOperator+Lexeme.boolOperator) && lexList[i+1].matches(Lexeme.mathOperator+Lexeme.boolOperator)) {
-					this.errorMessage="Invalid AN in expression! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 					return null;
 				}				
 			}
 		}
-		
-		
 		
 		String[] tempArr = new String[lexList.length-1]; //without mkay at the end
 		for(int i=0;i<lexList.length-1;i++) tempArr[i] = lexList[i];
@@ -674,7 +669,6 @@ public class GameStage{
 
 
 		if(lexList[lexList.length-1].matches("\\bAN\\b")) {
-			System.out.println(618);
 			return null;
 		}
 		
@@ -699,22 +693,18 @@ public class GameStage{
 				}
 				i--;
 				if(i+1<lexList.length && lexList[i+1].matches(literalsVar) && !lexList[i+1].matches("\\bAN\\b")) {
-					System.out.println(708);
 					return null;
 				}
 			}else if(lexList[i].matches("\\bAN\\b")) {
 				if(i+1<lexList.length && lexList[i+1].matches("\\bAN\\b")) {
-					System.out.println(713);
 					return null;
 				}
 				if(i==1) {
-					System.out.println(719);
 					return null;
 				}
 				continue;
 			}else {
 				if(i+1<lexList.length && lexList[i+1].matches(literalsVar) && !lexList[i+1].matches(regexOperation) && !lexList[i+1].matches("\\bAN\\b")) {
-					System.out.println(720);
 					return null;
 				}
 				removeAN.add(lexList[i]);
@@ -726,11 +716,9 @@ public class GameStage{
 			lexListNew[a] = removeAN.get(a);
 		}
 		
-		System.out.println("Final: "+Arrays.deepToString(lexListNew));
 		String ans = doVISIBLE(lexListNew);
 		if(ans!=null) return ans;
 		else {
-			System.out.println(741);
 			return null;
 		}
 	}
@@ -830,54 +818,58 @@ public class GameStage{
 					return ans;
 				}else {
 					clearTables();
-					displayResult.setText("473 Syntax Error."); return null;
+					this.errorMessage = "Invalid arithmetic expression --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
+					return null;
 				}
 			}catch(Exception e) {
 				clearTables();
-				displayResult.setText("475 Syntax Error."); return null;
+				this.errorMessage = "Invalid arithmetic expression --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
+				return null;
 			}
 		}else if(tokenArrLine[0].matches(Lexeme.boolOperator.substring(0, Lexeme.boolOperator.length()-37))) {  //both of, either of, won of, not, all of, any of, mkay
 			try {
 				String ans = setBooleanOperation(tokenArrLine);
 				if(ans!=null) {
-					System.out.println("481 Correct syntax: " + ans); 
 					return ans;
 				}
 				else {
 					clearTables();
-					displayResult.setText("481 Syntax Error."); return null;
+					this.errorMessage = "Invalid boolean expression --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
+					return null;
 				}
 			}catch(Exception e) {
 				clearTables();
-				displayResult.setText("484 Syntax Error."); return null;
+				this.errorMessage = "Invalid boolean expression --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
+				return null;
 			}
 		}else if(tokenArrLine[0].matches(Lexeme.boolOperator.substring(67,93))){ //both saem, diffrint
 			try {
-			String ans = setComparisonOperation(tokenArrLine);
-			if(ans!=null) {
-				System.out.println("Comparison - Correct syntax: " + ans); 
-				return ans;
-			}
-			else{
-					clearTables();
-					displayResult.setText("624 Syntax Error."); return null;
-			}
+				String ans = setComparisonOperation(tokenArrLine);
+				if(ans!=null) {
+					return ans;
+				}else{
+						clearTables();
+						this.errorMessage = "Invalid comparison expression --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
+						return null;
+				}
 			}catch(Exception e) {
 				clearTables();
-				displayResult.setText("Catch Syntax Error.");	return null;				
+				this.errorMessage = "Invalid comparison expression --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
+				return null;				
 			}
 		}else if(tokenArrLine[0].matches(Lexeme.SMOOSH)) {
 			try {
 				String ans = solveSmooshOperation(tokenArrLine);
 				if(ans!=null) {
-					System.out.println("Smoosh - Correct syntax: ");
 					return ans;
 				}else {
 					clearTables();
-					displayResult.setText("Smoosh - Syntax Error."); return null;
+					this.errorMessage = "Invalid smoosh concatenation --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
+					return null;
 				}
 			}catch(Exception e) {
-				displayResult.setText("Smoosh - Catch Syntax Error."); return null;
+				this.errorMessage = "Invalid smoosh concatenation --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
+				return null;
 			}
 		}else if(tokenArrLine[0].matches(Lexeme.VISIBLE)) {
 			try {
@@ -888,11 +880,13 @@ public class GameStage{
 					return ans;
 				}else {
 					clearTables();
-					displayResult.setText("VISIBLE - Syntax Error."); return null;
+					this.errorMessage = "Invalid VISIBLE statement --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
+					return null;
 				}
 			}catch(Exception e) {
 				clearTables();
-				displayResult.setText("VISIBLE Catch - Syntax Error."); return null;
+				this.errorMessage = "Invalid VISIBLE statement --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
+				return null;
 			}
 		
 		}
@@ -967,6 +961,7 @@ public class GameStage{
 	private String checkHaiKthxbye(String[] programInput) {
 		int len = programInput.length-1;
 		if(len==-1) return null;
+		
 		programInput[0] = programInput[0].replaceAll("BTW.*","");
 		programInput[0] = programInput[0].replaceAll("[\\s\\n]","");
 		programInput[len] = programInput[len].replaceAll("BTW.*","");
@@ -982,7 +977,11 @@ public class GameStage{
 			if(programInput[i].matches(Lexeme.HAI)) HAILen++;
 			if(programInput[i].matches(Lexeme.KTHXBYE)) KTHXBYELen++;
 		}
-		if(HAILen!=1 || KTHXBYELen!=1) return null;
+		if(HAILen!=1 || KTHXBYELen!=1) {
+			if(HAILen!=1) this.errorMessage="Invalid HAI!";
+			else if(HAILen!=1) this.errorMessage="Invalid KTHXBYE!";
+			return null;
+		}
 		this.lexemeTable.getItems().add(new Lexeme(programInput[0],Lexeme.CODE_DELIMETER));
 		this.lexemeTable.getItems().add(new Lexeme(programInput[len],Lexeme.CODE_DELIMETER));
 		return "success";
@@ -990,7 +989,10 @@ public class GameStage{
 	
 	private String doVISIBLE(String[] lexList) {
 		
-		if(lexList.length==1) return null; //must contain atleast one operand
+		if(lexList.length==1) {
+			this.errorMessage = "Error, print something! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return null; //must contain atleast one operand
+		}
 		String combinedOp = Lexeme.mathOperator + Lexeme.boolOperator+"\\bAN\\b";
 		String combinedVal = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7);
 		
@@ -1013,7 +1015,10 @@ public class GameStage{
 			//any of, all of, mkay
 			else if(lexList[1].matches(Lexeme.ANY_OF+"|"+Lexeme.ALL_OF)) {
 				ArrayList<String> tempStore = new ArrayList<String>();
-				if(!lexList[lexList.length-1].matches(Lexeme.MKAY)) return null;//if mkay is not the last item
+				if(!lexList[lexList.length-1].matches(Lexeme.MKAY)) {
+					this.errorMessage = "No MKAY found in expression --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+					return null;//if mkay is not the last item
+				}
 				while(!lexList[i].matches(Lexeme.MKAY)) {
 					tempStore.add(lexList[i]);
 					i++;
@@ -1026,8 +1031,14 @@ public class GameStage{
 					if(ans!=null) {
 						outputPrint.add(ans);
 					}
-					else return null;
-				}else return null;
+					else {
+						this.errorMessage = "Invalid expression --> " + Arrays.deepToString(passToOp).replaceAll("[\\[\\]\\,]", "");
+						return null;
+					}
+				}else {
+					this.errorMessage = "Invalid expression --> " + Arrays.deepToString(tempStore.toArray()).replaceAll("[\\[\\]\\,]", "");
+					return null;
+				}
 			}
 			
 			
@@ -1320,10 +1331,9 @@ public class GameStage{
 		
 		String[] programInput = new String[programInputList.size()];
 		for(int a=0;a<programInputList.size();a++) programInput[a] = programInputList.get(a);
-//		System.out.println("894: " + Arrays.toString(programInput));
 		
 		if(checkHaiKthxbye(programInput)==null) {
-			displayResult.setText("HAI/KTHXBYE has error!");
+			this.errorMessage="HAI/KTHXBYE error!";
 			return null;
 		}
 		
@@ -1341,7 +1351,10 @@ public class GameStage{
 			}
 			if(arrResult.length!=0) tokenizedOutput.add(arrResult);
 		}
-		if(checkGFTO(tokenizedOutput)==null) return null; 
+		if(checkGFTO(tokenizedOutput)==null) {
+			this.errorMessage="Dead code found, error!";
+			return null; 
+		}
 		
 		
 //		for(String[] arr : tokenizedOutput) {
@@ -1400,7 +1413,6 @@ public class GameStage{
 					clearTables();
 					displayResult.setText("I HAS-Syntax Error."); return;
 				}
-				
 			}else if(tokenArrLine[0].matches(Lexeme.VARIDENT) && tokenArrLine.length>1 && tokenArrLine[1].matches(Lexeme.R)) {
 				try {
 					String ans = makeRreassignment(tokenArrLine);
@@ -1426,7 +1438,7 @@ public class GameStage{
 					}
 				}catch(Exception e) {
 					clearTables();
-					displayResult.setText("GIMMEH Syntax Error."); return;
+					displayResult.setText("Invalid input, error!"); return;
 				}
 				break;
 			}else if(tokenArrLine[0].matches(Lexeme.O_RLY)) {
@@ -1469,17 +1481,16 @@ public class GameStage{
 						return;
 					}else {
 						clearTables();
-						displayResult.setText("Loop Syntax Error."); return;
+						displayResult.setText("Loop syntax Error."); return;
 					}
 				}catch(Exception e) {
 					clearTables();
-					displayResult.setText("Loop Syntax Error"); return;
+					displayResult.setText("Loop syntax Error"); return;
 				}
 			}else {
 				clearTables();
-				displayResult.setText("Syntax Error\n");
 				if(this.errorMessage==null) this.errorMessage="";
-				displayResult.setText(displayResult.getText() + this.errorMessage);
+				displayResult.setText("Syntax Error\n" + this.errorMessage);
 				return;				
 			}
 		}
@@ -1497,9 +1508,7 @@ public class GameStage{
                 		else if(tokensPerLine==null && isDeadCode) {
                 			clearTables();
                 			displayResult.setText("Dead code found after GTFO, error!");
-                			isDeadCode=false;
-                		}
-                		else {
+                		}else {
                 			clearTables();
                 			if(errorMessage==null) errorMessage="";
                 			displayResult.setText("499 Syntax Error."+"\n"+errorMessage);
@@ -1509,15 +1518,14 @@ public class GameStage{
 //            		clearTables();
 //            		displayResult.setText(displayResult.getText()+"\n"+"501 Syntax Error.");
 //            	}
-            	
+            		errorMessage=""; //reset error message every run
+            		isDeadCode=false;
             }
 		};
 		btnExecute.setOnAction(event); 
 		
 	}
 } 
-
-//all testcases passed
 
 
 //BONUS DONE:
