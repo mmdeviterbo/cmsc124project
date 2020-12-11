@@ -44,16 +44,13 @@ public class GameStage{
 	TextArea displayResult; ScrollPane scrollResult; VBox paneResult; 
 	boolean isNewLine, isDeadCode;
 	
-	
 	Button btnExecute;
 	
     TableView<Lexeme> lexemeTable; TableColumn<Lexeme, String> columnLexeme; TableColumn<Lexeme, String> columnClassification;
     TableView<SymbolTable> symbolTable; TableColumn<SymbolTable, String> columnIdentifier; TableColumn<SymbolTable, String> columnValue;
 
+	public static final int WINDOW_HEIGHT = 1070, WINDOW_WIDTH= 1890;
 
-	public static final int WINDOW_HEIGHT = 1070;
-	public static final int WINDOW_WIDTH= 1890;
-	
 	public GameStage() {
 		//check changes
 		this.root = new Group();
