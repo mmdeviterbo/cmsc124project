@@ -323,9 +323,9 @@ public class GameStage{
 				stackOperation.remove(index);
 				stackOperation.add(index,A);
 				solveBooleanOperation(stackOperation,0);	
-			}else if(tempB.matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3))){
-				boolean Atype= tempA.matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3));
-				boolean Btype = tempB.matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3));
+			}else if(tempB.matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7))){
+				boolean Atype= tempA.matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7));
+				boolean Btype = tempB.matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7));
 				boolean regexBool= (stackOperation.get(index+2)).matches(Lexeme.mathOperator+Lexeme.boolOperator);
 				if(stackOperation.size()>2 && Atype && Btype && regexBool && !(stackOperation.get(index+2)).matches(Lexeme.NOT)) {				
 					A = stackOperation.remove(index); B = stackOperation.remove(index);
@@ -361,7 +361,7 @@ public class GameStage{
 	}
 	
 	private String setBooleanOperationArity(String[] lexList) {	
-		String literals = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3);
+		String literals = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7);
 		if(!lexList[lexList.length-1].matches(Lexeme.MKAY)) {
 			this.errorMessage="Invalid MKAY in expression! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return null;
@@ -405,7 +405,7 @@ public class GameStage{
 		}
 		
 		//boolean expression may contain any of the other expressions
-		String regexLiteral= Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3);
+		String regexLiteral= Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7);
 		for(int i=0;i<lexList.length;i++) {
 			String[] validExpressions = (Lexeme.mathOperator+Lexeme.boolOperator).split("\\|");
 			boolean isOperator=false;
@@ -463,7 +463,7 @@ public class GameStage{
 		
 //		System.out.println("Given: "+Arrays.deepToString(lexList));
 		
-		String regexNum = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3);
+		String regexNum = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7);
 		String regexMath = Lexeme.boolOperator + Lexeme.mathOperator.substring(0,Lexeme.mathOperator.length()-1);
 		String isRelationOp = null; //-1 means false, 1 means biggr of, 2 means smallr
 
@@ -604,7 +604,7 @@ public class GameStage{
 				displayResult.setText("Variable already exists, error!");
 				displayResult.setText("Variable assignment error! --> " + lexList[1]);
 				return null;
-			}else if(lexList[1].matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3))) {
+			}else if(lexList[1].matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7))) {
 				displayResult.setText("Variable is invalid, error! -->" + lexList[1]);
 				return null;
 			}
@@ -669,43 +669,55 @@ public class GameStage{
 		return false;
 	}
 	
-	private String solveSmooshOperation(String[] lexList) {		
+	private String solveSmooshOperation(String[] lexList) {
 		if(checkInvalidNest(lexList)) return null;
 		ArrayList<String> removeAN = new ArrayList<String>();
 		String regexOperation = Lexeme.mathOperator+Lexeme.boolOperator.substring(0,Lexeme.boolOperator.length()-1);
-		String literalsVar = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-2)+Lexeme.VARIDENT;
+		String literalsVar = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-6)+Lexeme.VARIDENT;
 
-		if(lexList[lexList.length-1].matches("\\bAN\\b")) return null;
+
+		if(lexList[lexList.length-1].matches("\\bAN\\b")) {
+			System.out.println(618);
+			return null;
+		}
 		
 		for(int i=1;i<lexList.length;i++) { 
-			if(lexList[i].matches(Lexeme.SMOOSH)) {
-				continue;
-			}
+			if(lexList[i].matches(Lexeme.SMOOSH)) continue;
 			else if(lexList[i].matches(regexOperation)) {
 				int numOperation = 0; int numOperand = 0;
 				while(numOperation+1!=numOperand) {
 					if(lexList[i].matches(Lexeme.NOT)) {
 						removeAN.add(lexList[i]);
-					}else if(lexList[i].matches(literalsVar) && !lexList[i].matches("\\bAN\\b") && !lexList[i].matches(regexOperation)) {
-						removeAN.add(lexList[i]);
-						numOperand++;
-					}else if(lexList[i].matches(regexOperation)) {
-						removeAN.add(lexList[i]);
-						numOperation++;
 					}else if(lexList[i].matches("\\bAN\\b")) {
 						if(i+1<lexList.length && lexList[i+1].matches("\\bAN\\b")) return null;
 						removeAN.add(lexList[i]);
+					}else if(lexList[i].matches(regexOperation)) {
+						removeAN.add(lexList[i]);
+						numOperation++;
+					}else if(lexList[i].matches(literalsVar) && !lexList[i].matches("\\bAN\\b") && !lexList[i].matches(regexOperation)) {
+						removeAN.add(lexList[i]);
+						numOperand++;
 					}
 					i++;
 				}
 				i--;
-				if(i+1<lexList.length && lexList[i+1].matches(literalsVar) && !lexList[i+1].matches("\\bAN\\b")) return null;
+				if(i+1<lexList.length && lexList[i+1].matches(literalsVar) && !lexList[i+1].matches("\\bAN\\b")) {
+					System.out.println(708);
+					return null;
+				}
 			}else if(lexList[i].matches("\\bAN\\b")) {
-				if(i+1<lexList.length && lexList[i+1].matches("\\bAN\\b")) return null;
-				if(i==1) return null;
+				if(i+1<lexList.length && lexList[i+1].matches("\\bAN\\b")) {
+					System.out.println(713);
+					return null;
+				}
+				if(i==1) {
+					System.out.println(719);
+					return null;
+				}
 				continue;
 			}else {
 				if(i+1<lexList.length && lexList[i+1].matches(literalsVar) && !lexList[i+1].matches(regexOperation) && !lexList[i+1].matches("\\bAN\\b")) {
+					System.out.println(720);
 					return null;
 				}
 				removeAN.add(lexList[i]);
@@ -717,9 +729,13 @@ public class GameStage{
 			lexListNew[a] = removeAN.get(a);
 		}
 		
+		System.out.println("Final: "+Arrays.deepToString(lexListNew));
 		String ans = doVISIBLE(lexListNew);
 		if(ans!=null) return ans;
-		else return null;
+		else {
+			System.out.println(741);
+			return null;
+		}
 	}
 	
 	private String makeRreassignment(String[] lexList) {
@@ -744,7 +760,7 @@ public class GameStage{
 		
 		
 		//if literals
-		if(lexList[2].matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3))) {
+		if(lexList[2].matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7))) {
 			if(lexList.length!=3) {
 				displayResult.setText("Reassignment error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", ""));
 				return null;
@@ -800,8 +816,8 @@ public class GameStage{
 		String expOp = Lexeme.mathOperator+Lexeme.boolOperator+Lexeme.concat.substring(0,Lexeme.concat.length()-1);
 		if(operand.matches(Lexeme.VISIBLE)) {
 			operand = operands[1];
-			if(operand.matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3)+"|"+Lexeme.VARIDENT) && !operand.matches(expOp)) return;
-		}else if(operand.matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3)+"|"+Lexeme.VARIDENT) && !operand.matches(expOp)) return;
+			if(operand.matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7)+"|"+Lexeme.VARIDENT) && !operand.matches(expOp)) return;
+		}else if(operand.matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7)+"|"+Lexeme.VARIDENT) && !operand.matches(expOp)) return;
 
 		for(SymbolTable row : symbolTable.getItems()) {
 			row.setValue(answer);		
@@ -979,7 +995,7 @@ public class GameStage{
 		
 		if(lexList.length==1) return null; //must contain atleast one operand
 		String combinedOp = Lexeme.mathOperator + Lexeme.boolOperator+"\\bAN\\b";
-		String combinedVal = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-3);
+		String combinedVal = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7);
 		
 		ArrayList<String> outputPrint = new ArrayList<String>();
 		
@@ -1022,7 +1038,7 @@ public class GameStage{
 			//math,comparison, boolean
 			else if(lexList[i].matches(combinedOp)) {
 				String regexOperation = Lexeme.mathOperator+Lexeme.boolOperator.substring(0,Lexeme.boolOperator.length()-1);
-				String literalsVar = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-2)+"|"+Lexeme.VARIDENT;
+				String literalsVar = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7)+"|"+Lexeme.VARIDENT;
 				ArrayList<String> tempStore = new ArrayList<String>();
 				
 				int numOperation = 0; int numOperand = 0;
