@@ -394,6 +394,12 @@ public class GameStage{
 			if(checkInvalidNest(lexList)) {
 				return null;
 			}
+			if(!lexList[lexList.length-1].matches(Lexeme.MKAY)) {
+				this.errorMessage = "MKAY is not found, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+				return null;
+			}
+			
+			
 			else return setBooleanOperationArity(lexList);
 		}
 		
@@ -646,12 +652,6 @@ public class GameStage{
 	}
 	
 	private boolean checkInvalidNest(String[] lexList) {
-		
-		if(!lexList[lexList.length-1].matches(Lexeme.MKAY)) {
-			this.errorMessage = "MKAY is not found, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
-			return true;
-		}
-		
 		
 		String[] removeOp = new String[lexList.length-1];
  		for(int i=0;i<lexList.length-1;i++) removeOp[i] = lexList[i+1];
