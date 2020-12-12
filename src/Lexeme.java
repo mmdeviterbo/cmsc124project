@@ -150,7 +150,7 @@ public class Lexeme{
 	public static final String mathOperator = Lexeme.SUM_OF +"|" + Lexeme.DIFF_OF + "|" + Lexeme.PRODUKT_OF + "|" + Lexeme.QUOSHUNT_OF + "|" + Lexeme.MOD_OF + "|" + Lexeme.BIGGR_OF + "|" + Lexeme.SMALLR_OF + "|";
 	public static final String boolOperator = Lexeme.BOTH_OF +  "|" + Lexeme.EITHER_OF +  "|" + Lexeme.WON_OF +  "|" + Lexeme.ANY_OF +  "|" + Lexeme.ALL_OF + "|" +Lexeme.NOT + "|"+Lexeme.BOTH_SAEM + "|" + Lexeme.DIFFRINT + "|"+Lexeme.MKAY+"|";	
 	public static final String combineRegex = startEnd + I_HAS_CONSTRUCT + itz + inputOutput + concat + conditional + mathOperator + boolOperator + ALL_LITERALS+"|a!|"+VARIDENT; 
-	
+	public static final String keywordsNoLitVar = startEnd + I_HAS_CONSTRUCT + itz + inputOutput + concat + conditional + mathOperator + boolOperator + "\\bAN\\b";
 
 	
 	private String lexeme;

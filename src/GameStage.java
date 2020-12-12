@@ -171,7 +171,7 @@ public class GameStage{
 //				+ "\n\n\tIM IN YR LOOPY2 UPPIN YR VAR3 TIL BOTH SAEM VAR3 AN 3\n\t\tVISIBLE \"this is inner-2\"\n\tIM OUTTA YR LOOPY2\n\tVAR3 R 0\n"
 //				+ "\tVISIBLE \"is deadcode\"\n"
 //				+ "IM OUTTA YR LOOPY\n");
-		 inputUser.setText(inputUser.getText() + "VISIBLE ALL OF WIN AN FAIL AN WIN AN WIN MKAY");
+		 inputUser.setText(inputUser.getText() + "I HAS A num\nI HAS A var ITZ 0\nANY OF AN AN AN MKAY");
 //		inputUser.setText(inputUser.getText() + "SUM OF 10 AN 10\nWTF?\nOMG 20\n\tVISIBLE \"first choice\"\nOMG 30\n\tVISIBLE \"2nd choice\"\nOMG 40\n\tVISIBLE \"3rd choice\"\nOMGWTF\n\tVISIBLE \"default choice\" \nOIC");
 //		inputUser.setText(inputUser.getText() + "\n\n\tOBTW dsadsda\ndsdasdasadas\nsadasdsdasd\n\tTLDR");
 		inputUser.setText(inputUser.getText() + "\nKTHXBYE");		
@@ -207,7 +207,7 @@ public class GameStage{
 		for(SymbolTable rowData : symbolTable.getItems()) {
 			if(variable.equals(rowData.getIdentifier())) {
 				if(rowData.getValue().length()==0) {
-					this.errorMessage = variable + "has NOOB value, error!";
+					this.errorMessage = variable + " has NOOB value, error!";
 					return null;
 				}
 				return rowData.getValue();
@@ -277,7 +277,29 @@ public class GameStage{
 		if(lexList.length<4) { //minimum has to be 4: SUM OF 1 AN 1
 			this.errorMessage = "Arithmetic expression has missing operands, error --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return null;
+		}else if(Arrays.deepToString(lexList).contains(Lexeme.MKAY)) {
+			this.errorMessage= "Arithmetic expression has found MKAY keyword, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return null;
+		}else if(checkInvalidNest(lexList)) return null;
+		else {
+			for(int i=0;i<lexList.length-1;i++) {
+				if(lexList[i].matches("\\bAN\\b")) {
+					if(i+1==lexList.length) {
+						this.errorMessage= "Arithmetic expression has AN in the end statement, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+						return null;
+					}else if(lexList[i+1].matches("\\bAN\\b")) {
+						this.errorMessage= "Arithmetic expression has invalid AN AN operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+						return null;
+					}
+				}else if(lexList[i].matches(regexNum+"|"+Lexeme.VARIDENT) && !lexList[i].matches(Lexeme.mathOperator+"\\bAN\\b")) {
+					if(lexList[i+1].matches(regexNum+"|"+Lexeme.VARIDENT) && !lexList[i+1].matches(Lexeme.mathOperator+"\\bAN\\b")) {
+						this.errorMessage= "Arithmetic expression has invalid operand, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+						return null;
+					}
+				}
+			}
 		}
+		
 		for(int i=0;i<lexList.length;i++) {
 			if(lexList[i].matches(Lexeme.SUM_OF)) stackOperation.add(0,"SUM OF");
 			else if(lexList[i].matches(Lexeme.DIFF_OF)) stackOperation.add(0,"DIFF OF");
@@ -382,19 +404,21 @@ public class GameStage{
 	
 	private String setBooleanOperationArity(String[] lexList) {	
 		String literals = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-6)+Lexeme.VARIDENT;
-		String opCombined = Lexeme.mathOperator+Lexeme.boolOperator;
 		
 		if(checkInvalidNest(lexList)) return null;
-		
-		//if any of/all of does not end with MKAY, error
-		if(!lexList[lexList.length-1].matches(Lexeme.MKAY)) return null;
+		else if(!lexList[lexList.length-1].matches(Lexeme.MKAY)) {
+			this.errorMessage = "MKAY is not found, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return null;
+		}
 		
 		//error detection
 		for(int i=0;i<lexList.length;i++) {
 			if(i+1<lexList.length) {
-				if(lexList[i].matches(literals) && lexList[i+1].matches(literals) && !lexList[i].matches("\\bAN\\b") && !lexList[i+1].matches("\\bAN\\b")&& !lexList[i].matches(opCombined) && !lexList[i+1].matches(opCombined)) {
+				if(lexList[i].matches(literals) && lexList[i+1].matches(literals) && !lexList[i].matches("\\bAN\\b") && !lexList[i+1].matches("\\bAN\\b")&& !lexList[i].matches(Lexeme.keywordsNoLitVar) && !lexList[i+1].matches(Lexeme.keywordsNoLitVar)) {
+					this.errorMessage = "Invalid " + lexList[i] + " " + lexList[i+1]+ " operands -->" + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 					return null;
 				}else if(lexList[i].matches("\\bAN\\b") && lexList[i+1].matches("\\bAN\\b")) {
+					this.errorMessage = "Expression has invalid AN AN operands -->" + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 					return null;
 				}				
 			}
@@ -413,15 +437,8 @@ public class GameStage{
 	
 	private String setBooleanOperation(String[] lexList){
 		ArrayList<String> stackOperation = new ArrayList<String>();
-		if(lexList[0].matches(Lexeme.ALL_OF+"|"+Lexeme.ANY_OF)) {
-			if(checkInvalidNest(lexList)) {
-				return null;
-			}
-			if(!lexList[lexList.length-1].matches(Lexeme.MKAY)) {
-				this.errorMessage = "MKAY is not found, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
-				return null;
-			}else return setBooleanOperationArity(lexList);
-		}
+		
+		if(lexList[0].matches(Lexeme.ALL_OF+"|"+Lexeme.ANY_OF)) return setBooleanOperationArity(lexList);
 		
 		//boolean expression may contain any of the other expressions
 		String regexLiteral= Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7);
@@ -478,7 +495,7 @@ public class GameStage{
 	}
 	
 	@SuppressWarnings("unused")
-	private String setComparisonOperation(String[] lexList) {
+	private String setComparisonOperation(String[] lexList) {		
 		String regexNum = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7);
 		String regexMath = Lexeme.boolOperator + Lexeme.mathOperator.substring(0,Lexeme.mathOperator.length()-1);
 		String mathQuote = "\""+Lexeme.NUMBR +"\"|\"" +Lexeme.NUMBAR_LITERAL + "\"";
@@ -489,15 +506,17 @@ public class GameStage{
 		}else if(Arrays.deepToString(lexList).contains(Lexeme.MKAY)) {
 			this.errorMessage= "Comparison expression has found MKAY keyword, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return null;
-		}else if(Arrays.deepToString(lexList).contains("\\bAN\\b")) {
-			this.errorMessage= "Comparison expression has invalid AN in the end statement, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
-			return null;
 		}else if(checkInvalidNest(lexList)) return null;
 		else {
 			for(int i=0;i<lexList.length-1;i++) {
-				if(lexList[i].matches("\\bAN\\b") && lexList[i+1].matches("\\bAN\\b")) {
-					this.errorMessage= "Comparison expression has invalid AN AN operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
-					return null;
+				if(lexList[i].matches("\\bAN\\b")) {
+					if(i+1==lexList.length) {
+						this.errorMessage= "Comparison expression has AN in the end statement, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+						return null;
+					}else if(lexList[i+1].matches("\\bAN\\b")) {
+						this.errorMessage= "Comparison expression has invalid AN AN operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+						return null;
+					}
 				}else if(lexList[i].matches(regexNum+"|"+mathQuote+"|"+Lexeme.VARIDENT) && !lexList[i].matches(regexMath+"|\\bAN\\b")) {
 					if(lexList[i+1].matches(regexNum+"|"+mathQuote+"|"+Lexeme.VARIDENT) && !lexList[i+1].matches(regexMath+"|\\bAN\\b")) {
 						this.errorMessage= "Comparison expression has invalid operand, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
@@ -506,18 +525,17 @@ public class GameStage{
 				}
 			}
 		}
-		
-		
 		String isRelationOp = null; //-1 means false, 1 means biggr of, 2 means smallr
 
 		ArrayList<String> operandA = new ArrayList<String>();
 		ArrayList<String> operandB = new ArrayList<String>();		
+		
 		int i=1;
 		for(i=1;i<lexList.length;i++) { //getting operandA
 			if(lexList[i].matches(regexNum+"|"+mathQuote+"|"+Lexeme.VARIDENT) && !lexList[i].matches(regexMath+"|\\bAN\\b")) {
 				if(lexList[i].matches(regexNum+"|"+mathQuote)) { //literal operand
 					operandA.add(lexList[i]);
-				}else if(lexList[i].matches(Lexeme.VARIDENT)) { //varident operand
+				}else if(lexList[i].matches(Lexeme.VARIDENT) && !lexList[i].matches(Lexeme.keywordsNoLitVar)) { //varident operand
 					String temp = getValueVarident(lexList[i]);
 					if(temp==null) return null;
 					lexList[i] = temp;
@@ -531,16 +549,18 @@ public class GameStage{
 					i+=2;
 					break;
 				}else if(i+2<lexList.length && lexList[i+1].matches("\\bAN\\b") && lexList[i+2].matches(regexNum+"|"+mathQuote+"|"+Lexeme.VARIDENT)) {
-					operandA.add(lexList[i+1]);
-					if(lexList[i+2].matches(Lexeme.NUMBAR) && lexList[i+2].matches("[0-9]+[.]0+")) {
-						lexList[i+2] = lexList[i].split("\\.")[0];
-						}else if(lexList[i+2].matches(Lexeme.VARIDENT)) {
+					if(!lexList[i+2].matches(Lexeme.keywordsNoLitVar)) {
+						operandA.add(lexList[i+1]);
+						if(lexList[i+2].matches(Lexeme.NUMBAR) && lexList[i+2].matches("\\b[0-9]+[.]0+\\b")) {
+							lexList[i+2] = lexList[i].split("\\.")[0];
+						}else if(lexList[i+2].matches(Lexeme.VARIDENT) && !lexList[i+2].matches(regexNum+"|"+mathQuote)) {
 							String temp = getValueVarident(lexList[i+2]);
 							if(temp==null) return null;
 							lexList[i+2] = temp;
 						}
 						operandA.add(lexList[i+2]);i+=4; break;
 					}
+				}
 			}else if(lexList[i].matches(regexMath+"|\\bAN\\b")) {
 				operandA.add(lexList[i]);
 			}else {
@@ -610,6 +630,7 @@ public class GameStage{
 	
 	private boolean checkIfVarExist(String lex) {
 		for(SymbolTable row : symbolTable.getItems()) if(row.getIdentifier().equals(lex)) return true;
+		this.errorMessage=lex + " variable is not found, error!";
 		return false;
 	}
 	
@@ -729,10 +750,42 @@ public class GameStage{
 		String regexOperation = Lexeme.mathOperator+Lexeme.boolOperator.substring(0,Lexeme.boolOperator.length()-1);
 		String literalsVar = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-6)+Lexeme.VARIDENT;
 
-
+		
 		if(lexList[lexList.length-1].matches("\\bAN\\b")) {
-			this.errorMessage = "MKAY is missing, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			this.errorMessage = "Expression has missing operand, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return null;
+		}
+		
+		if(lexList.length<4) { //comparison expression must has at least 4 operands-operator e.g DIFFRINT 1 AN 1
+			this.errorMessage= "Expression has missing operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return null;
+		}else if(Arrays.deepToString(lexList).contains("MKAY")) {
+			this.errorMessage= "Expression has found MKAY keyword, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return null;
+		}else if(checkInvalidNest(lexList)) return null;
+		else {
+			for(int i=1;i<lexList.length-1;i++) {
+				if(lexList[i].matches("\\bAN\\b")) {
+					if(i==1) {
+						System.out.println(775);
+						this.errorMessage= "Expression has AN in start of the statement, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+						return null;
+					}
+					if(i+1==lexList.length) {
+						this.errorMessage= "Expression has AN in the end statement, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+						return null;
+					}else if(lexList[i+1].matches("\\bAN\\b")) {
+						System.out.println(78222);
+						this.errorMessage= "Expression has invalid AN AN operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+						return null;
+					}
+				}else if(lexList[i].matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-6)+Lexeme.VARIDENT) && !lexList[i].matches(Lexeme.keywordsNoLitVar+"|\\bAN\\b")) {
+					if(lexList[i+1].matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-6)+Lexeme.VARIDENT) && !lexList[i+1].matches(Lexeme.keywordsNoLitVar+"|\\bAN\\b")) {
+						this.errorMessage= "Expression has invalid operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+						return null;
+					}
+				}
+			}
 		}
 		
 		for(int i=1;i<lexList.length;i++) { 
@@ -743,7 +796,6 @@ public class GameStage{
 					if(lexList[i].matches(Lexeme.NOT)) {
 						removeAN.add(lexList[i]);
 					}else if(lexList[i].matches("\\bAN\\b")) {
-						if(i+1<lexList.length && lexList[i+1].matches("\\bAN\\b")) return null;
 						removeAN.add(lexList[i]);
 					}else if(lexList[i].matches(regexOperation)) {
 						removeAN.add(lexList[i]);
@@ -765,13 +817,13 @@ public class GameStage{
 					return null;
 				}
 				if(i==1) {
-					this.errorMessage = "Invalid AN in smoosh expression --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+					this.errorMessage = "Invalid AN in expression --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 					return null;
 				}
 				continue;
 			}else {
 				if(i+1<lexList.length && lexList[i+1].matches(literalsVar) && !lexList[i+1].matches(regexOperation) && !lexList[i+1].matches("\\bAN\\b")) {
-					this.errorMessage = "Invalid smoosh concatenation! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+					this.errorMessage = "Invalid expression! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 					return null;
 				}
 				removeAN.add(lexList[i]);
@@ -779,28 +831,26 @@ public class GameStage{
 		}
 		removeAN.add(0,"VISIBLE");
 		String[] lexListNew = new String[removeAN.size()];
-		for(int a=0;a<removeAN.size();a++) {
-			lexListNew[a] = removeAN.get(a);
-		}
+		for(int a=0;a<removeAN.size();a++) lexListNew[a] = removeAN.get(a);
 		
 		String ans = doVISIBLE(lexListNew);
 		if(ans!=null) return ans;
-		else {
-			this.errorMessage = "Invalid smoosh concatenation! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
-			return null;
-		}
+		else return null;
 	}
 	
 	private String makeRreassignment(String[] lexList) {
-		//check if LHS varident is existing or not		
-		if(lexList[0].matches(Lexeme.VARIDENT)) {
-			if(getValueVarident(lexList[0])==null) {
-				displayResult.setText(lexList[0]+" is not found, error!");
+		//check if LHS varident is existing or not
+		
+		if(lexList[0].matches(Lexeme.keywordsNoLitVar)) {
+			this.errorMessage = lexList[0] + " is a reserved keyword and not a variable, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return null;
+		}else if(lexList[0].matches(Lexeme.VARIDENT)) {
+			if(!checkIfVarExist(lexList[0])) {
 				return null;
 			}
-		}		
-		if(lexList.length<=2) {
-			displayResult.setText("Reassignment syntax error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", ""));
+		}
+		if(lexList.length==2) {
+			this.errorMessage = "R reassignment has missing operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return null;
 		}
 		
@@ -811,45 +861,52 @@ public class GameStage{
 		//check if RHS is literals
 		String newVal = null;
 		
+		//valid operators
+		String operatorValid = Lexeme.concat+Lexeme.mathOperator+Lexeme.boolOperator.substring(0,Lexeme.boolOperator.length()-10); //remove MKAY
 		
 		//if literals
 		if(lexList[2].matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7))) {
 			if(lexList.length!=3) {
-				displayResult.setText("Reassignment error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", ""));
+				this.errorMessage = "R reassignment has excess operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 				return null;
 			}
 			newVal = lexList[2];
-		}
-		else if(lexList.length>3) { //math,
+		}else if(lexList.length>3 && lexList[2].matches(operatorValid)) { //expression
+			if(!lexList[2].matches(operatorValid)) {
+				this.errorMessage = "R reassignment has invalid operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+				return null;
+			}
 			for(int i=2;i<lexList.length;i++) operands.add(lexList[i]);
 			String[] operandsArr =  new String[operands.size()];
 			for(int i=0;i<operands.size();i++) operandsArr[i] = operands.get(i);
 			if(operandsArr[0].matches(Lexeme.NOT) && operandsArr.length<2) {
-				displayResult.setText("Reassignment of expression error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", ""));
+				this.errorMessage = "R reassignment has missing operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 				return null;
 			}else if(!operandsArr[0].matches(Lexeme.NOT) && operandsArr.length<4) {
-				displayResult.setText("Reassignment of expression error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", ""));
+				this.errorMessage = "R reassignment has missing operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 				return null;
 			}
 			ifOperations = allOperations(operandsArr);
-		}else if(lexList[2].matches(Lexeme.VARIDENT)) { //check if RHS is varident and exisiting
+		}else if(lexList[2].matches(Lexeme.VARIDENT) && !lexList[2].matches(Lexeme.keywordsNoLitVar)) { //check if RHS is varident and exisiting
 			if(lexList.length!=3) {
-				displayResult.setText("Reassignment error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", ""));
+				this.errorMessage = "R reassignment has excess operands,error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+				return null;
+			}else if(!checkIfVarExist(lexList[2])) {
 				return null;
 			}
 			newVal = getValueVarident(lexList[2]);
 			if(newVal==null) {
-				displayResult.setText(lexList[2] +" is not found, error!");
 				return null;
-			}else if(lexList[2].contentEquals(lexList[0])) {
-				displayResult.setText("Warning due to self-reassignment!");
+			}else if(lexList[2].matches("\\b"+lexList[0]+"\\b")) {
+				this.errorMessage = "Warning due to self-reassignment!";
 				return null;
 			}
-		}
-		if(ifOperations==null) {
-			displayResult.setText("Reassignment of expression error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", ""));
+		}else {
+			this.errorMessage = "Reassignment has invalid "+ lexList[2] + " operand, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return null;
-		}else if(ifOperations.length()==0) {}
+		}
+		if(ifOperations==null) return null;
+		else if(ifOperations.length()==0) {}
 		else newVal = ifOperations;
 		
 		//reassigning after checking/solving if literals/varident/expression
@@ -907,14 +964,10 @@ public class GameStage{
 				if(ans!=null) {
 					return ans;
 				}else{
-						clearTables();
-//						this.errorMessage = "Invalid comparison expression --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
-						return null;
+						clearTables(); return null;
 				}
 			}catch(Exception e) {
-				clearTables();
-//				this.errorMessage = "Invalid comparison expression --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
-				return null;				
+				clearTables(); return null;				
 			}
 		}else if(tokenArrLine[0].matches(Lexeme.SMOOSH)) {
 			try {
@@ -923,12 +976,12 @@ public class GameStage{
 					return ans;
 				}else {
 					clearTables();
-					this.errorMessage = "Invalid smoosh concatenation --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
+//					this.errorMessage = "Invalid smoosh concatenation --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
 					return null;
 				}
 			}catch(Exception e) {
 				clearTables();
-				this.errorMessage = "Invalid smoosh concatenation --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
+//				this.errorMessage = "Invalid smoosh concatenation --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
 				return null;
 			}
 		}else if(tokenArrLine[0].matches(Lexeme.VISIBLE)) {
@@ -1397,7 +1450,9 @@ public class GameStage{
 		clearTables();
 		this.symbolTable.getItems().add(new SymbolTable(Lexeme.IT,""));
 		this.displayResult.setText("");
-
+		this.errorMessage="";
+		
+		
 		String removeComment = doRemoveComments();
 		if(removeComment==null) return null;
 		
@@ -1483,7 +1538,6 @@ public class GameStage{
 	} //end function
 	
 	private void doSyntaxAnalysis(ArrayList<String[]> tokensPerLine) {
-		
 		for(int i=0;i<tokensPerLine.size();i++) {
 			String[] tokenArrLine = tokensPerLine.get(i);
 			
@@ -1505,11 +1559,14 @@ public class GameStage{
 					clearTables();
 					displayResult.setText("I HAS-Syntax Error."); return;
 				}
+				this.errorMessage="";
 			}else if(tokenArrLine[0].matches(Lexeme.VARIDENT) && tokenArrLine.length>1 && tokenArrLine[1].matches(Lexeme.R)) {
 				try {
 					String ans = makeRreassignment(tokenArrLine);
 					if(ans!=null) {}
 					else {
+						if(this.errorMessage==null) this.errorMessage="";
+						displayResult.setText("Syntax error\n" + this.errorMessage);
 						clearTables();
 						return;
 					}
@@ -1517,6 +1574,7 @@ public class GameStage{
 					clearTables();
 					displayResult.setText("Reassignment error."); return;
 				}
+				this.errorMessage="";
 			}else if(tokenArrLine[0].matches(Lexeme.GIMMEH)) {
 				if(displayResult.getLength()!=0 && displayResult.getText().charAt(0)=='\n') displayResult.setText(displayResult.getText().substring(1)); //printing format only (nothing to do with syntax analyzer)
 				try{
@@ -1532,6 +1590,7 @@ public class GameStage{
 					clearTables();
 					displayResult.setText("Invalid input, error!"); return;
 				}
+				this.errorMessage="";
 				break;
 			}else if(tokenArrLine[0].matches(Lexeme.O_RLY)) {
 				try {
@@ -1561,7 +1620,9 @@ public class GameStage{
 					clearTables();
 					displayResult.setText("Switch Case Syntax Error."); return;
 				}
-			}else if(storeIt!=null) {	
+				this.errorMessage="";
+			}else if(storeIt!=null) {
+				this.errorMessage="";
 			}else if(tokenArrLine[0].matches(Lexeme.IM_IN_YR)) {
 				try {
 					int ans = doLoop(tokensPerLine,i);
@@ -1582,7 +1643,9 @@ public class GameStage{
 			}else {
 				clearTables();
 				if(this.errorMessage==null) this.errorMessage="";
-				displayResult.setText("487 Syntax Error\n" + this.errorMessage);
+				if(this.errorMessage.length()!=0) displayResult.setText("487 Syntax Error\n" + this.errorMessage);
+				else displayResult.setText("488 Syntax Error --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", ""));
+				this.errorMessage="";
 				return;				
 			}
 		}
