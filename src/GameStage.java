@@ -166,14 +166,25 @@ public class GameStage{
 		
 		//sample input for test only
 		inputUser.setText("HAI\n");
-//		inputUser.setText(inputUser.getText()+"\n\nI HAS A VAR ITZ 0\nI HAS A VAR2 ITZ 0\nI HAS A VAR3 ITZ 0\nIM IN YR LOOPY UPPIN YR VAR TIL BOTH SAEM VAR AN 10"
-//				+ "\n\tVISIBLE SUM OF VAR AN 1\n\tIM IN YR LOOPY2 UPPIN YR VAR2 TIL BOTH SAEM VAR2 AN 3\n\t\tVISIBLE \"this is inner-1\"\n\tIM OUTTA YR LOOPY2\n\tVAR2 R 0"
-//				+ "\n\n\tIM IN YR LOOPY2 UPPIN YR VAR3 TIL BOTH SAEM VAR3 AN 3\n\t\tVISIBLE \"this is inner-2\"\n\tIM OUTTA YR LOOPY2\n\tVAR3 R 0\n"
-//				+ "\tVISIBLE \"is deadcode\"\n"
-//				+ "IM OUTTA YR LOOPY\n");
-		 inputUser.setText(inputUser.getText() + "I HAS A num\nI HAS A var ITZ 0\nANY OF AN AN AN MKAY");
-//		inputUser.setText(inputUser.getText() + "SUM OF 10 AN 10\nWTF?\nOMG 20\n\tVISIBLE \"first choice\"\nOMG 30\n\tVISIBLE \"2nd choice\"\nOMG 40\n\tVISIBLE \"3rd choice\"\nOMGWTF\n\tVISIBLE \"default choice\" \nOIC");
-//		inputUser.setText(inputUser.getText() + "\n\n\tOBTW dsadsda\ndsdasdasadas\nsadasdsdasd\n\tTLDR");
+		
+		inputUser.setText(inputUser.getText() + "\nI HAS A a ITZ 12\nI HAS A b ITZ 5\n"
+				+ "\nBOTH SAEM 18 AN SUM OF 12 AN b\n"
+				+ "\nO RLY?\nYA RLY\n"
+				+ "   VISIBLE \"YA RLY\"\n"
+				+ "   VISIBLE IT\n   VISIBLE \"it is the same\"\n"
+				+ "   b R 17\n   SUM OF b AN DIFF OF a AN 5\n"
+				+ "   VISIBLE IT\n"
+				+ "MEBBE BOTH SAEM 1 AN 1 \n"
+				+ "   VISIBLE \"mebbe 01\"\n   VISIBLE MOD OF 2 AN 4\n"
+				+ "NO WAI\n"
+				+ "   VISIBLE \"NO WAI\"\n"
+				+ "   VISIBLE IT\n"
+				+ "   VISIBLE \"it is not!\"\n"
+				+ "   b R 18\n"
+				+ "   DIFFRINT b AN SUM OF 12 AN b\n"
+				+ "   VISIBLE IT\n"
+				+ "OIC");
+		
 		inputUser.setText(inputUser.getText() + "\nKTHXBYE");		
 		String str = "hello" + "\n" + "hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n";
 		str = str + str + str; //sample string lang if magsscroll yung window ng "Lexeme" at "Symbol Table"
@@ -503,7 +514,11 @@ public class GameStage{
 		if(lexList.length<4) { //comparison expression must has at least 4 operands-operator e.g DIFFRINT 1 AN 1
 			this.errorMessage= "Comparison expression has missing operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return null;
-		}else if(Arrays.deepToString(lexList).contains(Lexeme.MKAY)) {
+		}else if(lexList[lexList.length-1].matches(Lexeme.keywordsNoLitVar)) {
+			this.errorMessage= "Invalid operand in the end statement, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return null;
+		}
+		else if(Arrays.deepToString(lexList).contains(Lexeme.MKAY)) {
 			this.errorMessage= "Comparison expression has found MKAY keyword, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return null;
 		}else if(checkInvalidNest(lexList)) return null;
@@ -629,7 +644,11 @@ public class GameStage{
 	}
 	
 	private boolean checkIfVarExist(String lex) {
-		for(SymbolTable row : symbolTable.getItems()) if(row.getIdentifier().equals(lex)) return true;
+		for(SymbolTable row : symbolTable.getItems()) {
+			if(row.getIdentifier().equals(lex)) {
+				return true;
+			}
+		}
 		this.errorMessage=lex + " variable is not found, error!";
 		return false;
 	}
@@ -1244,36 +1263,128 @@ public class GameStage{
 		return null;
 	}
 	
+	private String checkITvalue() { //this function is for IF-ELSE if the value of IT can be cast to troof datatype
+		String ITval= getValueVarident("IT");
+		ITval = ITval.replaceAll("\"", "");
+		String validIT = "\\b"+ Lexeme.TROOF[0]+"\\b|\\b"+Lexeme.TROOF[1]+"\\b";
+	
+		if(ITval==null) return null; //if IT does not exist or NOOB data type (len = 0) or cannot be cast to TROOF data type
+		else if(!ITval.matches(validIT)) {
+			return Lexeme.TROOF[1];
+		}
+		return ITval; //if no error found
+	}
+	
+	private String findErrorInIFELSE(int isO_RLY, int isYA_RLY, int isNO_WAI, int isOIC, int increment, ArrayList<Integer> mebbeIndeces) {
+		int lenMebbeIndeces = mebbeIndeces.size();
+		
+		if(isYA_RLY==-1 || isOIC==-1) {
+			if(isYA_RLY==-1) this.errorMessage = "YA RLLY not found in conditional statement, error!";
+			else this.errorMessage = "OIC not found in conditional statement, error!";
+			return null;
+		}
+		//if there mebbee statement and NO WAI is not the last condition to be check (if it exists)
+		if(isNO_WAI!=-1) {
+			if(isNO_WAI<isO_RLY) {
+				this.errorMessage = "NO WAI must be preceeded by O RLY or MEBBE, error!";
+				return null;
+			}else if(lenMebbeIndeces!=0 && mebbeIndeces.get(lenMebbeIndeces-1)>isNO_WAI) { //else statement must be the last condition statement (if it exists)
+				this.errorMessage = "NO WAI is not found in the last condition statement, error!";
+				return null;
+			}
+		}
+		return "succes";
+	}
+	
+	private String findMebbeWIN(ArrayList<Integer> mebbeIndeces, ArrayList<String[]> tokensProgram, int isNO_WAI, int isOIC) {
+		String ij=null;
+		String boolOp = Lexeme.boolOperator.substring(0,Lexeme.boolOperator.length()-10);
+		String troofValues = "\\b"+Lexeme.TROOF[0]+"\\b|"+"\\b\""+Lexeme.TROOF[0]+"\"\\b";
+		
+		
+		for(int i=0;i<mebbeIndeces.size();i++) {
+			int mebbeStart = mebbeIndeces.get(i);
+			int mebbeEnd;
+			if(i+1<mebbeIndeces.size()) mebbeEnd = mebbeIndeces.get(i+1);
+			else if(isNO_WAI!=-1) mebbeEnd = isNO_WAI;
+			else mebbeEnd = isOIC;
+			
+			String[] mebbeExpression = new String[tokensProgram.get(mebbeStart).length-1];
+			for(int a=1;a<tokensProgram.get(mebbeStart).length;a++) mebbeExpression[a-1] = tokensProgram.get(mebbeStart)[a]; 
+			String value = allOperations(mebbeExpression);
+			
+			System.out.println(Arrays.deepToString(mebbeExpression));
+			System.out.println(value);
+			
+			if(value!=null) {
+				if(value.matches(troofValues)) {
+					ij=mebbeStart+"-"+mebbeEnd;
+					break;
+				}
+			}else return null;
+		}
+		if(ij==null) {
+			if(isNO_WAI!=-1) ij=isNO_WAI+"-"+isOIC;
+		}
+		return ij;
+	}
+	
 	private int doIFELSE(ArrayList<String[]> tokensProgram,int i) {	
-		int isYA_RLY=-1;
-		int isNO_WAI=-1;
-		int isOIC=-1;
-		int increment=0;
+		//-1 means error in return, else it  holds the statement's index
+		int isYA_RLY=-1, isNO_WAI=-1, isOIC=-1, increment=0;
+		ArrayList<Integer> mebbeIndeces = new ArrayList<Integer>(); //list of mebee indeces (key)
+		
+		//finding the ORLY, YA RLY, NO WAI, OIC keywords
 		for(int a=i;a<tokensProgram.size();a++) {
-			if(tokensProgram.get(a)[0].matches(Lexeme.OIC)) {
+			if(tokensProgram.get(a)[0].matches(Lexeme.OIC)) { //finding the OIC keyword
 				isOIC=a;
-				increment= a-i+1;
-				if(increment < 6) return -1;
+				increment= a+1;
 				break;
 			}else if(tokensProgram.get(a)[0].matches(Lexeme.YA_RLY)) {
-				if(!tokensProgram.get(a-1)[0].matches(Lexeme.O_RLY)) return -1;
-				isYA_RLY = a;
+				if(!tokensProgram.get(a-1)[0].matches(Lexeme.O_RLY)) {
+					this.errorMessage = tokensProgram.get(a)[0].replaceAll("[\\[\\]\\,]", "") + " must be preceded by O RLY?, error!";
+					return -1;
+				}
+				isYA_RLY=a;
 			}else if(tokensProgram.get(a)[0].matches(Lexeme.NO_WAI)) isNO_WAI = a;
+			else if(tokensProgram.get(a)[0].matches(Lexeme.MEBBE)) mebbeIndeces.add(a);
 		}
-		if(isYA_RLY==-1 || isNO_WAI==-1 || isOIC==-1) return -1;
 		
 		
-		String ITval= getValueVarident("IT");
+		//finding error in IF else construct
+		String isError = findErrorInIFELSE(i, isYA_RLY, isNO_WAI, isOIC, increment, mebbeIndeces);
+		if(isError==null) return -1;
+
+		//check if the IT value has troof (or can be cast) for YA RLY, NO WAIT block
+		String ITval= checkITvalue();
+		if(ITval==null) return -1;
+		
+		//finding where the condition statement falls (true)
 		ArrayList<String[]> blockStatement = new ArrayList<String[]>();
-		int start=0;
-		int end=0;
-		if(ITval.matches("\\b"+Lexeme.TROOF[0]+"\\b|"+"\""+Lexeme.TROOF[0]+"\"")) {
+		String troofValues = "\\b"+Lexeme.TROOF[0]+"\\b|"+"\\b\""+Lexeme.TROOF[0]+"\"\\b";
+		int start=-1, end=-1;
+		if(ITval.matches(troofValues)) {
 			start=isYA_RLY+1;
-			end=isNO_WAI;
-		}else { //FAIL, or cannot be typecast to WIN
-			start=isNO_WAI+1;
-			end=isOIC;
-		}
+			if(mebbeIndeces.size()!=0) end=mebbeIndeces.get(0); //if there's mebbe, YA RLY execute only until first mebbe
+			else if(isNO_WAI!=-1) end=isNO_WAI; //if there's NO WAI, YA RLY execute until NO WAI
+			else end=isOIC; //else, YA RLY will execute until OIC
+		}else if(mebbeIndeces.size()!=0){ //mebbe condeblock
+			String ansIndex = findMebbeWIN(mebbeIndeces, tokensProgram, isNO_WAI, isOIC);
+			String[] ij= new String[2];
+			if(ansIndex!=null) {
+				if(ij!=null) {
+					ij = ansIndex.split("-"); 
+					start = Integer.parseInt(ij[0])+1;
+					end = Integer.parseInt(ij[1]);
+				}
+			}else return -1;
+		}else if(isNO_WAI!=-1) { //else codeblock
+			start = isNO_WAI+1;
+			end = isOIC;
+		}else return increment-1;
+		
+		if(start==-1 || end==-1) return increment-1;
+		
 		
 		for(int j=start;j<end;j++) blockStatement.add(tokensProgram.get(j));		
 		doSyntaxAnalysis(blockStatement);
@@ -1445,7 +1556,7 @@ public class GameStage{
 		return end;
 	}
 	
-	private ArrayList<String[]> doLexicalAnalysis() { 
+	private ArrayList<String[]> doLexicalAnalysis() { 	
 		clearTables();
 		this.symbolTable.getItems().add(new SymbolTable(Lexeme.IT,""));
 		this.displayResult.setText("");
@@ -1501,10 +1612,9 @@ public class GameStage{
 		if(checkGFTO(tokenizedOutput)==null) {
 			return null; 
 		}
-		
-		
+			
 //		for(String[] arr : tokenizedOutput) {
-//			System.out.print(Arrays.toString(arr)+ " ");
+//			System.out.print(Arrays.toString(arr)+ "\n");
 //		}	
 
 		//--------------------------this: lexemes already tokenized here in this line-------------------------
@@ -1551,7 +1661,7 @@ public class GameStage{
 					String ans = setIHAS(tokenArrLine);
 					if(ans!=null) {
 					}else {
-						clearTables();
+						clearTables(); 
 						return;
 					}
 				}catch(Exception e) {
@@ -1582,8 +1692,7 @@ public class GameStage{
 					
 					String ans = doGIMMEH(tokenArrLine,continueAfterInput);
 					if(ans==null) {
-						clearTables();
-						return;						
+						clearTables(); return;						
 					}
 				}catch(Exception e) {
 					clearTables();
@@ -1592,19 +1701,21 @@ public class GameStage{
 				this.errorMessage="";
 				break;
 			}else if(tokenArrLine[0].matches(Lexeme.O_RLY)) {
-				try {
+				this.errorMessage="";
+//				try {
 					int ans = doIFELSE(tokensPerLine,i);
 					if(ans!=-1) {
-						i+=ans;
+						i=ans;
 					}
 					else {
 						clearTables();
-						displayResult.setText("IF-ELSE Syntax Error"); return;
+						if(this.errorMessage==null) this.errorMessage="";
+						displayResult.setText("Syntax Error\n" + this.errorMessage); return;
 					}
-				}catch(Exception e) {
-					clearTables();
-					displayResult.setText("IF ELSE Syntax Error."); return;	
-				}
+//				}catch(Exception e) {
+//					clearTables();
+//					displayResult.setText("IF ELSE Syntax Error."); return;	
+//				}
 			}else if(tokenArrLine[0].matches(Lexeme.GTFO)) {}
 			else if(tokenArrLine[0].matches(Lexeme.WTF)) {
 				try {
