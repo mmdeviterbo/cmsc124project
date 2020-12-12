@@ -426,7 +426,7 @@ public class GameStage{
 		
 		String[] tempArr = new String[lexList.length-1]; //without mkay at the end
 		for(int i=0;i<lexList.length-1;i++) tempArr[i] = lexList[i];
-		tempArr[0]="SMOOSH";
+//		tempArr[0]="SMOOSH";
 		String ans = solveSmooshOperation(tempArr);
 		if(lexList[0].matches(Lexeme.ANY_OF) && ans.contains("WIN")) return Lexeme.TROOF[0];
 		else if(lexList[0].matches(Lexeme.ANY_OF) && !ans.contains("WIN")) return Lexeme.TROOF[1];
@@ -767,7 +767,6 @@ public class GameStage{
 			for(int i=1;i<lexList.length-1;i++) {
 				if(lexList[i].matches("\\bAN\\b")) {
 					if(i==1) {
-						System.out.println(775);
 						this.errorMessage= "Expression has AN in start of the statement, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 						return null;
 					}
