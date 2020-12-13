@@ -42,7 +42,7 @@ public class GameStage{
 	
 	Text displayLexeme,displaySymbolTable;String errorMessage;
 	TextArea displayResult; ScrollPane scrollResult; VBox paneResult; 
-	boolean isNewLine, isDeadCode;
+	boolean isNewLine;
 	
 	Button btnExecute; //button to execute the program
 	
@@ -160,7 +160,7 @@ public class GameStage{
 	}
 	private void initializeElements() {
 		this.isNewLine=true;
-		this.isDeadCode=false;
+		this.errorMessage="";
 		inputUser.setPrefWidth(GameStage.WINDOW_WIDTH/3);
 		inputUser.setWrapText(true);
 		
@@ -687,8 +687,8 @@ public class GameStage{
 			if(row[0].matches(Lexeme.GTFO)) {
 				if(index+1<tokensPerLine.size()) {
 					if(!tokensPerLine.get(index+1)[0].matches(Lexeme.OMG+"|"+Lexeme.OMGWTF+"|"+Lexeme.OIC+"|"+Lexeme.IM_OUTTA_YR)) {
-						isDeadCode=true;
-						this.errorMessage="Deadcode found, error ---> " +  Arrays.deepToString(tokensPerLine.get(index+1)).replaceAll("[\\[\\]\\,]", "");
+						Lexeme.DEADCODE=true;
+						this.errorMessage="Deadcode found, error starts at --> " +  Arrays.deepToString(tokensPerLine.get(index+1)).replaceAll("[\\[\\]\\,]", "");
 						return null;
 					}
 				}
@@ -1100,28 +1100,35 @@ public class GameStage{
     	return "success";
 	}
 	
-	private String checkHaiKthxbye(String[] programInput) {
+	private String checkHaiKthxbye(String[] programInput) {//this function if HAI/KTHXBYE is correctly implemented
 		int len = programInput.length-1;
 		if(len==-1) return null;
+
+		String HAItemp = programInput[0].replaceAll("BTW.*","");
+		HAItemp = HAItemp.replaceAll("[\\s\\n]","");
+		String KTHXBYEtemp = programInput[len].replaceAll("BTW.*","");
+		KTHXBYEtemp = KTHXBYEtemp.replaceAll("[\\s\\\n]","");
 		
-		programInput[0] = programInput[0].replaceAll("BTW.*","");
-		programInput[0] = programInput[0].replaceAll("[\\s\\n]","");
-		programInput[len] = programInput[len].replaceAll("BTW.*","");
-		programInput[len] = programInput[len].replaceAll("[\\s\\\n]","");
-		if(programInput[0].matches("HAI") && programInput[0].length()>3) return null;
-		if(programInput[len].matches("KTHXBYE|\\n") && programInput[len].length()>7) return null;
-		if(!programInput[0].matches(Lexeme.HAI) || !programInput[len].matches(Lexeme.KTHXBYE)) return null;
+		if(HAItemp.contains("HAI") && HAItemp.length()>3) {
+			this.errorMessage = programInput[0] + " is not found, error!";
+			return null;
+		}else if(KTHXBYEtemp.contains("KTHXBYE") && KTHXBYEtemp.length()>7) {
+			this.errorMessage = programInput[len] + " is not found, error!";
+			return null;
+		}
 		
 		//if hai or kthxbye has multiple occurences
 		int HAILen = 0; int KTHXBYELen = 0;
 		for(int i=0;i<programInput.length;i++) {
 			programInput[i] = programInput[i].replaceAll("BTW.*","");
 			if(programInput[i].matches(Lexeme.HAI)) HAILen++;
-			if(programInput[i].matches(Lexeme.KTHXBYE)) KTHXBYELen++;
+			else if(programInput[i].matches(Lexeme.KTHXBYE)) KTHXBYELen++;
 		}
 		if(HAILen!=1 || KTHXBYELen!=1) {
-			if(HAILen!=1) this.errorMessage="Invalid HAI!";
-			else if(HAILen!=1) this.errorMessage="Invalid KTHXBYE!";
+			if(HAILen==0) this.errorMessage="HAI is missing, error!";
+			else if(HAILen>1) this.errorMessage="Found multiple HAI, error!";
+			else if(KTHXBYELen==0) this.errorMessage="KTHXBYE is missinig, error!";
+			else if(KTHXBYELen>1) this.errorMessage="Found multiple KTHXBYE, error!";
 			return null;
 		}
 		this.lexemeTable.getItems().add(new Lexeme(programInput[0],Lexeme.CODE_DELIMETER));
@@ -1485,15 +1492,22 @@ public class GameStage{
 		return increment-1;
 	}
 	
+	
 	private String doRemoveComments() { //removes all comments before it goes to syntax analyzer
 		String removeComment = this.inputUser.getText();
 		Pattern pattern = Pattern.compile("[\\s]*TLDR[ ]*[\\w]+"); //if TLDR has succeeding chars (excluding whitespaces)
 		Matcher match = pattern.matcher(removeComment);
-		if(match.find()) return null;
+		if(match.find()) {
+			this.errorMessage = "Comment error found at --> "+ match.group().replaceAll("\\n", "");
+			return null;
+		}
 	
 		Pattern pattern2 = Pattern.compile("[\\w]+[ ]*OBTW.*"); 
 		Matcher match2 = pattern2.matcher(removeComment);
-		if(match2.find()) return null;
+		if(match2.find()) {
+			this.errorMessage="Comment error found at --> " + match2.group();
+			return null;
+		}
 		
 		String newRemovedComments="";
 		String[] tempLines = removeComment.split("\n");
@@ -1507,11 +1521,15 @@ public class GameStage{
 					}
 					i++;
 				}
-				if(!isFoundTLDR) return null;
+				if(!isFoundTLDR) {
+					this.errorMessage = "TLDR is not found in the multiline comments!";
+					return null;
+				}
 			}else newRemovedComments = newRemovedComments +"\n" + tempLines[i];
 		}
 		return newRemovedComments;
 	}
+	
 	
 	private int doLoop(ArrayList<String[]> tokensProgram, int i) {
 		
@@ -1588,6 +1606,7 @@ public class GameStage{
 		return end;
 	}
 	
+	
 	private ArrayList<String[]> doLexicalAnalysis() { 	
 		clearTables();
 		this.symbolTable.getItems().add(new SymbolTable(Lexeme.IT,""));
@@ -1622,11 +1641,12 @@ public class GameStage{
 		String[] programInput = new String[programInputList.size()];
 		for(int a=0;a<programInputList.size();a++) programInput[a] = programInputList.get(a);
 		
+		//checks for HAI/KTHXBYE
 		if(checkHaiKthxbye(programInput)==null) {
-			this.errorMessage="HAI/KTHXBYE error!";
+			Lexeme.HAI_KTHXBYE_ERROR = true;
 			return null;
 		}
-		
+
 		for(int i=0;i<programInput.length;i++) {
 			//check if HAI/KTHXBYE are valid		
 			Matcher regexMatcher = regex.matcher(programInput[i]);	
@@ -1679,6 +1699,10 @@ public class GameStage{
 	} //end function
 	
 	private String doSyntaxAnalysis(ArrayList<String[]> tokensPerLine) {
+		
+		String errorLog = checkErrorLogs(); //errorlogs consists only checking of: HAI/KTHXBYE, deadcode, comments
+		if(errorLog==null) return null;
+		
 		for(int i=0;i<tokensPerLine.size();i++) {
 			String[] tokenArrLine = tokensPerLine.get(i);
 			
@@ -1705,7 +1729,6 @@ public class GameStage{
 					String ans = makeRreassignment(tokenArrLine);
 					if(ans!=null) {}
 					else {
-						if(this.errorMessage==null) this.errorMessage="";
 						displayResult.setText("Syntax error\n" + this.errorMessage);
 						clearTables();
 						return null;
@@ -1737,7 +1760,6 @@ public class GameStage{
 					}
 					else {
 						clearTables();
-						if(this.errorMessage==null) this.errorMessage="";
 						displayResult.setText("Syntax Error\n" + this.errorMessage); return null;
 					}
 //				}catch(Exception e) {
@@ -1779,7 +1801,6 @@ public class GameStage{
 				}
 			}else {
 				clearTables();
-				if(this.errorMessage==null) this.errorMessage="";
 				if(this.errorMessage.length()!=0) displayResult.setText("487 Syntax Error\n" + this.errorMessage);
 				else displayResult.setText("488 Syntax Error --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", ""));
 				return null;				
@@ -1788,36 +1809,51 @@ public class GameStage{
 		return "success";
 	}
 
+
+	private String checkErrorLogs() {
+		 if(Lexeme.HAI_KTHXBYE_ERROR) {
+			 return null;
+		 }else if(Lexeme.COMMENT_ERROR) {
+			 return null;
+		 }else if(Lexeme.DEADCODE) {
+			 return null;
+		 }
+		return "success";
+	}
+	private void resetAllFlags() {
+    	clearTables();
+    	displayResult.setText("");
+    	Lexeme.resetErrorFlags();
+    	errorMessage=""; 
+	}
+	
 	private void btnExecuteHandle() { //get and process the code input by user from texarea named "inputUser"
 		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() { 
             public void handle(ActionEvent e)
             { 
-            	clearTables();
-            	displayResult.setText("");
+            	resetAllFlags();
 //            	try {
             		if(inputUser.getText().replaceAll("[\\s]*","").length()>0) {
                 		ArrayList<String[]> tokensPerLine = doLexicalAnalysis();
-                		if(tokensPerLine!=null) doSyntaxAnalysis(tokensPerLine);
-                		else if(tokensPerLine==null && isDeadCode) {
+                		
+
+                		if(Lexeme.HAI_KTHXBYE_ERROR) {
                 			clearTables();
-                			if(errorMessage==null) errorMessage="";
-                			displayResult.setText(errorMessage);
-                		}else {
+                			displayResult.setText("Syntax Error"+"\n"+errorMessage);
+                		}else if(tokensPerLine!=null) doSyntaxAnalysis(tokensPerLine);
+                		else {
                 			clearTables();
-                			if(errorMessage==null) errorMessage="";
-                			displayResult.setText("499 Syntax Error."+"\n"+errorMessage);
+                			displayResult.setText("Lexical Error"+"\n"+errorMessage);
                 		}
             		}
 //            	}catch(Exception e1) {
-//            		clearTables();
+//            		resetAllFlags();
 //            		displayResult.setText(displayResult.getText()+"\n"+"501 Syntax Error.");
 //            	}
-            		errorMessage=""; //reset error message every run
-            		isDeadCode=false;
+            		
             }
 		};
 		btnExecute.setOnAction(event); 
-		
 	}
 } 
 

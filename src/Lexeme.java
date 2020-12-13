@@ -99,13 +99,11 @@ public class Lexeme{
 	// public static final String MAEK = "MAEK";
 	// public static final String IS_NOW_A = "IS NOW A";
 	// public static final String A = "A";
-	// public static final String IM_IN_YR  = "IM IN YR";
-	// public static final String UPPIN  = "UPPIN";
-	// public static final String NERFIN  = "NERFIN";
-	// public static final String YR  = "YR";
-	// public static final String TIL  = "TIL";
-	// public static final String WILE  = "WILE";
-	// public static final String IM_OUTTA_YR = "IM OUTTA YR";
+	
+	//errors - this will act as a flag, this possible errors must be checked only once (start of the run) --> before proceeding to syntaxAnalysis
+	public static boolean HAI_KTHXBYE_ERROR = false;
+	public static boolean COMMENT_ERROR = false;
+	public static boolean DEADCODE = false;
 	//========================================= END OF LEXEME ===========================================
 
 
@@ -274,6 +272,13 @@ public class Lexeme{
 		
 		
 	}
+	public static void resetErrorFlags() {
+		Lexeme.HAI_KTHXBYE_ERROR=false;
+		Lexeme.COMMENT_ERROR=false;
+		Lexeme.DEADCODE=false;
+		
+	}
+	
 	
 	public static void printLexemeContent() { //prints the content of hasmap TOKENS
         for (Map.Entry<String, ArrayList<String>> item : Lexeme.TOKENS.entrySet()) {
