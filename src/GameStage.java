@@ -1362,6 +1362,11 @@ public class GameStage{
 	}
 	
 	private int doIFELSE(ArrayList<String[]> tokensProgram,int i) {	
+		if(tokensProgram.get(i).length!=1) {
+			this.errorMessage = "O RLY? contains operands, error! --> " + Arrays.deepToString(tokensProgram.get(i)).replaceAll("[\\[\\]\\,]", "");
+			return -1;
+		}
+
 		//-1 means error in return, else it  holds the statement's index
 		int isYA_RLY=-1, isNO_WAI=-1, isOIC=-1, increment=0;
 		ArrayList<Integer> mebbeIndeces = new ArrayList<Integer>(); //list of mebee indeces (key)
@@ -1369,6 +1374,10 @@ public class GameStage{
 		//finding the ORLY, YA RLY, NO WAI, OIC keywords
 		for(int a=i;a<tokensProgram.size();a++) {
 			if(tokensProgram.get(a)[0].matches(Lexeme.OIC)) { //finding the OIC keyword
+				if(tokensProgram.get(a).length>1) {
+					this.errorMessage = tokensProgram.get(a)[0].replaceAll("[\\[\\]\\,]", "") + " contains operands, error!";
+					return -1;
+				}
 				isOIC=a;
 				increment= a+1;
 				break;
@@ -1376,9 +1385,18 @@ public class GameStage{
 				if(!tokensProgram.get(a-1)[0].matches(Lexeme.O_RLY)) {
 					this.errorMessage = tokensProgram.get(a)[0].replaceAll("[\\[\\]\\,]", "") + " must be preceded by O RLY?, error!";
 					return -1;
+				}else if(tokensProgram.get(a).length>1) {
+					this.errorMessage = "YA RLY contains operands, error! --> " + Arrays.deepToString(tokensProgram.get(a)).replaceAll("[\\[\\]\\,]", "");
+					return -1;
 				}
 				isYA_RLY=a;
-			}else if(tokensProgram.get(a)[0].matches(Lexeme.NO_WAI)) isNO_WAI = a;
+			}else if(tokensProgram.get(a)[0].matches(Lexeme.NO_WAI)) {
+				if(tokensProgram.get(a).length>1) {
+					this.errorMessage = tokensProgram.get(a)[0].replaceAll("[\\[\\]\\,]", "") + " contains operands, error!";
+					return -1;
+				}
+				isNO_WAI = a;
+			}
 			else if(tokensProgram.get(a)[0].matches(Lexeme.MEBBE)) mebbeIndeces.add(a);
 		}
 		
@@ -1428,8 +1446,6 @@ public class GameStage{
 		if(block==null) return -1; //-1 means error, since null value is not syntactically correct in Int data type 
 		return increment-1; //-1 if fail, syntax error
 	}
-	
-	
 	
 	private boolean findErrorSwtich(ArrayList<String[]> tokensProgram,int i, int isOMGWTF, int isOIC, ArrayList<Integer> OMGlist) {
 		if(i+1<tokensProgram.size() && !tokensProgram.get(i+1)[0].matches(Lexeme.OMG)) {
@@ -1640,6 +1656,19 @@ public class GameStage{
 	}
 	
 	
+	private void findErrorSyntaxAnalysis(String[] lexList) { //this function also returns an syntax error, if any
+		String lexeme = lexList[0];
+		String[] conditionalKeywords = Lexeme.conditional.split("\\|"); //ifelse => 1-3, switch => 5,6,7
+		for(int i=1;i<conditionalKeywords.length;i++) {
+			if(lexeme.matches(conditionalKeywords[i])) {
+				if(i<4) this.errorMessage = lexeme + " is not implemented with IF-ELSE statements, error!";
+				else this.errorMessage = lexeme + " is not implemented with SWITCH statements, error!";
+			}
+		}
+		
+
+	}
+	
 	private ArrayList<String[]> doLexicalAnalysis() { 	
 		clearTables();
 		this.symbolTable.getItems().add(new SymbolTable(Lexeme.IT,""));
@@ -1835,8 +1864,8 @@ public class GameStage{
 				}
 			}else {
 				clearTables();
-				if(this.errorMessage.length()!=0) displayResult.setText("487 Syntax Error\n" + this.errorMessage);
-				else displayResult.setText("488 Syntax Error --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", ""));
+				findErrorSyntaxAnalysis(tokenArrLine);
+				displayResult.setText("Syntax Error\n" + this.errorMessage);
 				return null;				
 			}
 		}
@@ -1854,6 +1883,7 @@ public class GameStage{
 		 }
 		return "success";
 	}
+	
 	private void resetAllFlags() {
     	clearTables();
     	displayResult.setText("");
