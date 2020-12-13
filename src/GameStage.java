@@ -1833,6 +1833,7 @@ public class GameStage{
 //	5.) typecast in arithmetic operation, "124" to 124
 //  6.) typecast from numbr to numbar,   2.0 to 2	(no specs related to this, we follow the rule in online interpreter) and they are equal/WIN
 //  7.) deadcode in switch, after gtfo
-
+//	8.) MEBBEE added
+//  9.) NO WAI (if else) is optional
 
 
