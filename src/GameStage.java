@@ -1146,6 +1146,9 @@ public class GameStage{
 		if(lexList.length==1) {
 			this.errorMessage = "Error, VISIBLE has missing operand! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return null; //must contain atleast one operand
+		}else if(lexList[lexList.length-1].matches(Lexeme.keywordsNoLitVar)) {
+			this.errorMessage = "Invalid " + lexList[lexList.length-1] +" in end of the statement! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return null; //must contain atleast one operand
 		}
 		String combinedOp = Lexeme.mathOperator + Lexeme.boolOperator+"\\bAN\\b";
 		String combinedVal = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7);
@@ -1243,7 +1246,7 @@ public class GameStage{
 					String ans = allOperations(passToOp);
 					if(ans!=null) outputPrint.add(ans);
 					else {
-						this.errorMessage="Invalid expression,error! -->" +  Arrays.deepToString(passToOp).replaceAll("[\\[\\]\\,]", "");
+						this.errorMessage="Invalid expression,error! --> " +  Arrays.deepToString(passToOp).replaceAll("[\\[\\]\\,]", "");
 						return null;
 					}
 				}else {
@@ -1415,9 +1418,9 @@ public class GameStage{
 
 		if(start==-1 || end==-1) return increment-1;
 		
-		for(int j=start;j<end;j++) blockStatement.add(tokensProgram.get(j));		
-		doSyntaxAnalysis(blockStatement);
-		
+		for(int j=start;j<end;j++) blockStatement.add(tokensProgram.get(j));	
+		String block = doSyntaxAnalysis(blockStatement);
+		if(block==null) return -1; //-1 means error, since null value is not syntactically correct in Int data type 
 		return increment-1; //-1 if fail, syntax error
 	}
 	
@@ -1675,7 +1678,7 @@ public class GameStage{
 		return tokenizedOutput;
 	} //end function
 	
-	private void doSyntaxAnalysis(ArrayList<String[]> tokensPerLine) {
+	private String doSyntaxAnalysis(ArrayList<String[]> tokensPerLine) {
 		for(int i=0;i<tokensPerLine.size();i++) {
 			String[] tokenArrLine = tokensPerLine.get(i);
 			
@@ -1691,13 +1694,12 @@ public class GameStage{
 					if(ans!=null) {
 					}else {
 						clearTables(); 
-						return;
+						return null;
 					}
 				}catch(Exception e) {
 					clearTables();
-					displayResult.setText("I HAS-Syntax Error."); return;
+					displayResult.setText("I HAS-Syntax Error."); return null;
 				}
-				this.errorMessage="";
 			}else if(tokenArrLine[0].matches(Lexeme.VARIDENT) && tokenArrLine.length>1 && tokenArrLine[1].matches(Lexeme.R)) {
 				try {
 					String ans = makeRreassignment(tokenArrLine);
@@ -1706,13 +1708,12 @@ public class GameStage{
 						if(this.errorMessage==null) this.errorMessage="";
 						displayResult.setText("Syntax error\n" + this.errorMessage);
 						clearTables();
-						return;
+						return null;
 					}
 				}catch(Exception e) {
 					clearTables();
-					displayResult.setText("Reassignment error."); return;
+					displayResult.setText("Reassignment error."); return null;
 				}
-				this.errorMessage="";
 			}else if(tokenArrLine[0].matches(Lexeme.GIMMEH)) {
 				if(displayResult.getLength()!=0 && displayResult.getText().charAt(0)=='\n') displayResult.setText(displayResult.getText().substring(1)); //printing format only (nothing to do with syntax analyzer)
 				try{
@@ -1721,16 +1722,14 @@ public class GameStage{
 					
 					String ans = doGIMMEH(tokenArrLine,continueAfterInput);
 					if(ans==null) {
-						clearTables(); return;						
+						clearTables(); return null;						
 					}
 				}catch(Exception e) {
 					clearTables();
-					displayResult.setText("Invalid input, error!"); return;
+					displayResult.setText("Invalid input, error!"); return null;
 				}
-				this.errorMessage="";
 				break;
 			}else if(tokenArrLine[0].matches(Lexeme.O_RLY)) {
-				this.errorMessage="";
 //				try {
 					int ans = doIFELSE(tokensPerLine,i);
 					if(ans!=-1) {
@@ -1739,11 +1738,11 @@ public class GameStage{
 					else {
 						clearTables();
 						if(this.errorMessage==null) this.errorMessage="";
-						displayResult.setText("Syntax Error\n" + this.errorMessage); return;
+						displayResult.setText("Syntax Error\n" + this.errorMessage); return null;
 					}
 //				}catch(Exception e) {
 //					clearTables();
-//					displayResult.setText("IF ELSE Syntax Error."); return;	
+//					displayResult.setText("IF ELSE Syntax Error."); return null;	
 //				}
 			}else if(tokenArrLine[0].matches(Lexeme.GTFO)) {}
 			else if(tokenArrLine[0].matches(Lexeme.WTF)) {
@@ -1753,13 +1752,12 @@ public class GameStage{
 						i+=ans;
 					}else {
 						clearTables();
-						displayResult.setText("Switch Case Syntax Error"); return;
+						displayResult.setText("Switch Case Syntax Error"); return null;
 					}
 				}catch(Exception e) {
 					clearTables();
-					displayResult.setText("Switch Case Syntax Error."); return;
+					displayResult.setText("Switch Case Syntax Error."); return null;
 				}
-				this.errorMessage="";
 			}else if(storeIt!=null) {
 				this.errorMessage="";
 			}else if(tokenArrLine[0].matches(Lexeme.IM_IN_YR)) {
@@ -1770,25 +1768,24 @@ public class GameStage{
 					}else if(ans==-2) {
 						displayResult.setText("Infinite loop encountered, error!");
 						clearTables();
-						return;
+						return null;
 					}else {
 						clearTables();
-						displayResult.setText("Loop syntax Error."); return;
+						displayResult.setText("Loop syntax Error."); return null;
 					}
 				}catch(Exception e) {
 					clearTables();
-					displayResult.setText("Loop syntax Error"); return;
+					displayResult.setText("Loop syntax Error"); return null;
 				}
 			}else {
 				clearTables();
 				if(this.errorMessage==null) this.errorMessage="";
 				if(this.errorMessage.length()!=0) displayResult.setText("487 Syntax Error\n" + this.errorMessage);
 				else displayResult.setText("488 Syntax Error --> " + Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", ""));
-				this.errorMessage="";
-				return;				
+				return null;				
 			}
 		}
-		this.errorMessage="";
+		return "success";
 	}
 
 	private void btnExecuteHandle() { //get and process the code input by user from texarea named "inputUser"
