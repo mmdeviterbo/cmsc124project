@@ -167,23 +167,21 @@ public class GameStage{
 		//sample input for test only
 		inputUser.setText("HAI\n");
 		
-		inputUser.setText(inputUser.getText() + "\nI HAS A a ITZ 12\nI HAS A b ITZ 5\n"
-				+ "\nBOTH SAEM 18 AN SUM OF 12 AN b\n"
-				+ "\nO RLY?\nYA RLY\n"
-				+ "   VISIBLE \"YA RLY\"\n"
-				+ "   VISIBLE IT\n   VISIBLE \"it is the same\"\n"
-				+ "   b R 17\n   SUM OF b AN DIFF OF a AN 5\n"
-				+ "   VISIBLE IT\n"
-				+ "MEBBE BOTH SAEM 1 AN 1 \n"
-				+ "   VISIBLE \"mebbe 01\"\n   VISIBLE MOD OF 2 AN 4\n"
-				+ "NO WAI\n"
-				+ "   VISIBLE \"NO WAI\"\n"
-				+ "   VISIBLE IT\n"
-				+ "   VISIBLE \"it is not!\"\n"
-				+ "   b R 18\n"
-				+ "   DIFFRINT b AN SUM OF 12 AN b\n"
-				+ "   VISIBLE IT\n"
-				+ "OIC");
+		inputUser.setText(inputUser.getText() + 
+				  "IT R 18\n"
+				  + "WTF?\n"
+				  + "OMG 1\n"
+				  + "   VISIBLE \"I'm the only oneeeee\"\n"
+				  + "   GTFO\nOMG 3\n"
+				  + "   VISIBLE \"third time's a charm\"\n"
+				  + "OMG 5\n"
+				  + "   VISIBLE \"no one wants a five\"\n"
+				  + "   GTFO\n"
+				  + "OMGWTF\n"
+				  + "  VISIBLE \"ano na\"\n"
+				  + "  VISIBLE IT\n"
+				  + "OIC"
+				);
 		
 		inputUser.setText(inputUser.getText() + "\nKTHXBYE");		
 		String str = "hello" + "\n" + "hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n";
@@ -1431,36 +1429,68 @@ public class GameStage{
 		return increment-1; //-1 if fail, syntax error
 	}
 	
+	
+	
+	private boolean findErrorSwtich(ArrayList<String[]> tokensProgram,int i, int isOMGWTF, int isOIC, ArrayList<Integer> OMGlist) {
+		if(i+1<tokensProgram.size() && !tokensProgram.get(i+1)[0].matches(Lexeme.OMG)) {
+			this.errorMessage="WTF? is not followed by OMG, error --> " +  Arrays.deepToString(tokensProgram.get(i+1)).replaceAll("[\\[\\]\\,]", "");
+			return true;
+		}else if(isOMGWTF==-1) {
+			this.errorMessage="OMGWTF in switch case is not found, error!";
+			return true; //-1 represents error 
+		}else if(OMGlist.size()==0) {
+			this.errorMessage="Swtich case must at least contain one OMG, error!";
+			return true;
+		}else if(isOIC==-1) {
+			this.errorMessage="OIC in switch case is not found, error!";
+			return true;
+		}	
+		return false; //1 means success
+	}
+	
 	private int doSWITCH(ArrayList<String[]> tokensProgram,int i) {
 		ArrayList<Integer> OMGlist = new ArrayList<Integer>();
-		int isOMGWTF=-1;
-		int isOIC=-1;
-		int increment=0;
-
-		if(i+1<tokensProgram.size() && !tokensProgram.get(i+1)[0].matches(Lexeme.OMG)) return -1;
+		String regexLiteral = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7);
+		int isOMGWTF=-1, isOIC=-1, increment=0;
 		
-		for(int a=i;a<tokensProgram.size();a++) {
+		for(int a=i+1;a<tokensProgram.size();a++) {
 			if(tokensProgram.get(a)[0].matches(Lexeme.OIC)) {
 				isOIC=a;
-				increment= a-i+1;
-				if(increment < 6) return -1;
+				increment= a-i+1; //for the next blockcode after this whole switch case
 				break;
 			}else if(tokensProgram.get(a)[0].matches(Lexeme.OMG)) {
-				if(tokensProgram.get(a).length==1 || !tokensProgram.get(a)[1].matches(Lexeme.ALL_LITERALS)) return -1;
-				if(a!=0 && tokensProgram.get(a-1)[0].matches(Lexeme.OMG)) return -1;
+				if(tokensProgram.get(a).length==1) {
+					this.errorMessage = "OMG does not contain a literal, error! --> " + Arrays.deepToString(tokensProgram.get(a)).replaceAll("[\\[\\]\\,]", "");
+					return -1;
+				}else if(tokensProgram.get(a).length>2) {
+					this.errorMessage = "OMG has excess operands, error! --> " + Arrays.deepToString(tokensProgram.get(a)).replaceAll("[\\[\\]\\,]", "");
+					return -1;
+				}else if(!tokensProgram.get(a)[1].matches(regexLiteral)) {
+					if(tokensProgram.get(a)[1].matches(Lexeme.keywordsNoLitVar))
+						this.errorMessage = "OMG contains a keyword and not a literal, error! --> " + Arrays.deepToString(tokensProgram.get(a)).replaceAll("[\\[\\]\\,]", "");
+					else this.errorMessage = "OMG contains a variable and not a literal, error! --> " + Arrays.deepToString(tokensProgram.get(a)).replaceAll("[\\[\\]\\,]", "");
+					return -1;
+				}
 				OMGlist.add(a);
 			}else if(tokensProgram.get(a)[0].matches(Lexeme.OMGWTF)) {
-				if(tokensProgram.get(a).length>1) return -1;
-				if(a!=0 && tokensProgram.get(a-1)[0].matches(Lexeme.OMG)) return -1;
+				if(tokensProgram.get(a).length>1) {
+					this.errorMessage="OMGWTF must contain no literal, identifier, or expression";
+					return -1;
+				}
 				isOMGWTF = a;
+			}else if(tokensProgram.get(a)[0].matches(Lexeme.WTF)) {
+				this.errorMessage = "Swtich cases cannot be nested, error!";
+				return -1;
 			}
 		}
 		
-		if(isOMGWTF==-1 || OMGlist.size()==0 || isOIC==-1) return -1;
+		//finding errors after getting the OMG, OMGWTF, OIC indeces
+		boolean isErrorSwitch = findErrorSwtich(tokensProgram,i, isOMGWTF, isOIC, OMGlist);
+		if(isErrorSwitch) return -1;
+		
 		
 		String ITval= getValueVarident("IT");
-		ITval = ITval.replace("\"", "");
-		if(ITval.length()==0) return -1;
+		if(ITval==null) return -1;
 		
 		//find on where OMG it satisfies, matches, or equal
 		boolean isOMGsatisfied = false;
@@ -1486,7 +1516,10 @@ public class GameStage{
 		//if there is no OMG satisfied, matches, or equal
 		if(!isOMGsatisfied) {
 			for(int a=isOMGWTF+1;a<isOIC;a++) blockStatement.add(tokensProgram.get(a));
-			doSyntaxAnalysis(blockStatement);
+				String isBlockCodeError = doSyntaxAnalysis(blockStatement);
+				if(isBlockCodeError==null) { //if codeblock to be executed has error, then the whole program must be suspended/stopeed
+					return -1;
+				}
 		}
 		
 		return increment-1;
@@ -1698,6 +1731,7 @@ public class GameStage{
 		return tokenizedOutput;
 	} //end function
 	
+	
 	private String doSyntaxAnalysis(ArrayList<String[]> tokensPerLine) {
 		
 		String errorLog = checkErrorLogs(); //errorlogs consists only checking of: HAI/KTHXBYE, deadcode, comments
@@ -1774,11 +1808,11 @@ public class GameStage{
 						i+=ans;
 					}else {
 						clearTables();
-						displayResult.setText("Switch Case Syntax Error"); return null;
+						displayResult.setText("Syntax Error\n" + this.errorMessage); return null;
 					}
 				}catch(Exception e) {
 					clearTables();
-					displayResult.setText("Switch Case Syntax Error."); return null;
+					displayResult.setText("Syntax Error\n" + this.errorMessage); return null;
 				}
 			}else if(storeIt!=null) {
 				this.errorMessage="";
@@ -1843,7 +1877,7 @@ public class GameStage{
                 		}else if(tokensPerLine!=null) doSyntaxAnalysis(tokensPerLine);
                 		else {
                 			clearTables();
-                			displayResult.setText("Lexical Error"+"\n"+errorMessage);
+                			displayResult.setText("Syntax Error"+"\n"+errorMessage);
                 		}
             		}
 //            	}catch(Exception e1) {
