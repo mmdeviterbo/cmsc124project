@@ -278,6 +278,10 @@ public class GameStage{
 			
 		}else solveArithmeticOperation(stackOperation,index+1);
 		if(stackOperation.size()==1) return stackOperation.get(0);
+		else if(stackOperation.size()>1) {
+			this.errorMessage = "Arithmetic expression has excess operands, error!";
+			return null;
+		}
 		else return null; //wrong construct is used
 	}
 
@@ -287,6 +291,9 @@ public class GameStage{
 		
 		if(lexList.length<4) { //minimum has to be 4: SUM OF 1 AN 1
 			this.errorMessage = "Arithmetic expression has missing operands, error --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return null;
+		}else if(lexList[lexList.length-1].matches(Lexeme.keywordsNoLitVar)) {
+			this.errorMessage= "Invalid " + lexList[lexList.length-1] +" in the end statement, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return null;
 		}else if(Arrays.deepToString(lexList).contains(Lexeme.MKAY)) {
 			this.errorMessage= "Arithmetic expression has found MKAY keyword, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
@@ -409,7 +416,10 @@ public class GameStage{
 			}
 		}
 		if(stackOperation.size()==1) return stackOperation.get(0);
-		if(stackOperation.size()>1) return null;
+		else if(stackOperation.size()>1) {
+			this.errorMessage = "Boolean expression has excess operands, error!";
+			return null;
+		}
 		return null;
 	}
 	
@@ -449,7 +459,10 @@ public class GameStage{
 	private String setBooleanOperation(String[] lexList){
 		ArrayList<String> stackOperation = new ArrayList<String>();
 		
-		if(lexList[0].matches(Lexeme.ALL_OF+"|"+Lexeme.ANY_OF)) return setBooleanOperationArity(lexList);
+		if(lexList[lexList.length-1].matches(Lexeme.keywordsNoLitVar)) {
+			this.errorMessage= "Invalid " + lexList[lexList.length-1] +" in the end statement, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return null;
+		}else if(lexList[0].matches(Lexeme.ALL_OF+"|"+Lexeme.ANY_OF)) return setBooleanOperationArity(lexList);
 		
 		//boolean expression may contain any of the other expressions
 		String regexLiteral= Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7);
@@ -515,7 +528,7 @@ public class GameStage{
 			this.errorMessage= "Comparison expression has missing operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return null;
 		}else if(lexList[lexList.length-1].matches(Lexeme.keywordsNoLitVar)) {
-			this.errorMessage= "Invalid operand in the end statement, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			this.errorMessage= "Invalid " + lexList[lexList.length-1] +" in the end statement, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return null;
 		}
 		else if(Arrays.deepToString(lexList).contains(Lexeme.MKAY)) {
@@ -1265,7 +1278,9 @@ public class GameStage{
 	
 	private String checkITvalue() { //this function is for IF-ELSE if the value of IT can be cast to troof datatype
 		String ITval= getValueVarident("IT");
-		ITval = ITval.replaceAll("\"", "");
+		if(ITval!=null) {
+			if(ITval.length()!=0) ITval = ITval.replaceAll("\"", "");
+		}
 		String validIT = "\\b"+ Lexeme.TROOF[0]+"\\b|\\b"+Lexeme.TROOF[1]+"\\b";
 	
 		if(ITval==null) return null; //if IT does not exist or NOOB data type (len = 0) or cannot be cast to TROOF data type
@@ -1309,21 +1324,30 @@ public class GameStage{
 			else if(isNO_WAI!=-1) mebbeEnd = isNO_WAI;
 			else mebbeEnd = isOIC;
 			
+			
+			if(tokensProgram.get(mebbeStart).length<3) {
+				this.errorMessage = "MEBBE contains invalid expression --> " + Arrays.deepToString(tokensProgram.get(mebbeStart)).replaceAll("[\\[\\]\\,]", "");
+				return null;
+			}else if(!tokensProgram.get(mebbeStart)[1].matches(Lexeme.mathOperator+Lexeme.boolOperator.substring(0, Lexeme.boolOperator.length()-10))) {
+				this.errorMessage = "MEBBE does not contain an expression, error! --> " + Arrays.deepToString(tokensProgram.get(mebbeStart)).replaceAll("[\\[\\]\\,]", "");
+				return null;	
+			}
+			
 			String[] mebbeExpression = new String[tokensProgram.get(mebbeStart).length-1];
 			for(int a=1;a<tokensProgram.get(mebbeStart).length;a++) mebbeExpression[a-1] = tokensProgram.get(mebbeStart)[a]; 
+					
 			String value = allOperations(mebbeExpression);
-			
-			System.out.println(Arrays.deepToString(mebbeExpression));
-			System.out.println(value);
-			
 			if(value!=null) {
 				if(value.matches(troofValues)) {
 					ij=mebbeStart+"-"+mebbeEnd;
 					break;
+				}else {
+					ij=Lexeme.TROOF[1];
 				}
-			}else return null;
+			}else if(value==null) return null; //this is only an ERROR if null, but if numbr, numbar, still accepted
 		}
 		if(ij==null) {
+			System.out.println(1336);
 			if(isNO_WAI!=-1) ij=isNO_WAI+"-"+isOIC;
 		}
 		return ij;
@@ -1369,22 +1393,27 @@ public class GameStage{
 			else if(isNO_WAI!=-1) end=isNO_WAI; //if there's NO WAI, YA RLY execute until NO WAI
 			else end=isOIC; //else, YA RLY will execute until OIC
 		}else if(mebbeIndeces.size()!=0){ //mebbe condeblock
+			
+			//returns i-j if MEBBE is true, FAIL when no MEBBEE is true
+			//i-j contains the index of scope of the MEBBE codeblock
 			String ansIndex = findMebbeWIN(mebbeIndeces, tokensProgram, isNO_WAI, isOIC);
-			String[] ij= new String[2];
 			if(ansIndex!=null) {
-				if(ij!=null) {
-					ij = ansIndex.split("-"); 
-					start = Integer.parseInt(ij[0])+1;
-					end = Integer.parseInt(ij[1]);
+				if(ansIndex.contains("-")) {
+					start = Integer.parseInt(ansIndex.split("-")[0])+1;
+					end = Integer.parseInt(ansIndex.split("-")[1]);
+				}else { //if NOT NULL AND NOT WIN
+					if(isNO_WAI!=-1) {
+						start = isNO_WAI+1;
+						end = isOIC;
+					}
 				}
-			}else return -1;
-		}else if(isNO_WAI!=-1) { //else codeblock
+			}else return -1; //if null, then expression has error
+		}else if(isNO_WAI!=-1) { //if no mebbee and YA RLLY is false, perform else codeblock
 			start = isNO_WAI+1;
 			end = isOIC;
 		}else return increment-1;
-		
+
 		if(start==-1 || end==-1) return increment-1;
-		
 		
 		for(int j=start;j<end;j++) blockStatement.add(tokensProgram.get(j));		
 		doSyntaxAnalysis(blockStatement);
@@ -1766,6 +1795,8 @@ public class GameStage{
 		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() { 
             public void handle(ActionEvent e)
             { 
+            	clearTables();
+            	displayResult.setText("");
 //            	try {
             		if(inputUser.getText().replaceAll("[\\s]*","").length()>0) {
                 		ArrayList<String[]> tokensPerLine = doLexicalAnalysis();
