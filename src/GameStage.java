@@ -456,7 +456,7 @@ public class GameStage{
 		
 		String[] tempArr = new String[lexList.length-1]; //without mkay at the end
 		for(int i=0;i<lexList.length-1;i++) tempArr[i] = lexList[i];
-//		tempArr[0]="SMOOSH";
+		
 		String ans = solveSmooshOperation(tempArr);
 		if(lexList[0].matches(Lexeme.ANY_OF) && ans.contains("WIN")) return Lexeme.TROOF[0];
 		else if(lexList[0].matches(Lexeme.ANY_OF) && !ans.contains("WIN")) return Lexeme.TROOF[1];
@@ -470,7 +470,7 @@ public class GameStage{
 		if(lexList.length==1) {
 			this.errorMessage = lexList[0] + " has missing operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return null;
-		}else if(lexList[lexList.length-1].matches(Lexeme.keywordsNoLitVar)) {
+		}else if(lexList[lexList.length-1].matches(Lexeme.keywordsNoLitVar) && !lexList[lexList.length-1].matches(Lexeme.MKAY)) {
 			this.errorMessage= "Invalid " + lexList[lexList.length-1] +" in the end statement, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return null;
 		}else if(lexList[0].matches(Lexeme.ALL_OF+"|"+Lexeme.ANY_OF)) return setBooleanOperationArity(lexList);
@@ -1711,6 +1711,7 @@ public class GameStage{
 		
 		//literals, ANY, MKAY, ITZ, IT, R
 		String regexLiterals = Lexeme.ALL_LITERALS.substring(0, Lexeme.ALL_LITERALS.length()-7);
+		
 		if(lexeme.matches(regexLiterals)) {
 			this.errorMessage = lexeme + " literal has unknown operation, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return;
@@ -1734,14 +1735,6 @@ public class GameStage{
 			return;
 		}
 		
-
-		
-		
-		
-		
-		
-		
-
 	}
 	
 	private ArrayList<String[]> doLexicalAnalysis() { 	
@@ -1783,9 +1776,31 @@ public class GameStage{
 			Lexeme.HAI_KTHXBYE_ERROR = true;
 			return null;
 		}
-
+		
+		//finding error in lexical analysis
+		Pattern regexSplit = Pattern.compile("[^\\s\"']+|\"([^\"]*)\"|'([^']*)'");
 		for(int i=0;i<programInput.length;i++) {
-			//check if HAI/KTHXBYE are valid		
+			Matcher regexMatcher = regexSplit.matcher(programInput[i]);
+			while(regexMatcher.find()) {
+				String lex = regexMatcher.group();				
+				
+				if(lex.matches(Lexeme.INVALIDdecimal)) {
+					this.errorMessage = lex + " has invalid decimal value, error";					
+					return null;
+				}else if(lex.matches(Lexeme.INVALIDdigit)) {
+					 this.errorMessage = lex + "  literal has invalid positive sign, error!";
+					return null;
+				}else if(lex.matches(Lexeme.INVALIDvar)) {
+					if(lex.matches(Lexeme.NUMBAR+"|"+Lexeme.NUMBR)) continue;
+					 this.errorMessage = lex + " is invalid variable identifier, error!";
+					return null;
+				}
+			}
+		}
+		
+		
+		//finding lexeme
+		for(int i=0;i<programInput.length;i++) {	
 			Matcher regexMatcher = regex.matcher(programInput[i]);	
 			ArrayList<String> tokenizedLine = new ArrayList<String>();
 			while (regexMatcher.find()) {
@@ -1798,6 +1813,8 @@ public class GameStage{
 			}
 			if(arrResult.length!=0) tokenizedOutput.add(arrResult);
 		}
+		
+		//checking for deadcode
 		if(checkGFTO(tokenizedOutput)==null) {
 			return null; 
 		}
@@ -1981,10 +1998,15 @@ public class GameStage{
                 		if(Lexeme.HAI_KTHXBYE_ERROR) {
                 			clearTables();
                 			displayResult.setText("Syntax Error"+"\n"+errorMessage);
-                		}else if(tokensPerLine!=null) doSyntaxAnalysis(tokensPerLine);
-                		else {
+                		}else if(tokensPerLine!=null) {
+                			if(doSyntaxAnalysis(tokensPerLine)!=null) {
+                			}else {
+                				clearTables();
+                    			displayResult.setText("Syntax Error"+"\n"+errorMessage);
+                			}
+                		}else {
                 			clearTables();
-                			displayResult.setText("Syntax Error"+"\n"+errorMessage);
+                			displayResult.setText("Lexical Error"+"\n"+errorMessage);
                 		}
             		}
 //            	}catch(Exception e1) {
