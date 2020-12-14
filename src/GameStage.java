@@ -87,7 +87,7 @@ public class GameStage{
             }else {
             	try(BufferedReader reader = new BufferedReader(new FileReader(selectedFile))) {
             		if(selectedFile.toString().matches(".+\\.lol$")==false) {
-            			inputUser.setText("Please insert lolcode file!");
+            			inputUser.setText("The files inserted is not a LOLCODE program!");
             			return;
             		}
             		
@@ -1099,23 +1099,25 @@ public class GameStage{
 			}
 		}
 		if(!isSuccessInput) {
-			clearTables();
-			displayResult.setText("Error input, enter on last line!");
 			displayResult.setEditable(false);
+			this.errorMessage = "Error input, enter on the last line!";
+			displayErrorMessage();
 		}
 	}
 	
 	private String doGIMMEH(String[] lexList, ArrayList<String[]> continueLine) {
 		if(lexList.length==1) {
-			displayResult.setText("GIMMEH has no variable, error!");
+			this.errorMessage = "GIMMEH has no variable, error!";
 			return null;
+		}else if(lexList[1].matches(Lexeme.keywordsNoLitVar)) {
+			this.errorMessage = "Use valid variable for input, error!";
+			return  null;
 		}else if(lexList.length>2) {
-			displayResult.setText("GIMMEH cannot store on more than one variable, error!");
+			this.errorMessage = "GIMMEH cannot store on more than one variable, error!";
 			return  null;
 		}
 		String variable = lexList[1];
 		if(!checkIfVarExist(variable)) {
-			displayResult.setText(variable +" does not exist!");
 			return null; //lexList[1] contains the varident/variable that user want to store, if not existing then return null (error)
 		}
 		
@@ -1722,27 +1724,30 @@ public class GameStage{
 			this.errorMessage = lexeme + " is not with any expression, error! --> "  + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return;
 		}else if(lexeme.matches(Lexeme.MKAY)){
-			this.errorMessage = lexeme + " keyword must only be with ALL OF and ANY OF expression, error! --> "  + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			this.errorMessage = lexeme + " keyword is not implemented with ALL OF or ANY OF expression, error! --> "  + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return;
 		}else if(lexeme.matches(Lexeme.IT)) {
-			this.errorMessage = lexeme + " variable has unknown operation, error! --> "  + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			this.errorMessage = lexeme + " variable has with unknown operation, error! --> "  + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return;
 		}else if(lexeme.matches("\\bR\\b")) {
 			this.errorMessage = lexeme + " reassignment is not stored to a variable, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return;
+		}else if(lexeme.matches(Lexeme.TLDR)) {
+			this.errorMessage = lexeme + " is not implemented with multiline comment statements, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return;
 		}else if(lexeme.matches(Lexeme.VARIDENT) && !lexeme.matches(Lexeme.keywordsNoLitVar)) {
 			this.errorMessage = lexeme + " variable has unknown operation, error! --> "  + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return;
 		}
-		
 	}
 	
 	private ArrayList<String[]> doLexicalAnalysis() { 	
 		clearTables();
 		this.symbolTable.getItems().add(new SymbolTable(Lexeme.IT,""));
+		 displayResult.setStyle("-fx-control-inner-background:#000000; -fx-font-family: Consolas; -fx-highlight-fill: #00ff00; -fx-highlight-text-fill: #000000; -fx-text-fill: #00ff00; -fx-font-size: 1.5em;");
 		this.displayResult.setText("");
 		this.errorMessage="";
-		
+
 		
 		String removeComment = doRemoveComments();
 		if(removeComment==null) return null;
@@ -1852,6 +1857,12 @@ public class GameStage{
 		return tokenizedOutput;
 	} //end function
 	
+	private void displayErrorMessage() {
+		clearTables();
+		 displayResult.setStyle("-fx-control-inner-background:#000000; -fx-font-family: Consolas; -fx-highlight-fill: #00ff00; -fx-highlight-text-fill: #000000; -fx-text-fill: #ff0000; -fx-font-size: 1.5em;");
+		if(this.errorMessage.length()==0) displayResult.setText("Syntax Error");
+		else displayResult.setText(this.errorMessage);
+	}
 	
 	private String doSyntaxAnalysis(ArrayList<String[]> tokensPerLine) {
 		
@@ -1868,74 +1879,50 @@ public class GameStage{
 			//syntax for I HAS
 			if(tokenArrLine[0].matches(Lexeme.HAI+"|"+Lexeme.KTHXBYE)) {continue;}
 			else if(tokenArrLine[0].matches(Lexeme.I_HAS_A)) {
-//				try {
+				try {
 					String ans = setIHAS(tokenArrLine);
 					if(ans!=null) {
-					}else {
-						clearTables();
-						displayResult.setText("Syntax error\n" + this.errorMessage);
-						return null;
-					}
-//				}catch(Exception e) {
-//					clearTables();
-//					displayResult.setText("Syntax error\n" + this.errorMessage);
-//					return null;
-//				}
+					}else return null;
+					
+				}catch(Exception e) {
+					return null;
+				}
 			}else if(tokenArrLine[0].matches(Lexeme.VARIDENT) && tokenArrLine.length>1 && tokenArrLine[1].matches(Lexeme.R)) {
 				try {
 					String ans = makeRreassignment(tokenArrLine);
 					if(ans!=null) {}
-					else {
-						displayResult.setText("Syntax error\n" + this.errorMessage);
-						clearTables();
-						return null;
-					}
+					else return null;
+					
 				}catch(Exception e) {
-					clearTables();
-					displayResult.setText("Reassignment error."); return null;
+					return null;
 				}
 			}else if(tokenArrLine[0].matches(Lexeme.GIMMEH)) {
 				if(displayResult.getLength()!=0 && displayResult.getText().charAt(0)=='\n') displayResult.setText(displayResult.getText().substring(1)); //printing format only (nothing to do with syntax analyzer)
 				try{
 					ArrayList<String[]> continueAfterInput = new ArrayList<String[]>();
 					for(int a=i+1;a<tokensPerLine.size();a++) continueAfterInput.add(tokensPerLine.get(a));
-					
 					String ans = doGIMMEH(tokenArrLine,continueAfterInput);
-					if(ans==null) {
-						clearTables(); return null;						
-					}
+					if(ans==null) return null;						
 				}catch(Exception e) {
-					clearTables();
-					displayResult.setText("Invalid input, error!"); return null;
+					return null;
 				}
 				break;
 			}else if(tokenArrLine[0].matches(Lexeme.O_RLY)) {
-//				try {
+				try {
 					int ans = doIFELSE(tokensPerLine,i);
-					if(ans!=-1) {
-						i=ans;
-					}
-					else {
-						clearTables();
-						displayResult.setText("Syntax Error\n" + this.errorMessage); return null;
-					}
-//				}catch(Exception e) {
-//					clearTables();
-//					displayResult.setText("IF ELSE Syntax Error."); return null;	
-//				}
+					if(ans!=-1) i=ans;
+					else return null;
+				}catch(Exception e) {
+					return null;
+				}
 			}else if(tokenArrLine[0].matches(Lexeme.GTFO)) {}
 			else if(tokenArrLine[0].matches(Lexeme.WTF)) {
 				try {
 					int ans = doSWITCH(tokensPerLine,i);
-					if(ans!=-1) {
-						i+=ans;
-					}else {
-						clearTables();
-						displayResult.setText("Syntax Error\n" + this.errorMessage); return null;
-					}
+					if(ans!=-1) i+=ans;
+					else return null;
 				}catch(Exception e) {
-					clearTables();
-					displayResult.setText("Syntax Error\n" + this.errorMessage); return null;
+					return null;
 				}
 			}else if(storeIt!=null) {
 				this.errorMessage="";
@@ -1943,30 +1930,25 @@ public class GameStage{
 				try {
 					int ans = doLoop(tokensPerLine,i);
 					if(ans!=-1 && ans!=-2) {
-						i=ans;continue;
+						i=ans; continue;
 					}else if(ans==-2) {
-						displayResult.setText("Infinite loop encountered, error!");
-						clearTables();
+						this.errorMessage = "Infinite loop encountered, error!";
 						return null;
-					}else {
-						clearTables();
-						displayResult.setText("Loop syntax Error."); return null;
-					}
+					}else return null;
+					
 				}catch(Exception e) {
-					clearTables();
-					displayResult.setText("Loop syntax Error"); return null;
+					return null;
 				}
+				
 			}else {
-				clearTables();
 				findErrorSyntaxAnalysis(tokenArrLine);
-				displayResult.setText("Syntax Error\n" + this.errorMessage);
 				return null;				
 			}
 		}
 		return "success";
 	}
 
-
+	
 	private String checkErrorLogs() {
 		 if(Lexeme.HAI_KTHXBYE_ERROR) {
 			 return null;
@@ -1994,24 +1976,19 @@ public class GameStage{
             		if(inputUser.getText().replaceAll("[\\s]*","").length()>0) {
                 		ArrayList<String[]> tokensPerLine = doLexicalAnalysis();
                 		
-
                 		if(Lexeme.HAI_KTHXBYE_ERROR) {
-                			clearTables();
-                			displayResult.setText("Syntax Error"+"\n"+errorMessage);
+                			displayErrorMessage();
                 		}else if(tokensPerLine!=null) {
                 			if(doSyntaxAnalysis(tokensPerLine)!=null) {
                 			}else {
-                				clearTables();
-                    			displayResult.setText("Syntax Error"+"\n"+errorMessage);
+                				displayErrorMessage();
                 			}
                 		}else {
-                			clearTables();
-                			displayResult.setText("Lexical Error"+"\n"+errorMessage);
+                			displayErrorMessage();
                 		}
             		}
 //            	}catch(Exception e1) {
-//            		resetAllFlags();
-//            		displayResult.setText(displayResult.getText()+"\n"+"501 Syntax Error.");
+//            		displayErrorMessage();
 //            	}
             		
             }
