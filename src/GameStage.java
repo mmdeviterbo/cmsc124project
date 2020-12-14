@@ -467,8 +467,10 @@ public class GameStage{
 	
 	private String setBooleanOperation(String[] lexList){
 		ArrayList<String> stackOperation = new ArrayList<String>();
-		
-		if(lexList[lexList.length-1].matches(Lexeme.keywordsNoLitVar)) {
+		if(lexList.length==1) {
+			this.errorMessage = lexList[0] + " has missing operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return null;
+		}else if(lexList[lexList.length-1].matches(Lexeme.keywordsNoLitVar)) {
 			this.errorMessage= "Invalid " + lexList[lexList.length-1] +" in the end statement, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return null;
 		}else if(lexList[0].matches(Lexeme.ALL_OF+"|"+Lexeme.ANY_OF)) return setBooleanOperationArity(lexList);
@@ -1696,13 +1698,48 @@ public class GameStage{
 	
 	private void findErrorSyntaxAnalysis(String[] lexList) { //this function also returns an syntax error, if any
 		String lexeme = lexList[0];
-		String[] conditionalKeywords = Lexeme.conditional.split("\\|"); //ifelse => 1-3, switch => 5,6,7
+		
+		//conditional statements
+		String[] conditionalKeywords = Lexeme.conditional.split("\\|"); //ifelse => 1,2,3, switch => 5,6,7
 		for(int i=1;i<conditionalKeywords.length;i++) {
 			if(lexeme.matches(conditionalKeywords[i])) {
 				if(i<4) this.errorMessage = lexeme + " is not implemented with IF-ELSE statements, error!";
-				else this.errorMessage = lexeme + " is not implemented with SWITCH statements, error!";
+				else this.errorMessage = lexeme + " is not implemented with SWITCH-CASE statements, error!";
+				return;
 			}
 		}
+		
+		//literals, ANY, MKAY, ITZ, IT, R
+		String regexLiterals = Lexeme.ALL_LITERALS.substring(0, Lexeme.ALL_LITERALS.length()-7);
+		if(lexeme.matches(regexLiterals)) {
+			this.errorMessage = lexeme + " literal has unknown operation, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return;
+		}else if(lexeme.matches(Lexeme.ITZ)) {
+			this.errorMessage = lexeme + " must be only used with initialization, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return;
+		}else if(lexeme.matches("\\bAN\\b")) {
+			this.errorMessage = lexeme + " is not with any expression, error! --> "  + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return;
+		}else if(lexeme.matches(Lexeme.MKAY)){
+			this.errorMessage = lexeme + " keyword must only be with ALL OF and ANY OF expression, error! --> "  + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return;
+		}else if(lexeme.matches(Lexeme.IT)) {
+			this.errorMessage = lexeme + " variable has unknown operation, error! --> "  + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return;
+		}else if(lexeme.matches("\\bR\\b")) {
+			this.errorMessage = lexeme + " reassignment is not stored to a variable, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return;
+		}else if(lexeme.matches(Lexeme.VARIDENT) && !lexeme.matches(Lexeme.keywordsNoLitVar)) {
+			this.errorMessage = lexeme + " variable has unknown operation, error! --> "  + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return;
+		}
+		
+
+		
+		
+		
+		
+		
 		
 
 	}
