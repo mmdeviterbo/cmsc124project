@@ -230,8 +230,8 @@ public class GameStage{
 		if(stackOperation.size()<3) return null;
 				
 		String tempA = stackOperation.get(index).replace("\"",""); String tempB = stackOperation.get(index+1).replace("\"","");
-		boolean regexNUMBR_A = tempA.matches("^"+Lexeme.NUMBR+"$"); boolean regexNUMBAR_A = tempA.matches("^"+Lexeme.NUMBAR+"$");
-		boolean regexNUMBR_B = tempB.matches("^"+Lexeme.NUMBR+"$"); boolean regexNUMBAR_B = tempB.matches("^"+Lexeme.NUMBAR+"$");
+		boolean regexNUMBR_A = tempA.matches(Lexeme.NUMBR); boolean regexNUMBAR_A = tempA.matches(Lexeme.NUMBAR);
+		boolean regexNUMBR_B = tempB.matches(Lexeme.NUMBR); boolean regexNUMBAR_B = tempB.matches(Lexeme.NUMBAR);
 		boolean regexSUM_OF = (stackOperation.get(index+2)).matches(Lexeme.SUM_OF);
 		boolean regexDIFF_OF = (stackOperation.get(index+2)).matches(Lexeme.DIFF_OF);
 		boolean regexPROD_OF = (stackOperation.get(index+2)).matches(Lexeme.PRODUKT_OF);
@@ -274,13 +274,18 @@ public class GameStage{
 				solveArithmeticOperation(stackOperation,0);	
 			} else solveArithmeticOperation(stackOperation,index+1);
 			
-		}else solveArithmeticOperation(stackOperation,index+1);
+		}else {
+			if(index+3>=stackOperation.size()) {	
+				return null; 
+			}
+			solveArithmeticOperation(stackOperation,index+1);
+		}
 		if(stackOperation.size()==1) return stackOperation.get(0);
 		else if(stackOperation.size()>1) {
-			this.errorMessage = "Arithmetic expression has excess operands, error!";
+			this.errorMessage = "Arithmetic expression has invalid operands, error!";
 			return null;
 		}
-		else return null; //wrong construct is used
+		return null;
 	}
 
 	private String setArithmeticOperation(String[] lexList) {		
@@ -410,12 +415,18 @@ public class GameStage{
 					stackOperation.remove(index); //remove the operation used
 					stackOperation.add(index,ans); //push the answer from recent expression
 					solveBooleanOperation(stackOperation,0);
-				}else solveBooleanOperation(stackOperation,index+1);
+				}else {
+					if(index+3>=stackOperation.size()) {	
+						return null; 
+					}
+					solveBooleanOperation(stackOperation,index+1);
+				
+				}
 			}
 		}
 		if(stackOperation.size()==1) return stackOperation.get(0);
 		else if(stackOperation.size()>1) {
-			this.errorMessage = "Boolean expression has excess operands, error!";
+			this.errorMessage = "Boolean expression has invalid operands, error!";
 			return null;
 		}
 		return null;
@@ -696,26 +707,50 @@ public class GameStage{
 		return "succes";
 	}
 	
-	private String setIHAS(String[] lexList) {		
-		if(lexList.length==1 || lexList.length==3 || (lexList.length>3 && !lexList[2].matches(Lexeme.ITZ))) {
-			displayResult.setText("Variable assignment error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", ""));
+	private String findErrorIHAS(String[] lexList) {
+		// [I HAS A, num, ITZ, 0]
+		//    0       1    2   3
+		if(lexList.length==1) {
+			this.errorMessage = "Variable declaration contains no variable, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return null;
 		}else if(lexList.length>=2) {
-			if(checkIfVarExist(lexList[1])) {
-				displayResult.setText("Variable already exists, error!");
-				displayResult.setText("Variable assignment error! --> " + lexList[1]);
+			if(checkIfVarExist(lexList[1])) { //if already declared
+				this.errorMessage = lexList[1] + " variable already exists, error!";
 				return null;
-			}else if(lexList[1].matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7))) {
-				displayResult.setText("Variable is invalid, error! -->" + lexList[1]);
+			}else this.errorMessage = "";
+			if(lexList.length>2 && !lexList[2].matches(Lexeme.ITZ)) {
+				this.errorMessage = "Variable declaration has no ITZ for initialization,  error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 				return null;
+			}else if(lexList.length==3 && lexList[2].matches(Lexeme.ITZ)) {
+				this.errorMessage = "Variable declaration has no value after ITZ,  error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+				return null;
+			}else if(lexList.length==4 && lexList[3].matches(Lexeme.keywordsNoLitVar)) {
+				this.errorMessage = "Value in variable declaration has invalid operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+				return null;	
 			}
-			else if(lexList.length==2) {
-				this.symbolTable.getItems().add(new SymbolTable(lexList[1],""));
-				return "success";
+			if(lexList[1].matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7))) {
+				this.errorMessage = "Variable declaration must be stored to a variable and not to a literal,  error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+				return null;
+			}else if(lexList[1].matches(Lexeme.keywordsNoLitVar)) {
+				this.errorMessage = "Variable declaration must be stored to a variable and not to a keyword,  error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+				return null;
 			}
 		}
+	
+		return "success";
+	}
+	
+	private String setIHAS(String[] lexList) {		
+		if(findErrorIHAS(lexList)==null) return null;
+	
+		//uninitialized variable
+		if(lexList.length==2) {
+			this.symbolTable.getItems().add(new SymbolTable(lexList[1],""));
+			return "success";
+		}
 		
-		//this is for operations eg "I HAS A var ITZ SUM OF 10 AN 5"
+		
+		//this is for expression eg "I HAS A var ITZ SUM OF 10 AN 5"
 		ArrayList<String> operands = new ArrayList<String>();
 		String ifOperations = null;
 		if(lexList.length>=5) { //expression
@@ -724,36 +759,39 @@ public class GameStage{
 			for(int i=0;i<operands.size();i++) operandsArr[i] = operands.get(i);
 			ifOperations = allOperations(operandsArr);
 		}
-		//====end of i has with operations=====		
 		
+		//====end of i has with expression=====		
+		// [I HAS A, num, ITZ, 0]
+		//    0       1    2   3
 		
-		if(lexList[3].matches(Lexeme.ALL_LITERALS)) {
+		//checks if valus is literal, value, expression
+		if(lexList.length>3 && lexList[3].matches(Lexeme.ALL_LITERALS)) { //literals
 			if(lexList.length!=4) {
-				displayResult.setText("Variable assignment error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", ""));
+				this.errorMessage = "Variable declaration has excess operands! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 				return null;
 			}
 			lexList[3] = lexList[3].replace("\"", "");
 			this.symbolTable.getItems().add(new SymbolTable(lexList[1],lexList[3]));	
 			return "Success";
-		}else if(ifOperations!=null) {
+		}else if(ifOperations!=null) { //expression
 			ifOperations = ifOperations.replace("\"", "");
 			this.symbolTable.getItems().add(new SymbolTable(lexList[1],ifOperations));		
 			return "Success";
-		}else if(lexList[3].matches(Lexeme.VARIDENT)) { //varident
-			boolean isFound = false;
-			for(SymbolTable row : symbolTable.getItems()) {
-				if(lexList[3].contentEquals(row.getIdentifier())) {
-					this.symbolTable.getItems().add(new SymbolTable(lexList[1],row.getValue()));			
-					isFound = true;
-					break;
-				}
-			}
-			if(!isFound) {
-				displayResult.setText(lexList[3]+ " variable not found, error!");
+		}else if(lexList.length>3 && lexList[3].matches(Lexeme.VARIDENT)) { //varident
+			boolean isFound = checkIfVarExist(lexList[3]);
+			if(!isFound) return null;
+			else if(lexList.length!=4) {
+				this.errorMessage = "Variable declaration has excess operands! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 				return null;
-			}else return "Success";
+			}else if(isFound) {
+				String newValue = getValueVarident(lexList[3]);
+				if(newValue==null) return null;
+				else {
+					this.symbolTable.getItems().add(new SymbolTable(lexList[1],newValue));	
+					return "success";
+				}
+			}else return null; //if not found
 		}
-		displayResult.setText("I HAS statement error!");
 		return null;
 	}
 	
@@ -1776,17 +1814,19 @@ public class GameStage{
 			//syntax for I HAS
 			if(tokenArrLine[0].matches(Lexeme.HAI+"|"+Lexeme.KTHXBYE)) {continue;}
 			else if(tokenArrLine[0].matches(Lexeme.I_HAS_A)) {
-				try {
+//				try {
 					String ans = setIHAS(tokenArrLine);
 					if(ans!=null) {
 					}else {
-						clearTables(); 
+						clearTables();
+						displayResult.setText("Syntax error\n" + this.errorMessage);
 						return null;
 					}
-				}catch(Exception e) {
-					clearTables();
-					displayResult.setText("I HAS-Syntax Error."); return null;
-				}
+//				}catch(Exception e) {
+//					clearTables();
+//					displayResult.setText("Syntax error\n" + this.errorMessage);
+//					return null;
+//				}
 			}else if(tokenArrLine[0].matches(Lexeme.VARIDENT) && tokenArrLine.length>1 && tokenArrLine[1].matches(Lexeme.R)) {
 				try {
 					String ans = makeRreassignment(tokenArrLine);
