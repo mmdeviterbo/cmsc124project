@@ -697,7 +697,7 @@ public class GameStage{
 		for(String[] row : tokensPerLine) {
 			if(row[0].matches(Lexeme.GTFO)) {
 				if(index+1<tokensPerLine.size()) {
-					if(!tokensPerLine.get(index+1)[0].matches(Lexeme.OMG+"|"+Lexeme.OMGWTF+"|"+Lexeme.OIC+"|"+Lexeme.IM_OUTTA_YR)) {
+					if(!tokensPerLine.get(index+1)[0].matches(Lexeme.OMG+"|"+Lexeme.OMGWTF+"|"+Lexeme.OIC+"|"+Lexeme.IM_OUTTA_YR+"|"+Lexeme.KTHXBYE)) {
 						Lexeme.DEADCODE=true;
 						this.errorMessage="Deadcode found, error starts at --> " +  Arrays.deepToString(tokensPerLine.get(index+1)).replaceAll("[\\[\\]\\,]", "");
 						return null;
@@ -1493,18 +1493,40 @@ public class GameStage{
 		if(i+1<tokensProgram.size() && !tokensProgram.get(i+1)[0].matches(Lexeme.OMG)) {
 			this.errorMessage="WTF? is not followed by OMG, error --> " +  Arrays.deepToString(tokensProgram.get(i+1)).replaceAll("[\\[\\]\\,]", "");
 			return true;
-		}else if(isOMGWTF==-1) {
-			this.errorMessage="OMGWTF in switch case is not found, error!";
-			return true; //-1 represents error 
 		}else if(OMGlist.size()==0) {
 			this.errorMessage="Swtich case must at least contain one OMG, error!";
 			return true;
 		}else if(isOIC==-1) {
 			this.errorMessage="OIC in switch case is not found, error!";
 			return true;
-		}	
+		}
+		for(int a=0;a<OMGlist.size();a++) {
+			int A = OMGlist.get(a);
+			if(a+1==OMGlist.size()) {
+				if(isOMGWTF!=-1) {
+					if(isOMGWTF-A==1) { //between last OMG and OMGWTF 
+						this.errorMessage = "Codeblock not found after --> " + Arrays.deepToString(tokensProgram.get(A)).replaceAll("[\\[\\]\\,]", "");
+						return true;
+					}else if(isOIC-isOMGWTF==1) { //between OMGWTF and OIC 
+						this.errorMessage = "Codeblock not found after --> " + Arrays.deepToString(tokensProgram.get(isOMGWTF)).replaceAll("[\\[\\]\\,]", "");
+						return true;
+					}
+				}else {
+					if(isOIC-A==1) { //between last OMG and OIC
+						this.errorMessage = "Codeblock not found after --> " + Arrays.deepToString(tokensProgram.get(A)).replaceAll("[\\[\\]\\,]", "");
+						return true;
+					}
+				}
+			}else if(OMGlist.get(a+1)-A==1) { //between two OMG's
+				this.errorMessage = "Codeblock not found after --> " + Arrays.deepToString(tokensProgram.get(A)).replaceAll("[\\[\\]\\,]", "");
+				return true;
+			}
+		}
+		
 		return false; //1 means success
 	}
+	
+
 	
 	private int doSWITCH(ArrayList<String[]> tokensProgram,int i) {
 		ArrayList<Integer> OMGlist = new ArrayList<Integer>();
@@ -1513,6 +1535,10 @@ public class GameStage{
 		
 		for(int a=i+1;a<tokensProgram.size();a++) {
 			if(tokensProgram.get(a)[0].matches(Lexeme.OIC)) {
+				if(tokensProgram.get(a).length>1) {
+					this.errorMessage="OIC must contain no literal, identifier, or expression";
+					return -1;
+				}
 				isOIC=a;
 				increment= a-i+1; //for the next blockcode after this whole switch case
 				break;
@@ -1573,13 +1599,14 @@ public class GameStage{
 		
 		//if there is no OMG satisfied, matches, or equal
 		if(!isOMGsatisfied) {
-			for(int a=isOMGWTF+1;a<isOIC;a++) blockStatement.add(tokensProgram.get(a));
-				String isBlockCodeError = doSyntaxAnalysis(blockStatement);
-				if(isBlockCodeError==null) { //if codeblock to be executed has error, then the whole program must be suspended/stopeed
-					return -1;
-				}
+			if(isOMGWTF!=-1) {
+				for(int a=isOMGWTF+1;a<isOIC;a++) blockStatement.add(tokensProgram.get(a));
+					String isBlockCodeError = doSyntaxAnalysis(blockStatement);
+					if(isBlockCodeError==null) { //if codeblock to be executed has error, then the whole program must be suspended/stopeed
+						return -1;
+					}
+			}
 		}
-		
 		return increment-1;
 	}
 	
@@ -1620,7 +1647,6 @@ public class GameStage{
 		}
 		return newRemovedComments;
 	}
-	
 	
 	private int doLoop(ArrayList<String[]> tokensProgram, int i) {
 		
