@@ -1691,23 +1691,48 @@ public class GameStage{
 		return newRemovedComments;
 	}
 	
+	
+	private int findLoopError(ArrayList<String[]> tokensProgram, int i, String[] loopStartArr) {
+		//checking error for loop identifier
+		if(loopStartArr[1].matches(Lexeme.keywordsNoLitVar)) {
+			this.errorMessage = loopStartArr[1] + " loop identifier is a reserved keyword, error!" +  Arrays.deepToString(tokensProgram.get(i)).replaceAll("[\\[\\]\\,]", "");
+			return -1;
+		}else if(loopStartArr[1].matches(Lexeme.ALL_LITERALS)) {
+			this.errorMessage = " loop identifier is a literal and not a variable, error! --> " + Arrays.deepToString(tokensProgram.get(i)).replaceAll("[\\[\\]\\,]", "");
+			return -1;
+		}else if(loopStartArr.length<8) {
+			this.errorMessage = "Loop statement has missing operands, error! --> " + Arrays.deepToString(tokensProgram.get(i)).replaceAll("[\\[\\]\\,]", "");
+			return -1; //8 is the minimum length of the array of where IM IN YR array belongs
+		}else if(loopStartArr[4].matches(Lexeme.keywordsNoLitVar)) {
+			this.errorMessage =loopStartArr[4] + " variable is a reserved keyword, error! --> "  + Arrays.deepToString(tokensProgram.get(i)).replaceAll("[\\[\\]\\,]", "");
+			return -1;
+		}else if(loopStartArr[4].matches(Lexeme.ALL_LITERALS)) {
+			this.errorMessage = loopStartArr[4] + " loop identifier is a literal and not a variable, error! --> "  + Arrays.deepToString(tokensProgram.get(i)).replaceAll("[\\[\\]\\,]", "");
+			return -1;
+		}		
+		if(checkIfVarExist(loopStartArr[4])) {
+			String variable = getValueVarident(loopStartArr[4]);
+			if(variable==null) return -1; //must have valid data type (numbr, numbar, troof only)
+			if(variable.matches("\\b"+Lexeme.TROOF[1]+"\\b")) updateVar(loopStartArr[4],"0"); //online interpreter makes FAIL = 0, WIN = 1
+			else if(variable.matches("\\b"+Lexeme.TROOF[0]+"\\b")) updateVar(loopStartArr[4],"1");
+			else if(!variable.matches(Lexeme.NUMBR+"|"+Lexeme.NUMBAR)) {
+				this.errorMessage = loopStartArr[4] +" variable is not troof, numbar, nor numbr data type, error!"  + Arrays.deepToString(tokensProgram.get(i)).replaceAll("[\\[\\]\\,]", "");
+				return -1;
+			}
+		}else return -1;
+		
+		return 1;
+	}
+	
 	private int doLoop(ArrayList<String[]> tokensProgram, int i) {
 		
 		String[] loopStartArr = tokensProgram.get(i); //array of where IM IN YR belongs
 		int start = i, end = -1, updateVal = 0;
 		String literals = Lexeme.NUMBR+"|"+Lexeme.NUMBAR+"|\\b"+Lexeme.TROOF[0]+"\\b|\\b"+Lexeme.TROOF[1]+"\\b";
 
-		if(!loopStartArr[1].matches(Lexeme.VARIDENT)) return -1;
-		if(loopStartArr.length<8) return -1; //8 is the minimum length of the array of where IM IN YR array belongs
-				
-		//check if valid data type to be incremented/decremented (check if var has data type of numbar, numbr, or troof, else error)
-		if(checkIfVarExist(loopStartArr[4])) {
-			String variable = getValueVarident(loopStartArr[4]);
-			if(variable.length()==0 || !variable.matches(literals)) return -1; //must have valid data type (numbr, numbar, troof only)
-			if(variable.matches("\\b"+Lexeme.TROOF[1]+"\\b")) updateVar(loopStartArr[4],"0");
-			else if(variable.matches("\\b"+Lexeme.TROOF[0]+"\\b")) updateVar(loopStartArr[4],"1");
+		if(findLoopError(tokensProgram, i, loopStartArr)==-1) { //-1 means error
+			return -1;
 		}
-		
 		//find where IM OUTTA YR
 		int numLoop = 1; //this is for nested loop 
 		for(int a=i+1;i<tokensProgram.size();a++) {
@@ -1718,24 +1743,41 @@ public class GameStage{
 				break;
 			}
 		}
-		if(end==-1) return -1;
+		if(end==-1) {
+			this.errorMessage = "IM OUTA YR not found in loop, error!";
+			return -1;
+		}
 		
 		//loop identifer must be paired/must
-		if(tokensProgram.get(end).length!=2 || !loopStartArr[1].contentEquals(tokensProgram.get(end)[1])) return -1;
+		if(tokensProgram.get(end).length!=2) {
+			this.errorMessage = "IM OUTA YR has excess operands, error! --> " + Arrays.deepToString(tokensProgram.get(end)).replaceAll("[\\[\\]\\,]", "");
+			return -1;
+		}else if(!loopStartArr[1].contentEquals(tokensProgram.get(end)[1])){
+			this.errorMessage = "IM IN YR loop identifier is not the same with IM OUTA YR loop identifier, error! --> \n\t" + Arrays.deepToString(tokensProgram.get(start)).replaceAll("[\\[\\]\\,]", "") +"\n\t" + Arrays.deepToString(tokensProgram.get(end)).replaceAll("[\\[\\]\\,]", "");
+			return -1;
+		}
 		
 		//increment or decrement based if UPPIN/NERFIN respectively
-		if(!tokensProgram.get(start)[2].matches(Lexeme.UPPIN+"|"+Lexeme.NERFIN)) return -1;
+		if(!tokensProgram.get(start)[2].matches(Lexeme.UPPIN+"|"+Lexeme.NERFIN)) {
+			this.errorMessage = tokensProgram.get(start)[2] + " is invalid to increment or decrement the loop, error! --> " + Arrays.deepToString(tokensProgram.get(start)).replaceAll("[\\[\\]\\,]", "");
+			return -1;
+		}
 		updateVal = loopStartArr[2].matches(Lexeme.UPPIN)? 1:-1;
 		
 		//getting the blockStatement to be executed
 		ArrayList<String[]> blockStatements = new ArrayList<String[]>();
 		for(int c=start+1;c<end;c++) blockStatements.add(tokensProgram.get(c));
 
-		
-
-		//getting the condition statement: outputs WIN breakk, FAIL continue
+		//getting the condition statement: outputs WIN (break loop), FAIL (continue loop)
 		ArrayList<String> conditionStatement = new ArrayList<String>();
-		if(!tokensProgram.get(start)[6].matches(Lexeme.boolOperator.substring(0,Lexeme.boolOperator.length()-1))) return -1; //BOTH SAEM because if: WIN - stop loop, FAIL = continue loop
+		if(tokensProgram.get(start)[6].matches(Lexeme.MKAY)) {
+			this.errorMessage = "Invalid MKAY in the start of loop condition expression, error! --> " + Arrays.deepToString(tokensProgram.get(start)).replaceAll("[\\[\\]\\,]", "");
+			return -1; 
+		}else if(!tokensProgram.get(start)[6].matches(Lexeme.boolOperator.substring(0,Lexeme.boolOperator.length()-1))) {
+			this.errorMessage = "Boolean expression can only be used for loop condition, error!";
+			return -1; //BOTH SAEM because if: WIN - stop loop, FAIL = continue loop
+		}
+		
 		for(int b=6;b<loopStartArr.length;b++) { //6 because 6 is the constant value of index in an array of where the condition checking begins
 			conditionStatement.add(tokensProgram.get(start)[b]);
 		}
@@ -1750,8 +1792,14 @@ public class GameStage{
 			if(isContinueLoop!=null && isContinueLoop.equals(Lexeme.TROOF[0])) break; //if WINL : break the loop
 			
 			//if FAIL, execute
-			doSyntaxAnalysis(blockStatements);
+			String loopResult = doSyntaxAnalysis(blockStatements);
+			if(loopResult==null){
+				return -1;
+			}else if(loopResult.matches("break")) {
+				break;
+			}
 			
+			//increment/decrement the variable (depends if UPPIN, NERFIN)
 			String varUpdate = getValueVarident(loopStartArr[4]);
 			if(varUpdate!=null && varUpdate.matches(Lexeme.NUMBAR)) {
 				Float newval = Float.parseFloat(getValueVarident(loopStartArr[4]))+ updateVal;
@@ -1760,8 +1808,9 @@ public class GameStage{
 				int newval = Integer.parseInt(getValueVarident(loopStartArr[4]))+updateVal;
 				updateVar(loopStartArr[4],Integer.toString(newval));
 			}
-			if(checkerInfiniteLoop>=1000) return -2; //ideal scenario (online interpreter only allowed at most 1,000 iterations, else infinite loop error)
+			if(checkerInfiniteLoop>=500) return -2; //ideal scenario (online interpreter only allowed at most 1,000 iterations, else infinite loop error)
 			checkerInfiniteLoop++;
+			
 		}
 		return end;
 	}
@@ -1982,8 +2031,9 @@ public class GameStage{
 					return null;
 				}
 			}
-//			else if(tokenArrLine[0].matches(Lexeme.GTFO)) {}
-			else if(tokenArrLine[0].matches(Lexeme.WTF)) {
+			else if(tokenArrLine[0].matches(Lexeme.GTFO)) {
+				return "break";
+			}else if(tokenArrLine[0].matches(Lexeme.WTF)) {
 				try {
 					int ans = doSWITCH(tokensPerLine,i);
 					if(ans!=-1) i+=ans;
@@ -2039,11 +2089,15 @@ public class GameStage{
 //            	try {
             		if(inputUser.getText().replaceAll("[\\s]*","").length()>0) {
                 		ArrayList<String[]> tokensPerLine = doLexicalAnalysis();
-                		
                 		if(Lexeme.HAI_KTHXBYE_ERROR) {
                 			displayErrorMessage();
                 		}else if(tokensPerLine!=null) {
-                			if(doSyntaxAnalysis(tokensPerLine)!=null) {
+                			String result = doSyntaxAnalysis(tokensPerLine);
+                			if(result!=null) {
+                				if(result.matches("break")) {
+                					errorMessage = "GTFO is implemented without switchcase or loop statements, error!";
+                					displayErrorMessage();
+                				}
                 			}else {
                 				displayErrorMessage();
                 			}
