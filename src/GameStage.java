@@ -1044,6 +1044,16 @@ public class GameStage{
 			}
 		}else if(tokenArrLine[0].matches(Lexeme.VISIBLE)) {
 			try {
+				//finding error in supressing new line (bonus = a!)
+				String tempVisibleStr = Arrays.deepToString(tokenArrLine).replaceAll("[\\[\\]\\,]", "");
+				int index = tempVisibleStr.indexOf("a!");
+				while (index >= 0) {
+				    if(index!=tempVisibleStr.length()-2){
+				    	this.errorMessage = "Suppressing newline error! --> " + tempVisibleStr;
+				    	return null;
+				    }
+				    index = tempVisibleStr.indexOf("a!", index+1);
+				}
 				if(tokenArrLine[tokenArrLine.length-1].contentEquals("a!")) isNewLine=false;
 				String ans = doVISIBLE(tokenArrLine);	
 				if(ans!=null) {
@@ -1064,7 +1074,9 @@ public class GameStage{
 	
 	private void printFormatVisible(String temp){
 		//bonus#1
+		System.out.println(temp);
 		String ans = temp.replace("a!","");
+		
 		if(isNewLine) displayResult.setText(displayResult.getText()+ans+"\n");
 		else displayResult.setText(displayResult.getText()+ans);
 		this.isNewLine=true;
@@ -1691,7 +1703,6 @@ public class GameStage{
 		return newRemovedComments;
 	}
 	
-	
 	private int findLoopError(ArrayList<String[]> tokensProgram, int i, String[] loopStartArr) {
 		//checking error for loop identifier
 		if(loopStartArr[1].matches(Lexeme.keywordsNoLitVar)) {
@@ -1824,7 +1835,6 @@ public class GameStage{
 		}
 		return end;
 	}
-	
 	
 	private void findErrorSyntaxAnalysis(String[] lexList) { //this function also returns an syntax error, if any
 		String lexeme = lexList[0];
