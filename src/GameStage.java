@@ -263,7 +263,14 @@ public class GameStage{
 				if(regexSUM_OF) ans = A+B;
 				else if(regexDIFF_OF) ans = B-A;
 				else if(regexPROD_OF) ans = A*B;
-				else if(regexQUO_OF) ans = B/A;
+				else if(regexQUO_OF) {
+					String divisor = String.valueOf(A);
+					if(divisor.matches("0+|0+.0+")) {
+						this.errorMessage = "Division by zero, error!";
+						return null;
+					}
+					ans = B/A;
+				}
 				else if(regexMOD_OF) ans = B%A;
 				else if(regexBIGGR_OF) ans = (B>A)? B:A;
 				else if(regexSMALLR_OF) ans = (A<B)? A:B;
