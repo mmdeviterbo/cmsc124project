@@ -1073,6 +1073,11 @@ public class GameStage{
 	private void storeGIMMEH(String variable, String newStr, String oldStr, ArrayList<String[]> continueLine) {
 		boolean isSuccessInput=false;
 		if(newStr.contains(oldStr)) {
+			int indexSubStr = newStr.indexOf(oldStr);
+			if(indexSubStr!=0) {
+				this.errorMessage="Error input, enter on the last line!";
+				displayErrorMessage();
+			}
 			for(SymbolTable row : symbolTable.getItems()) {
 				if(row.getIdentifier().equals(variable)) {
 					newStr = newStr.replace(oldStr,"").replaceAll("[\"\n]",""); 
