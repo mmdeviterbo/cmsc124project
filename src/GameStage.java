@@ -1766,7 +1766,20 @@ public class GameStage{
 		
 		//getting the blockStatement to be executed
 		ArrayList<String[]> blockStatements = new ArrayList<String[]>();
-		for(int c=start+1;c<end;c++) blockStatements.add(tokensProgram.get(c));
+		for(int c=start+1;c<end;c++) {
+			
+			//finding deadcode if exist
+			if(tokensProgram.get(c)[0].matches(Lexeme.GTFO)) {
+				if(tokensProgram.get(c).length>1) {
+					this.errorMessage = "GTFO has excess operands, error!" + Arrays.deepToString(tokensProgram.get(c)).replaceAll("[\\[\\]\\,]", "");
+				}
+				if(c+1<end && !tokensProgram.get(c+1)[0].matches(Lexeme.IM_OUTTA_YR+"|"+Lexeme.KTHXBYE+"|"+Lexeme.OMG+"|"+Lexeme.OMGWTF)){	
+					this.errorMessage = "Deadcode found after GTFO, error! --> " + Arrays.deepToString(tokensProgram.get(c+1)).replaceAll("[\\[\\]\\,]", "");
+					return -1;
+				}
+			}
+			blockStatements.add(tokensProgram.get(c));
+		}
 
 		//getting the condition statement: outputs WIN (break loop), FAIL (continue loop)
 		ArrayList<String> conditionStatement = new ArrayList<String>();
@@ -2123,7 +2136,7 @@ public class GameStage{
 //  4.) loop (with nesting)
 //	5.) typecast in arithmetic operation, "124" to 124
 //  6.) typecast from numbr to numbar,   2.0 to 2	(no specs related to this, we follow the rule in online interpreter) and they are equal/WIN
-//  7.) deadcode in switch, after gtfo
+//  7.) deadcode in switch,loop after gtfo
 //	8.) MEBBEE added
 //  9.) NO WAI (if else) is optional
 
