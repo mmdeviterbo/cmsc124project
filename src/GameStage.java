@@ -87,10 +87,9 @@ public class GameStage{
             }else {
             	try(BufferedReader reader = new BufferedReader(new FileReader(selectedFile))) {
             		if(selectedFile.toString().matches(".+\\.lol$")==false) {
-            			inputUser.setText("The files inserted is not a LOLCODE program!");
+            			inputUser.setText("File inserted is not a LOLCODE program!");
             			return;
             		}
-            		
             		String line;
             		String load = "";
             		while((line = reader.readLine()) != null){
@@ -163,33 +162,7 @@ public class GameStage{
 		this.errorMessage="";
 		inputUser.setPrefWidth(GameStage.WINDOW_WIDTH/3);
 		inputUser.setWrapText(true);
-		
-		//sample input for test only
-		inputUser.setText("HAI\n");
-		
-		inputUser.setText(inputUser.getText() + 
-				  "IT R 18\n"
-				  + "WTF?\n"
-				  + "OMG 1\n"
-				  + "   VISIBLE \"I'm the only oneeeee\"\n"
-				  + "   GTFO\nOMG 3\n"
-				  + "   VISIBLE \"third time's a charm\"\n"
-				  + "OMG 5\n"
-				  + "   VISIBLE \"no one wants a five\"\n"
-				  + "   GTFO\n"
-				  + "OMGWTF\n"
-				  + "  VISIBLE \"ano na\"\n"
-				  + "  VISIBLE IT\n"
-				  + "OIC"
-				);
-		
-		inputUser.setText(inputUser.getText() + "\nKTHXBYE");		
-		String str = "hello" + "\n" + "hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n" +"hello" + "\n";
-		str = str + str + str; //sample string lang if magsscroll yung window ng "Lexeme" at "Symbol Table"
-		
-		
-		displayLexeme.setText(str);
-		displaySymbolTable.setText(str);
+	
 	    btnExecute.setPrefWidth(GameStage.WINDOW_WIDTH*1.01);
 	    btnExecute.setStyle("-fx-background-color: #ffffff; -fx-background-radius: 5;");
 	    btnExecute.setFont(Font.font("Courier New", FontWeight.BOLD, FontPosture.REGULAR, 25));
@@ -1934,10 +1907,12 @@ public class GameStage{
 				if(lex.matches(Lexeme.INVALIDdecimal)) {
 					this.errorMessage = lex + " has invalid decimal value, error";					
 					return null;
-				}else if(lex.matches(Lexeme.INVALIDdigit)) {
+				}
+				if(lex.matches(Lexeme.INVALIDdigit)) {
 					 this.errorMessage = lex + "  literal has invalid positive sign, error!";
 					return null;
-				}else if(lex.matches(Lexeme.INVALIDvar)) {
+				}
+				if(lex.matches(Lexeme.INVALIDvar)) {
 					if(lex.matches(Lexeme.NUMBAR+"|"+Lexeme.NUMBR)) continue;
 					 this.errorMessage = lex + " is invalid variable identifier, error!";
 					return null;
