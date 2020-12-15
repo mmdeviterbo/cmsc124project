@@ -596,10 +596,8 @@ public class GameStage{
 					break;
 				}else if(i+2<lexList.length && lexList[i+1].matches("\\bAN\\b") && lexList[i+2].matches(regexNum+"|"+mathQuote+"|"+Lexeme.VARIDENT)) {
 					if(!lexList[i+2].matches(Lexeme.keywordsNoLitVar)) {
-						operandA.add(lexList[i+1]);
-						if(lexList[i+2].matches(Lexeme.NUMBAR) && lexList[i+2].matches("\\b[0-9]+[.]0+\\b")) {
-							lexList[i+2] = lexList[i].split("\\.")[0];
-						}else if(lexList[i+2].matches(Lexeme.VARIDENT) && !lexList[i+2].matches(regexNum+"|"+mathQuote)) {
+						operandA.add(lexList[i+1]);		
+						if(lexList[i+2].matches(Lexeme.VARIDENT) && !lexList[i+2].matches(regexNum+"|"+mathQuote)) {
 							String temp = getValueVarident(lexList[i+2]);
 							if(temp==null) return null;
 							lexList[i+2] = temp;
@@ -620,20 +618,18 @@ public class GameStage{
 				if(lexList[j].matches(regexNum+"|"+mathQuote)) {
 					operandB.add(lexList[j]);
 					if(j+1!=lexList.length && i==j) {
-						System.out.println(lexList[j]);
 						this.errorMessage= "Comparison expression has excess operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 						return null;
 					}
 				}else if(lexList[j].matches(Lexeme.VARIDENT)) {
+					System.out.println(625);
 					String temp = getValueVarident(lexList[j]);
 					if(temp==null) return null;
 					lexList[j] = temp;
 					operandB.add(lexList[j]);
 				}else if(j+2<lexList.length && lexList[j+1].matches("\\bAN\\b") && lexList[j+2].matches(regexNum+"|"+Lexeme.VARIDENT)) {
 					operandB.add(lexList[j+1]);
-					if(lexList[j+2].matches(Lexeme.NUMBAR) && lexList[j+2].matches("[0-9]+[.]0+")) {
-						lexList[j+2] = lexList[j+2].split("\\.")[0];
-					}else if(lexList[j+2].matches(Lexeme.VARIDENT)) {
+					if(lexList[j+2].matches(Lexeme.VARIDENT)) {
 						String temp = getValueVarident(lexList[j+2]);
 						if(temp==null) return null;
 						lexList[j+2] = temp;
@@ -662,10 +658,20 @@ public class GameStage{
 		if(!valueA.matches(Lexeme.NUMBAR+"|"+Lexeme.NUMBR)) return Lexeme.TROOF[1];
 		if(!valueB.matches(Lexeme.NUMBAR+"|"+Lexeme.NUMBR)) return Lexeme.TROOF[1];
 		
-		if(valueA.matches("[0-9]+[.]0+")) valueA = valueA.split("\\.")[0]; //if decimal contains 0's, then it will be then typecast to integer
-		if(valueB.matches("[0-9]+[.]0+")) valueB = valueB.split("\\.")[0]; //if decimal contains 0'sthen it will be then typecast to integer
+		if(valueA.matches("^[0-9]+[.]0+$")) valueA = valueA.split("\\.")[0]; //if decimal contains 0's, then it will be then typecast to integer
+		if(valueB.matches("^[0-9]+[.]0+$")) valueB = valueB.split("\\.")[0]; //if decimal contains 0'sthen it will be then typecast to integer
+		if(valueA.contains(valueB)) {
+			String[] temp = valueA.split(valueB);
+			if(temp.length>1 && temp[1].matches("^0+$")) {
+				valueA = valueB;
+			}
+		}else if(valueB.contains(valueA)){
+			String[] temp = valueB.split(valueA);
+			if(temp.length>1 && temp[1].matches("^0+$")) {
+				valueB = valueA;
+			}
+		}
 		
-					
 		if(lexList[0].matches(Lexeme.DIFFRINT) && !valueA.contentEquals(valueB)) return Lexeme.TROOF[0];
 		else if(lexList[0].matches(Lexeme.DIFFRINT) && valueA.contentEquals(valueB)) return Lexeme.TROOF[1];
 		if(lexList[0].matches(Lexeme.BOTH_SAEM) && valueA.contentEquals(valueB)) return Lexeme.TROOF[0];
@@ -833,7 +839,6 @@ public class GameStage{
 						this.errorMessage= "Expression has AN in the end statement, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 						return null;
 					}else if(lexList[i+1].matches("\\bAN\\b")) {
-						System.out.println(78222);
 						this.errorMessage= "Expression has invalid AN AN operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 						return null;
 					}
@@ -1074,7 +1079,6 @@ public class GameStage{
 	
 	private void printFormatVisible(String temp){
 		//bonus#1
-		System.out.println(temp);
 		String ans = temp.replace("a!","");
 		
 		if(isNewLine) displayResult.setText(displayResult.getText()+ans+"\n");
@@ -1293,10 +1297,7 @@ public class GameStage{
 					
 					String ans = allOperations(passToOp);
 					if(ans!=null) outputPrint.add(ans);
-					else {
-						this.errorMessage="Invalid expression,error! --> " +  Arrays.deepToString(passToOp).replaceAll("[\\[\\]\\,]", "");
-						return null;
-					}
+					else return null;
 				}else {
 					this.errorMessage="Expression has missing operands, error! --> " +  Arrays.deepToString(tempStore.toArray()).replaceAll("[\\[\\]\\,]", "");
 					return null;
