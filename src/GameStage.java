@@ -1800,8 +1800,6 @@ public class GameStage{
 			conditionStatement.add(tokensProgram.get(start)[b]);
 		}
 	
-		int checkerInfiniteLoop = 0; //this stops if it exceeds 1,000 iterations assuming 1,000 is the maximum statck size (ideal) -- to avoid infinite loop
-		
 		while(true) {	
 			//gettinig the expression resulting to: WIN/FAIL
 			String[] conditionStatementArr = new String[conditionStatement.size()];
@@ -1826,9 +1824,8 @@ public class GameStage{
 				int newval = Integer.parseInt(getValueVarident(loopStartArr[4]))+updateVal;
 				updateVar(loopStartArr[4],Integer.toString(newval));
 			}
-			if(checkerInfiniteLoop>=500) return -2; //ideal scenario (online interpreter only allowed at most 1,000 iterations, else infinite loop error)
-			checkerInfiniteLoop++;
-			
+			if(Lexeme.NUM_ITERATION>=1000) return -2; //ideal scenario (online interpreter only allowed at most 1,000 iterations, else infinite loop error)
+			Lexeme.NUM_ITERATION++;
 		}
 		return end;
 	}
