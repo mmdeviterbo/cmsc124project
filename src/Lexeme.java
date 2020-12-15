@@ -24,7 +24,7 @@ public class Lexeme{
 	public static final String ALL_LITERALS = NUMBAR+"|"+NUMBR +"|"+YARN+"|\\b"+TROOF[0]+"\\b|\\b"+TROOF[1]+"\\b|"+TYPE[0]+"|"+TYPE[1]+"|"+TYPE[2]+"|"+TYPE[3] + "|\\bAN\\b";
 	public static final String INVALIDdigit = "\\+\\d*\\.*\\d*";
 	public static final String INVALIDdecimal = "-*\\d+\\.+[.a-zA-Z_]+|-*\\d+\\.+";
-	public static final String INVALIDvar = "[-\\+\\d_][.\\w]+|\\b[a-zA-Z][\\w]*[.][\\w]*|.*[^\\w\\s]+.*";
+	public static final String INVALIDvar = "[-\\+\\d_][.\\w]+|\\b[a-zA-Z][\\w]*[.][\\w]*|[^\"]*[^\\w\\s\\?\\!]+[^\"]*";
 	
 	//file naming and formatting
 	public static final String HAI =  "\\bHAI\\b";

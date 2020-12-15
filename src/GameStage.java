@@ -510,10 +510,11 @@ public class GameStage{
 	}
 	
 	@SuppressWarnings("unused")
-	private String setComparisonOperation(String[] lexList) {		
+	private String setComparisonOperation(String[] lexList) {	
+		
 		String regexNum = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7);
 		String regexMath = Lexeme.boolOperator + Lexeme.mathOperator.substring(0,Lexeme.mathOperator.length()-1);
-		String mathQuote = "\""+Lexeme.NUMBR +"\"|\"" +Lexeme.NUMBAR_LITERAL + "\"";
+		String mathQuote = "\""+Lexeme.NUMBR +"\"|\"" +Lexeme.NUMBAR + "\"";
 		
 		if(lexList.length<4) { //comparison expression must has at least 4 operands-operator e.g DIFFRINT 1 AN 1
 			this.errorMessage= "Comparison expression has missing operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
@@ -553,6 +554,7 @@ public class GameStage{
 		for(i=1;i<lexList.length;i++) { //getting operandA
 			if(lexList[i].matches(regexNum+"|"+mathQuote+"|"+Lexeme.VARIDENT) && !lexList[i].matches(regexMath+"|\\bAN\\b")) {
 				if(lexList[i].matches(regexNum+"|"+mathQuote)) { //literal operand
+					lexList[i] = lexList[i].replaceAll("\"", "");
 					operandA.add(lexList[i]);
 				}else if(lexList[i].matches(Lexeme.VARIDENT) && !lexList[i].matches(Lexeme.keywordsNoLitVar)) { //varident operand
 					String temp = getValueVarident(lexList[i]);
@@ -589,13 +591,13 @@ public class GameStage{
 		for(int j=i;j<lexList.length;j++) { //getting operandB
 			if(lexList[j].matches(regexNum+"|"+ mathQuote + "|"+ Lexeme.VARIDENT) && !lexList[j].matches(regexMath+"|\\bAN\\b")) {
 				if(lexList[j].matches(regexNum+"|"+mathQuote)) {
+					lexList[j] = lexList[j].replaceAll("\"", "");
 					operandB.add(lexList[j]);
 					if(j+1!=lexList.length && i==j) {
 						this.errorMessage= "Comparison expression has excess operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 						return null;
 					}
 				}else if(lexList[j].matches(Lexeme.VARIDENT)) {
-					System.out.println(625);
 					String temp = getValueVarident(lexList[j]);
 					if(temp==null) return null;
 					lexList[j] = temp;
@@ -633,12 +635,12 @@ public class GameStage{
 		
 		if(valueA.matches("^[0-9]+[.]0+$")) valueA = valueA.split("\\.")[0]; //if decimal contains 0's, then it will be then typecast to integer
 		if(valueB.matches("^[0-9]+[.]0+$")) valueB = valueB.split("\\.")[0]; //if decimal contains 0'sthen it will be then typecast to integer
-		if(valueA.contains(valueB)) {
+		if(valueA.contains(valueB) && valueB.contains(".")) {
 			String[] temp = valueA.split(valueB);
 			if(temp.length>1 && temp[1].matches("^0+$")) {
 				valueA = valueB;
 			}
-		}else if(valueB.contains(valueA)){
+		}else if(valueB.contains(valueA) && valueA.contains(".")){
 			String[] temp = valueB.split(valueA);
 			if(temp.length>1 && temp[1].matches("^0+$")) {
 				valueB = valueA;
@@ -2079,6 +2081,8 @@ public class GameStage{
     	errorMessage=""; 
 	}
 	
+	
+	
 	private void btnExecuteHandle() { //get and process the code input by user from texarea named "inputUser"
 		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() { 
             public void handle(ActionEvent e)
@@ -2119,7 +2123,7 @@ public class GameStage{
 //	2.) SMOOSH
 //	3.) loop (without nesting)
 //  4.) loop (with nesting)
-//	5.) typecast in arithmetic operation, "124" to 124
+//	5.) typecast in arithmetic operation, comparison operation "124" to 124
 //  6.) typecast from numbr to numbar,   2.0 to 2	(no specs related to this, we follow the rule in online interpreter) and they are equal/WIN
 //  7.) deadcode in switch,loop after gtfo
 //	8.) MEBBEE added
