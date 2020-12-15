@@ -1137,12 +1137,9 @@ public class GameStage{
 	private String checkHaiKthxbye(String[] programInput) {//this function if HAI/KTHXBYE is correctly implemented
 		int len = programInput.length-1;
 		if(len==-1) return null;
-
-		String HAItemp = programInput[0].replaceAll("BTW.*","");
-		HAItemp = HAItemp.replaceAll("[\\s\\n]","");
-		String KTHXBYEtemp = programInput[len].replaceAll("BTW.*","");
-		KTHXBYEtemp = KTHXBYEtemp.replaceAll("[\\s\\\n]","");
 		
+		String HAItemp = programInput[0].replaceAll("\\s","");
+		String KTHXBYEtemp = programInput[len].replaceAll("\\s","");
 		if(HAItemp.contains("HAI") && HAItemp.length()>3) {
 			this.errorMessage = programInput[0] + " is not found, error!";
 			return null;
@@ -1154,9 +1151,9 @@ public class GameStage{
 		//if hai or kthxbye has multiple occurences
 		int HAILen = 0; int KTHXBYELen = 0;
 		for(int i=0;i<programInput.length;i++) {
-			programInput[i] = programInput[i].replaceAll("BTW.*","");
-			if(programInput[i].matches(Lexeme.HAI)) HAILen++;
-			else if(programInput[i].matches(Lexeme.KTHXBYE)) KTHXBYELen++;
+			String tempStr = programInput[i].replaceAll("\\s", "");
+			if(tempStr.matches(Lexeme.HAI)) HAILen++;
+			else if(tempStr.matches(Lexeme.KTHXBYE)) KTHXBYELen++;
 		}
 		if(HAILen!=1 || KTHXBYELen!=1) {
 			if(HAILen==0) this.errorMessage="HAI is missing, error!";
@@ -1165,8 +1162,6 @@ public class GameStage{
 			else if(KTHXBYELen>1) this.errorMessage="Found multiple KTHXBYE, error!";
 			return null;
 		}
-		this.lexemeTable.getItems().add(new Lexeme(programInput[0],Lexeme.CODE_DELIMETER));
-		this.lexemeTable.getItems().add(new Lexeme(programInput[len],Lexeme.CODE_DELIMETER));
 		return "success";
 	}
 	
@@ -1681,7 +1676,7 @@ public class GameStage{
 			if(tempLines[i].matches("[\\s]*OBTW[\\s\\w]*")) {
 				boolean isFoundTLDR = false;
 				while(i<tempLines.length) {
-					if(tempLines[i].matches("[\\s\\w]*TLDR")) {
+					if(tempLines[i].matches("[\\s\\w]*TLDR[ ]*")) {
 						isFoundTLDR = true;
 						break;
 					}
@@ -1970,10 +1965,12 @@ public class GameStage{
 				if(classification!=null) {
 					if(arrLexeme[a].matches(Lexeme.YARN) && !checkIfLexemeExist(arrLexeme[a])) {
 						String removeQuote = arrLexeme[a].replace(Lexeme.QUOTE, "");
+						
 						if(!checkIfLexemeExist(Lexeme.QUOTE)) this.lexemeTable.getItems().add(new Lexeme(Lexeme.QUOTE,Lexeme.STRING_DELIMETER));
 						this.lexemeTable.getItems().add(new Lexeme(removeQuote,classification));
 					}
 					else {
+						if(classification.equals("Code Delimeter")) arrLexeme[a] = arrLexeme[a].replaceAll(" ", "");
 						if(!checkIfLexemeExist(arrLexeme[a])) this.lexemeTable.getItems().add(new Lexeme(arrLexeme[a],classification));
 					}
 				}else {

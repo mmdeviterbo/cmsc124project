@@ -142,7 +142,7 @@ public class Lexeme{
 
 	//compiled regex in every catergory (input/output, expression, comments, conditional statements)
 	public static final String loopOperator = Lexeme.IM_IN_YR +"|" + Lexeme.IM_OUTTA_YR + "|" + Lexeme.YR + "|" + Lexeme.UPPIN + "|" + Lexeme.NERFIN + "|" + Lexeme.TIL + "|";
-	public static final String startEnd = Lexeme.loopOperator + Lexeme.HAI + "|" + Lexeme.KTHXBYE + Lexeme.GTFO + "|";
+	public static final String startEnd = Lexeme.loopOperator + Lexeme.HAI + "|" + Lexeme.KTHXBYE + "|" +Lexeme.GTFO + "|";
 	public static final String inputOutput = Lexeme.VISIBLE + "|" + Lexeme.GIMMEH + "|";
 	public static final String itz = Lexeme.ITZ + "|";
 	public static final String comments = Lexeme.BTW + "|" + Lexeme.OBTW + "|" + Lexeme.TLDR + "|";
@@ -150,7 +150,7 @@ public class Lexeme{
 	public static final String conditional = Lexeme.O_RLY + "|" + Lexeme.YA_RLY + "|" + Lexeme.MEBBE + "|" + Lexeme.NO_WAI + "|" + Lexeme.WTF + "|" + Lexeme.OMGWTF + "|" + Lexeme.OMG + "|" + Lexeme.OIC + "|";
 	public static final String mathOperator = Lexeme.SUM_OF +"|" + Lexeme.DIFF_OF + "|" + Lexeme.PRODUKT_OF + "|" + Lexeme.QUOSHUNT_OF + "|" + Lexeme.MOD_OF + "|" + Lexeme.BIGGR_OF + "|" + Lexeme.SMALLR_OF + "|";
 	public static final String boolOperator = Lexeme.BOTH_OF +  "|" + Lexeme.EITHER_OF +  "|" + Lexeme.WON_OF +  "|" + Lexeme.ANY_OF +  "|" + Lexeme.ALL_OF + "|" +Lexeme.NOT + "|"+Lexeme.BOTH_SAEM + "|" + Lexeme.DIFFRINT + "|"+Lexeme.MKAY+"|";	
-	public static final String combineRegex = startEnd + I_HAS_CONSTRUCT + itz + inputOutput + concat + conditional + mathOperator + boolOperator + ALL_LITERALS+"|a!|"+VARIDENT; 
+	public static final String combineRegex = startEnd + I_HAS_CONSTRUCT + itz + inputOutput + concat + conditional + mathOperator + boolOperator + ALL_LITERALS+"|\\ba!\\b|"+VARIDENT; 
 	public static final String keywordsNoLitVar = startEnd + I_HAS_CONSTRUCT + itz + inputOutput + concat + conditional + mathOperator + boolOperator + "\\bAN\\b";
 
 	
