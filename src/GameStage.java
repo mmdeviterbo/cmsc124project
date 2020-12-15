@@ -1078,12 +1078,15 @@ public class GameStage{
 					displayResult.setEditable(false);
 					displayResult.setText(displayResult.getText()+"\n");
 					if(displayResult.getText().charAt(0)=='\n') displayResult.setText(displayResult.getText().substring(1)); //printing format only
+					
+					displayResult.setOnKeyPressed(new EventHandler<KeyEvent>(){public void handle(KeyEvent ke){}});
 					doSyntaxAnalysis(continueLine);
 					return;
 				}
 			}
 		}
 		if(!isSuccessInput) {
+			displayResult.setOnKeyPressed(new EventHandler<KeyEvent>(){public void handle(KeyEvent ke){}});
 			displayResult.setEditable(false);
 			this.errorMessage = "Error input, enter on the last line!";
 			displayErrorMessage();
@@ -1114,7 +1117,6 @@ public class GameStage{
     	String oldStr = displayResult.getText();    	
     	
     	displayResult.setOnKeyPressed(new EventHandler<KeyEvent>(){
-    	   @Override
     	   public void handle(KeyEvent ke){
     	     if(ke.getCode().equals(KeyCode.ENTER)){
     	    	 String newStr = displayResult.getText();
@@ -1122,6 +1124,9 @@ public class GameStage{
     	     }
     	   }
     	});
+    	
+    	
+    	
     	return "success";
 	}
 	
