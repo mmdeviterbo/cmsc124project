@@ -330,9 +330,14 @@ public class GameStage{
 					this.errorMessage = "Invalid varidents in arithmetic expression, error --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 					return null;
 				}
+				if(lexList[i].matches("\\b"+Lexeme.TROOF[0]+"\\b|\\b"+Lexeme.TROOF[1]+"\\b")) {
+					this.errorMessage = lexList[i] + " is not NUMBR/NUMBAR of data type, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+					return null;
+				}
 				String valueVar = getValueVarident(lexList[i]);
-				if(valueVar!=null) stackOperation.add(0,valueVar);
-				else return null;
+				if(valueVar!=null) {
+					stackOperation.add(0,valueVar);
+				}else return null;
 			}else {
 				this.errorMessage = "Invalid operand, "+ lexList[i] + ", in arithmetic expression, error --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 				return null;
@@ -354,14 +359,20 @@ public class GameStage{
 		}
 		String ans="";
 		if(stackOperation.size()==2 && (stackOperation.get(index+1)).matches(Lexeme.NOT)) { //not operator - need one operand
-			if(!stackOperation.get(index).matches("\\b"+Lexeme.TROOF[0]+"\\b|\\b"+Lexeme.TROOF[1]+"\\b")) return null;
+			if(!stackOperation.get(index).matches("\\b"+Lexeme.TROOF[0]+"\\b|\\b"+Lexeme.TROOF[1]+"\\b")) {
+				this.errorMessage = stackOperation.get(index) + " is not TROOF data type, error!";
+				return null;
+			}
 			ans = stackOperation.remove(index).matches("\\b"+Lexeme.TROOF[0]+"\\b")? Lexeme.TROOF[1] : Lexeme.TROOF[0];
 			stackOperation.remove(index);
 			stackOperation.add(index,ans);
 		}else if(stackOperation.size()>2) { //may valid expression
 			String A,B;
 			if(tempB.matches(Lexeme.NOT)) {
-				if(!tempA.matches("\\b"+Lexeme.TROOF[0]+"\\b|\\b"+Lexeme.TROOF[1]+"\\b")) return null;
+				if(!tempA.matches("\\b"+Lexeme.TROOF[0]+"\\b|\\b"+Lexeme.TROOF[1]+"\\b")) {
+					this.errorMessage = stackOperation.get(index) + " is not TROOF data type, error!";
+					return null;
+				}
 				A = stackOperation.remove(index).matches("\\b"+Lexeme.TROOF[0]+"\\b")? Lexeme.TROOF[1]: Lexeme.TROOF[0];
 				stackOperation.remove(index);
 				stackOperation.add(index,A);
