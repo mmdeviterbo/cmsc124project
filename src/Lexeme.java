@@ -106,7 +106,6 @@ public class Lexeme{
 	//errors - this will act as a flag, this possible errors must be checked only once (start of the run) --> before proceeding to syntaxAnalysis
 	public static boolean HAI_KTHXBYE_ERROR = false;
 	public static boolean COMMENT_ERROR = false;
-	public static boolean DEADCODE = false;
 	//========================================= END OF LEXEME ===========================================
 
 
@@ -278,8 +277,6 @@ public class Lexeme{
 	public static void resetErrorFlags() {
 		Lexeme.HAI_KTHXBYE_ERROR=false;
 		Lexeme.COMMENT_ERROR=false;
-		Lexeme.DEADCODE=false;
-		
 	}
 	
 	

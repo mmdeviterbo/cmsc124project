@@ -691,24 +691,6 @@ public class GameStage{
 		}
 	}
 	
-	private String checkGFTO(ArrayList<String[]> tokensPerLine) {
-		//check if there's unreachable code after GTFO keyword
-		int index=0;
-		for(String[] row : tokensPerLine) {
-			if(row[0].matches(Lexeme.GTFO)) {
-				if(index+1<tokensPerLine.size()) {
-					if(!tokensPerLine.get(index+1)[0].matches(Lexeme.OMG+"|"+Lexeme.OMGWTF+"|"+Lexeme.OIC+"|"+Lexeme.IM_OUTTA_YR+"|"+Lexeme.KTHXBYE)) {
-						Lexeme.DEADCODE=true;
-						this.errorMessage="Deadcode found, error starts at --> " +  Arrays.deepToString(tokensPerLine.get(index+1)).replaceAll("[\\[\\]\\,]", "");
-						return null;
-					}
-				}
-			}
-			index++;
-		}
-		return "succes";
-	}
-	
 	private String findErrorIHAS(String[] lexList) {
 		// [I HAS A, num, ITZ, 0]
 		//    0       1    2   3
@@ -1340,7 +1322,7 @@ public class GameStage{
 		return ITval; //if no error found
 	}
 	
-	private String findErrorInIFELSE(int isO_RLY, int isYA_RLY, int isNO_WAI, int isOIC, int increment, ArrayList<Integer> mebbeIndeces) {
+	private String findErrorInIFELSE(int isO_RLY, int isYA_RLY, int isNO_WAI, int isOIC, int increment, ArrayList<Integer> mebbeIndeces, ArrayList<String[]> tokensProgram) {
 		int lenMebbeIndeces = mebbeIndeces.size();
 		
 		if(isYA_RLY==-1 || isOIC==-1) {
@@ -1357,6 +1339,45 @@ public class GameStage{
 				this.errorMessage = "NO WAI is not found in the last condition statement, error!";
 				return null;
 			}
+		}
+		//checking for if codeblocks exists (codeblock is required for every conditional statements)
+		if(mebbeIndeces.size()!=0) {
+			int firstMebbe = mebbeIndeces.get(0);
+			if(firstMebbe-isYA_RLY==1) { //between YA RLY and first mebbe
+				this.errorMessage = "Codeblock in YA RLY not found, error! --> " + Arrays.deepToString(tokensProgram.get(firstMebbe)).replaceAll("[\\[\\]\\,]", "");
+				return null;
+			}else if(isNO_WAI!=-1) { //between last mebbe and NO WAI (if exists)
+				int lastMebbe = mebbeIndeces.get(mebbeIndeces.size()-1); 
+				if(isNO_WAI-lastMebbe==1) {
+					this.errorMessage = "Codeblock in MEBBE not found, error! --> " + Arrays.deepToString(tokensProgram.get(lastMebbe)).replaceAll("[\\[\\]\\,]", "");
+					return null;
+				}
+			}else if(isNO_WAI==-1) { //between last mebbe and OIC (if NO WAI does not exist)
+				int lastMebbe = mebbeIndeces.get(mebbeIndeces.size()-1); 
+				if(isOIC-lastMebbe==1) {
+					this.errorMessage = "Codeblock in MEBBE not found, error! --> " + Arrays.deepToString(tokensProgram.get(lastMebbe)).replaceAll("[\\[\\]\\,]", "");
+					return null;
+				}
+			}
+			//check for all mebbee if there's exisiting codeblock, else error
+			for(int a=0;a<mebbeIndeces.size()-1;a++) {
+				int A = mebbeIndeces.get(a+1), B = mebbeIndeces.get(a);
+				if(A-B==1) {
+					this.errorMessage = "Codeblock in MEBBE not found, error! --> " + Arrays.deepToString(tokensProgram.get(B)).replaceAll("[\\[\\]\\,]", "");
+					return null;
+				}
+			}
+		}
+		//if there's no mebbe
+		if(isNO_WAI!=-1 && isNO_WAI-isYA_RLY==1) {
+			this.errorMessage = "Codeblock in YA RLY not found, error! --> " + Arrays.deepToString(tokensProgram.get(isYA_RLY)).replaceAll("[\\[\\]\\,]", "");
+			return null;
+		}else if(isNO_WAI!=-1 && isOIC-isNO_WAI==1) {
+			this.errorMessage = "Codeblock in NO WAI not found, error! --> " + Arrays.deepToString(tokensProgram.get(isNO_WAI)).replaceAll("[\\[\\]\\,]", "");
+			return null;
+		}else if(isOIC-isYA_RLY==1) {
+			this.errorMessage = "Codeblock in YA RLY not found, error! --> " + Arrays.deepToString(tokensProgram.get(isYA_RLY)).replaceAll("[\\[\\]\\,]", "");
+			return null;
 		}
 		return "succes";
 	}
@@ -1397,7 +1418,6 @@ public class GameStage{
 			}else if(value==null) return null; //this is only an ERROR if null, but if numbr, numbar, still accepted
 		}
 		if(ij==null) {
-			System.out.println(1336);
 			if(isNO_WAI!=-1) ij=isNO_WAI+"-"+isOIC;
 		}
 		return ij;
@@ -1444,7 +1464,7 @@ public class GameStage{
 		
 		
 		//finding error in IF else construct
-		String isError = findErrorInIFELSE(i, isYA_RLY, isNO_WAI, isOIC, increment, mebbeIndeces);
+		String isError = findErrorInIFELSE(i, isYA_RLY, isNO_WAI, isOIC, increment, mebbeIndeces, tokensProgram);
 		if(isError==null) return -1;
 
 		//check if the IT value has troof (or can be cast) for YA RLY, NO WAIT block
@@ -1489,7 +1509,7 @@ public class GameStage{
 		return increment-1; //-1 if fail, syntax error
 	}
 	
-	private boolean findErrorSwtich(ArrayList<String[]> tokensProgram,int i, int isOMGWTF, int isOIC, ArrayList<Integer> OMGlist) {
+	private boolean findErrorSwtich(ArrayList<String[]> tokensProgram,int i, int isOMGWTF, int isOIC, ArrayList<Integer> OMGlist, ArrayList<Integer> GTFOlist) {
 		if(i+1<tokensProgram.size() && !tokensProgram.get(i+1)[0].matches(Lexeme.OMG)) {
 			this.errorMessage="WTF? is not followed by OMG, error --> " +  Arrays.deepToString(tokensProgram.get(i+1)).replaceAll("[\\[\\]\\,]", "");
 			return true;
@@ -1522,14 +1542,21 @@ public class GameStage{
 				return true;
 			}
 		}
+		//start of finding deadcode
+		for(int a=0;a<GTFOlist.size()-1;a++) {
+			int c = GTFOlist.get(a);
+			if(!tokensProgram.get(c+1)[0].matches(Lexeme.OMG+"|"+Lexeme.OMGWTF+"|"+Lexeme.OIC)) {
+				this.errorMessage = "Deadcode found after GTFO --> " + Arrays.deepToString(tokensProgram.get(c+1)).replaceAll("[\\[\\]\\,]", "");
+				return true;
+			}
+		}
 		
 		return false; //1 means success
 	}
 	
-
-	
 	private int doSWITCH(ArrayList<String[]> tokensProgram,int i) {
 		ArrayList<Integer> OMGlist = new ArrayList<Integer>();
+		ArrayList<Integer> GTFOlist = new ArrayList<Integer>();
 		String regexLiteral = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7);
 		int isOMGWTF=-1, isOIC=-1, increment=0;
 		
@@ -1565,11 +1592,17 @@ public class GameStage{
 			}else if(tokensProgram.get(a)[0].matches(Lexeme.WTF)) {
 				this.errorMessage = "Swtich cases cannot be nested, error!";
 				return -1;
+			}else if(tokensProgram.get(a)[0].matches(Lexeme.GTFO)) {
+					if(tokensProgram.get(a).length>1) {
+						this.errorMessage = "GTFO has excess operands, error!";
+						return -1;
+					}
+					GTFOlist.add(a);
 			}
 		}
 		
 		//finding errors after getting the OMG, OMGWTF, OIC indeces
-		boolean isErrorSwitch = findErrorSwtich(tokensProgram,i, isOMGWTF, isOIC, OMGlist);
+		boolean isErrorSwitch = findErrorSwtich(tokensProgram,i, isOMGWTF, isOIC, OMGlist, GTFOlist);
 		if(isErrorSwitch) return -1;
 		
 		
@@ -1609,7 +1642,6 @@ public class GameStage{
 		}
 		return increment-1;
 	}
-	
 	
 	private String doRemoveComments() { //removes all comments before it goes to syntax analyzer
 		String removeComment = this.inputUser.getText();
@@ -1761,6 +1793,9 @@ public class GameStage{
 		}else if(lexeme.matches(Lexeme.TLDR)) {
 			this.errorMessage = lexeme + " is not implemented with multiline comment statements, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return;
+		}else if(lexeme.matches(Lexeme.GTFO)) {
+			this.errorMessage = lexeme + " is not implemented with switch case statements, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			return;
 		}else if(lexeme.matches(Lexeme.VARIDENT) && !lexeme.matches(Lexeme.keywordsNoLitVar)) {
 			this.errorMessage = lexeme + " variable has unknown operation, error! --> "  + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return;
@@ -1843,13 +1878,7 @@ public class GameStage{
 				arrResult[a] = tokenizedLine.get(a);	
 			}
 			if(arrResult.length!=0) tokenizedOutput.add(arrResult);
-		}
-		
-		//checking for deadcode
-		if(checkGFTO(tokenizedOutput)==null) {
-			return null; 
-		}
-			
+		}	
 //		for(String[] arr : tokenizedOutput) {
 //			System.out.print(Arrays.toString(arr)+ "\n");
 //		}	
@@ -1941,7 +1970,8 @@ public class GameStage{
 				}catch(Exception e) {
 					return null;
 				}
-			}else if(tokenArrLine[0].matches(Lexeme.GTFO)) {}
+			}
+//			else if(tokenArrLine[0].matches(Lexeme.GTFO)) {}
 			else if(tokenArrLine[0].matches(Lexeme.WTF)) {
 				try {
 					int ans = doSWITCH(tokensPerLine,i);
@@ -1973,14 +2003,11 @@ public class GameStage{
 		}
 		return "success";
 	}
-
 	
 	private String checkErrorLogs() {
 		 if(Lexeme.HAI_KTHXBYE_ERROR) {
 			 return null;
 		 }else if(Lexeme.COMMENT_ERROR) {
-			 return null;
-		 }else if(Lexeme.DEADCODE) {
 			 return null;
 		 }
 		return "success";
