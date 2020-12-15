@@ -1460,6 +1460,10 @@ public class GameStage{
 				isNO_WAI = a;
 			}
 			else if(tokensProgram.get(a)[0].matches(Lexeme.MEBBE)) mebbeIndeces.add(a);
+			else if(tokensProgram.get(a)[0].matches(Lexeme.GTFO)) {
+				this.errorMessage = "GTFO is not implemented in switch case statements, error!";
+				return -1;
+			}
 		}
 		
 		
