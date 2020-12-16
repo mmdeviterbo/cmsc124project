@@ -1908,6 +1908,7 @@ public class GameStage{
 	
 	private ArrayList<String[]> doLexicalAnalysis() { 	
 		clearTables();
+		displayResult.setEditable(false);
 		this.symbolTable.getItems().add(new SymbolTable(Lexeme.IT,""));
 		 displayResult.setStyle("-fx-control-inner-background:#000000; -fx-font-family: Consolas; -fx-highlight-fill: #00ff00; -fx-highlight-text-fill: #000000; -fx-text-fill: #00ff00; -fx-font-size: 1.5em;");
 		this.displayResult.setText("");
