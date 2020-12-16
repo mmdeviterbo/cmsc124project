@@ -1530,6 +1530,10 @@ public class GameStage{
 			String ansIndex = findMebbeWIN(mebbeIndeces, tokensProgram, isNO_WAI, isOIC);
 			if(ansIndex!=null) {
 				if(ansIndex.contains("-")) {
+					for(SymbolTable row : symbolTable.getItems()) {
+						row.setValue("WIN");		
+						break;
+					}
 					start = Integer.parseInt(ansIndex.split("-")[0])+1;
 					end = Integer.parseInt(ansIndex.split("-")[1]);
 				}else { //if NOT NULL AND NOT WIN
@@ -2163,13 +2167,24 @@ public class GameStage{
 
 
 //BONUSES DONE:
-//	1.) a! -- suppress newline
-//	2.) SMOOSH
-//	3.) loop (without nesting)
-//  4.) loop (with nesting)
-//	5.) typecast in arithmetic operation, comparison operation "124" to 124
-//  6.) typecast from numbr to numbar,   2.0 to 2	(no specs related to this, we follow the rule in online interpreter) and they are equal/WIN
-//  7.) deadcode in switch,loop after gtfo
+
+//TYPECASTING
+// 1.) typecast in arithmetic operation, comparison operation "124" to 124
+// 2.) typecast (trailing zeroes) from numbr to numbar,   2.0 to 2	(no specs related to this, we follow the rule in online interpreter) and they are equal/WIN
+
+//SUPRRES NEWLINIE
+// 3.) a! -- suppress newline
+
+//SMOOSH
+// 4.) SMOOSH
+
+//LOOP
+//	5.) loop (without nesting, gtfo)
+//  6.) loop (with nesting, gtfo)
+//	7.) deadcode in switch,loop after gtfo
+
+
+//IFELSE BONUS
 //	8.) MEBBEE added
 //  9.) NO WAI (if else) is optional
 
