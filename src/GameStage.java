@@ -1190,6 +1190,7 @@ public class GameStage{
 	}
 
 	private String doVISIBLE(String[] lexList) {
+	
 		if(checkVISIBLEnest(lexList)) {
 			return null;
 		}
@@ -1206,11 +1207,17 @@ public class GameStage{
 		ArrayList<String> outputPrint = new ArrayList<String>();
 		
 		for(int i=1;i<lexList.length;i++) { //1 because VISIBLE keyword is excluded
-			//literals only
-			if(lexList[i].matches(Lexeme.ALL_LITERALS) && !lexList[i].matches("\\bAN\\b")) {
+			//AN keyword, error
+			if(lexList[i].matches("\\bAN\\b")) {
+				this.errorMessage = "Invalid AN in statement --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+				return null; //outputPrint list will collect all operands (arity) before it prints/displays to the textarea
+			}
+			
+			else if(lexList[i].matches(Lexeme.ALL_LITERALS) && !lexList[i].matches("\\bAN\\b")) {
 				outputPrint.add(lexList[i]); 
 				continue; //outputPrint list will collect all operands (arity) before it prints/displays to the textarea
 			}
+			
 			
 			//smoosh operation
 			else if(lexList[i].matches(Lexeme.SMOOSH)) {
@@ -1876,7 +1883,7 @@ public class GameStage{
 			this.errorMessage = lexeme + " is not implemented with switch case statements, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return;
 		}else if(lexeme.matches(Lexeme.VARIDENT) && !lexeme.matches(Lexeme.keywordsNoLitVar)) {
-			this.errorMessage = lexeme + " variable has unknown operation, error! --> "  + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			this.errorMessage = lexeme + " has unknown operation, error! --> "  + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return;
 		}
 	}
