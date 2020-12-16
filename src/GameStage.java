@@ -1143,11 +1143,10 @@ public class GameStage{
 		
 		if(displayResult.getLength()!=0 && displayResult.getText().charAt(0)=='\n') displayResult.setText(displayResult.getText().substring(1)); //printing format only
 		
-    	displayResult.setEditable(true);
-    	
     	//old string input from terminal
-    	String oldStr = displayResult.getText();    	
+    	String oldStr = displayResult.getText();  
     	
+		displayResult.setEditable(true);
     	displayResult.setOnKeyPressed(new EventHandler<KeyEvent>(){
     	   public void handle(KeyEvent ke){
     	     if(ke.getCode().equals(KeyCode.ENTER)){
