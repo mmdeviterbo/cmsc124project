@@ -1000,10 +1000,12 @@ public class GameStage{
 		String expOp = Lexeme.mathOperator+Lexeme.boolOperator+Lexeme.concat.substring(0,Lexeme.concat.length()-1);
 		if(operand.matches(Lexeme.VISIBLE)) {
 			operand = operands[1];
+			System.out.println(operand);
 			if(operand.matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7)+"|"+Lexeme.VARIDENT) && !operand.matches(expOp)) return;
 		}else if(operand.matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7)+"|"+Lexeme.VARIDENT) && !operand.matches(expOp)) return;
 
 		for(SymbolTable row : symbolTable.getItems()) {
+			
 			row.setValue(answer);		
 			break;
 		}
@@ -1231,8 +1233,9 @@ public class GameStage{
 			}
 			
 			else if(lexList[i].matches(Lexeme.ALL_LITERALS) && !lexList[i].matches("\\bAN\\b")) {
-				if(lexList[i].matches(Lexeme.YARN)) lexList[i] = lexList[i].substring(1,lexList[i].length()-1);
-				outputPrint.add(lexList[i]); 
+				String tempStr = lexList[i];
+				if(lexList[i].matches(Lexeme.YARN)) tempStr = lexList[i].substring(1,lexList[i].length()-1);
+				outputPrint.add(tempStr); 
 				continue; //outputPrint list will collect all operands (arity) before it prints/displays to the textarea
 			}
 			
