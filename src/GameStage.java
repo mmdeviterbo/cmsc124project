@@ -1207,6 +1207,7 @@ public class GameStage{
 	}
 
 	private String doVISIBLE(String[] lexList) {
+		
 		if(checkVISIBLEnest(lexList)) {
 			return null;
 		}
@@ -1230,7 +1231,7 @@ public class GameStage{
 			}
 			
 			else if(lexList[i].matches(Lexeme.ALL_LITERALS) && !lexList[i].matches("\\bAN\\b")) {
-				lexList[i] = lexList[i].substring(1,lexList[i].length()-1);
+				if(lexList[i].matches(Lexeme.YARN)) lexList[i] = lexList[i].substring(1,lexList[i].length()-1);
 				outputPrint.add(lexList[i]); 
 				continue; //outputPrint list will collect all operands (arity) before it prints/displays to the textarea
 			}
