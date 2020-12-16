@@ -342,6 +342,10 @@ public class GameStage{
 				}
 				String valueVar = getValueVarident(lexList[i]);
 				if(valueVar!=null) {
+					if(!valueVar.matches(Lexeme.NUMBAR+"|"+Lexeme.NUMBR)) {
+						this.errorMessage = lexList[i] + " variable is not NUMBAR/NUMBR of data type, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+						return null;
+					}
 					stackOperation.add(0,valueVar);
 				}else return null;
 			}else {
