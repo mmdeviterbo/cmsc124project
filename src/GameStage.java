@@ -189,7 +189,7 @@ public class GameStage{
 		for(SymbolTable rowData : symbolTable.getItems()) {
 			if(variable.equals(rowData.getIdentifier())) {
 				if(rowData.getValue().length()==0) {
-					this.errorMessage = variable + " has NOOB value, error!";
+					this.errorMessage = variable + " has NOOB data type, error!";
 					return null;
 				}
 				return rowData.getValue();
@@ -394,6 +394,13 @@ public class GameStage{
 							if(a>=0 && a<=6) { //then it is math expression
 								ans = setArithmeticOperation(lexList);
 							}else if(a>=7 && a<=12) { //then it is relational op
+								if(!A.matches("\\b"+Lexeme.TROOF[0]+"\\b|\\b"+Lexeme.TROOF[1]+"\\b")) {
+									this.errorMessage = A + " is not TROOF of data type, error!";
+									return null;
+								}else if(!B.matches("\\b"+Lexeme.TROOF[0]+"\\b|\\b"+Lexeme.TROOF[1]+"\\b")) {
+									this.errorMessage = B + " is not TROOF of data type, error!";
+									return null;
+								}
 								if(actualOperator.matches(Lexeme.BOTH_OF)) ans = Abool&&Bbool==true? Lexeme.TROOF[0] : Lexeme.TROOF[1];
 								else if(actualOperator.matches(Lexeme.EITHER_OF)) ans = Abool||Bbool==true? Lexeme.TROOF[0] : Lexeme.TROOF[1];
 								else if(actualOperator.matches(Lexeme.WON_OF)) ans = Abool==Bbool==true? Lexeme.TROOF[1] : Lexeme.TROOF[0];
