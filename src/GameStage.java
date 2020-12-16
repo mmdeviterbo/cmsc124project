@@ -302,6 +302,12 @@ public class GameStage{
 		}
 		
 		for(int i=0;i<lexList.length;i++) {
+			if(i+1<lexList.length && lexList[i].matches(Lexeme.mathOperator.substring(0,Lexeme.mathOperator.length()-1))) {
+				if(lexList[i+1].matches("\\bAN\\b")) {
+					this.errorMessage = "Invalid AN after "+ lexList[i] + " arithmetic operator, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+					return null;
+				}
+			}
 			if(lexList[i].matches(Lexeme.SUM_OF)) stackOperation.add(0,"SUM OF");
 			else if(lexList[i].matches(Lexeme.DIFF_OF)) stackOperation.add(0,"DIFF OF");
 			else if(lexList[i].matches(Lexeme.PRODUKT_OF)) stackOperation.add(0,"PRODUKT OF");
@@ -435,7 +441,7 @@ public class GameStage{
 		
 		if(checkInvalidNest(lexList)) return null;
 		else if(!lexList[lexList.length-1].matches(Lexeme.MKAY)) {
-			this.errorMessage = "MKAY is not found, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			this.errorMessage = "MKAY is not found, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "")  + " MKAY";
 			return null;
 		}
 		
@@ -443,10 +449,10 @@ public class GameStage{
 		for(int i=0;i<lexList.length;i++) {
 			if(i+1<lexList.length) {
 				if(lexList[i].matches(literals) && lexList[i+1].matches(literals) && !lexList[i].matches("\\bAN\\b") && !lexList[i+1].matches("\\bAN\\b")&& !lexList[i].matches(Lexeme.keywordsNoLitVar) && !lexList[i+1].matches(Lexeme.keywordsNoLitVar)) {
-					this.errorMessage = "Invalid " + lexList[i] + " " + lexList[i+1]+ " operands -->" + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+					this.errorMessage = "Invalid " + lexList[i] + " " + lexList[i+1]+ " operands -->" + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "") + " MKAY";
 					return null;
 				}else if(lexList[i].matches("\\bAN\\b") && lexList[i+1].matches("\\bAN\\b")) {
-					this.errorMessage = "Expression has invalid AN AN operands -->" + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+					this.errorMessage = "Expression has invalid AN AN operands -->" + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "")  + " MKAY";
 					return null;
 				}				
 			}
@@ -487,6 +493,10 @@ public class GameStage{
 					return null;	
 				}
 				if(actualOperator.matches(lexList[i])) {
+					if(i+1<lexList.length && lexList[i+1].matches("\\bAN\\b")) {
+						this.errorMessage = "Invalid AN after "+ lexList[i] + " boolean operator, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+						return null;
+					}
 					stackOperation.add(0,actualOperator);
 					isOperator=true;	
 					break;
@@ -548,6 +558,10 @@ public class GameStage{
 		else {
 			for(int i=0;i<lexList.length-1;i++) {
 				if(lexList[i].matches("\\bAN\\b")) {
+					if(i==1) {
+						this.errorMessage = "Invalid AN in comparison operator, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+						return null;
+					}
 					if(i+1==lexList.length) {
 						this.errorMessage= "Comparison expression has AN in the end statement, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 						return null;
