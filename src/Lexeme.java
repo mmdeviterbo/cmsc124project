@@ -17,14 +17,14 @@ public class Lexeme{
 	//literals
 	public static final String NUMBR = "-?\\d+";
 	public static final String NUMBAR = "-?\\d*\\.\\d+";
-	public static final String YARN = "\"[^\"]+\""; 
+	public static final String YARN = "\".+\""; 
 	public static final String[] TROOF = {"WIN","FAIL"};
 	public static final String[] TYPE = {"NUMBR","NUMBAR","YARN","TROOF"};
 	public static final String[] LITERALS = {NUMBR,NUMBAR,YARN,TROOF[0],TROOF[1],TYPE[0],TYPE[1],TYPE[2],TYPE[3]};
 	public static final String ALL_LITERALS = NUMBAR+"|"+NUMBR +"|"+YARN+"|\\b"+TROOF[0]+"\\b|\\b"+TROOF[1]+"\\b|"+TYPE[0]+"|"+TYPE[1]+"|"+TYPE[2]+"|"+TYPE[3] + "|\\bAN\\b";
 	public static final String INVALIDdigit = "\\+\\d*\\.*\\d*";
 	public static final String INVALIDdecimal = "-*\\d+\\.+[.a-zA-Z_]+|-*\\d+\\.+";
-	public static final String INVALIDvar = "[-\\+\\d_][.\\w]+|\\b[a-zA-Z][\\w]*[.][\\w]*|[^\"]*[^\\w\\s\\?\\!]+[^\"]*";
+	public static final String INVALIDvar = "[-\\+\\d_][.\\w]+|\\b[a-zA-Z][\\w]*[.][\\w]*|[^\"]*[^\\w\\s\\?\\!:>)\"]+[^\"]*";
 	
 	//file naming and formatting
 	public static final String HAI =  "\\bHAI\\b";

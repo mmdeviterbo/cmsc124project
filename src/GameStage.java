@@ -1089,7 +1089,7 @@ public class GameStage{
 	}
 	
 	private void printFormatVisible(String temp){
-		//bonus#1
+		//bonus
 		String ans = temp.replace("a!","");
 		
 		if(isNewLine) displayResult.setText(displayResult.getText()+ans+"\n");
@@ -1207,7 +1207,6 @@ public class GameStage{
 	}
 
 	private String doVISIBLE(String[] lexList) {
-	
 		if(checkVISIBLEnest(lexList)) {
 			return null;
 		}
@@ -1231,6 +1230,7 @@ public class GameStage{
 			}
 			
 			else if(lexList[i].matches(Lexeme.ALL_LITERALS) && !lexList[i].matches("\\bAN\\b")) {
+				lexList[i] = lexList[i].substring(1,lexList[i].length()-1);
 				outputPrint.add(lexList[i]); 
 				continue; //outputPrint list will collect all operands (arity) before it prints/displays to the textarea
 			}
@@ -1343,7 +1343,13 @@ public class GameStage{
 		String finalOutput="";
 		if(outputPrint.size()!=0) {
 			for(String output : outputPrint) {
-				finalOutput = finalOutput + output.replace("\"","");		
+				output = output.replaceAll("::", "~");
+				output = output.replaceAll(":o", "g");
+				output = output.replaceAll(":>", "\t");
+				output = output.replaceAll(":\\)", "\n");
+				output = output.replaceAll(":\"", "\"");
+				output = output.replaceAll("~", ":");
+				finalOutput = finalOutput + output;		
 			}
 			return finalOutput;
 		}
@@ -1952,12 +1958,27 @@ public class GameStage{
 		}
 		
 		//finding error in lexical analysis
-		Pattern regexSplit = Pattern.compile("[^\\s\"']+|\"([^\"]*)\"|'([^']*)'");
+		Pattern regexSplit = Pattern.compile("[^\\s\"']+|\".+\"|'([^']*)'");
 		for(int i=0;i<programInput.length;i++) {
 			Matcher regexMatcher = regexSplit.matcher(programInput[i]);
 			while(regexMatcher.find()) {
-				String lex = regexMatcher.group();				
+				String tempStr = regexMatcher.group();				
+				if(tempStr.matches(Lexeme.YARN)) {
+					tempStr = tempStr.substring(1,tempStr.length()-1);
+					int a=0;
+					while(a<tempStr.length()-1){
+						if(tempStr.charAt(a)==':') {
+							if(tempStr.charAt(a+1)=='>' || tempStr.charAt(a+1)=='o' || tempStr.charAt(a+1)=='"' || tempStr.charAt(a+1)==')' || tempStr.charAt(a+1)==':') {
+								a+=2;
+							}else {
+								this.errorMessage = "Colon is used only for special characters, error! --> " + tempStr;
+								return null;
+							}
+						}else a++;
+					}
+				}
 				
+				String lex = regexMatcher.group();
 				if(lex.matches(Lexeme.INVALIDdecimal)) {
 					this.errorMessage = lex + " has invalid decimal value, error";					
 					return null;
@@ -2003,11 +2024,12 @@ public class GameStage{
 				if(arrLexeme[a]==null) continue;
 				classification = Lexeme.findLexemeType(arrLexeme[a]);
 				if(classification!=null) {
-					if(arrLexeme[a].matches(Lexeme.YARN) && !checkIfLexemeExist(arrLexeme[a])) {
-						String removeQuote = arrLexeme[a].replace(Lexeme.QUOTE, "");
-						
-						if(!checkIfLexemeExist(Lexeme.QUOTE)) this.lexemeTable.getItems().add(new Lexeme(Lexeme.QUOTE,Lexeme.STRING_DELIMETER));
-						this.lexemeTable.getItems().add(new Lexeme(removeQuote,classification));
+					if(arrLexeme[a].matches(Lexeme.YARN)) {
+						String removeQuote = arrLexeme[a].substring(1,arrLexeme[a].length()-1);
+						if(!checkIfLexemeExist(removeQuote)) {
+							if(!checkIfLexemeExist(Lexeme.QUOTE)) this.lexemeTable.getItems().add(new Lexeme(Lexeme.QUOTE,Lexeme.STRING_DELIMETER));
+							this.lexemeTable.getItems().add(new Lexeme(removeQuote,classification));
+						}
 					}
 					else {
 						if(classification.equals("Code Delimeter")) arrLexeme[a] = arrLexeme[a].replaceAll(" ", "");
@@ -2179,17 +2201,21 @@ public class GameStage{
 //SUPRRES NEWLINIE
 // 3.) a! -- suppress newline
 
+//Special characters in Strings
+// 4.) :> :) :: :o :"
+
 //SMOOSH
-// 4.) SMOOSH
+// 5.) SMOOSH
 
 //LOOP
-//	5.) loop (without nesting, gtfo)
-//  6.) loop (with nesting, gtfo)
-//	7.) deadcode in switch,loop after gtfo
+//	6.) loop (without nesting, gtfo)
+//  7.) loop (with nesting, gtfo)
+//	8.) deadcode in switch,loop after gtfo
 
 
 //IFELSE BONUS
-//	8.) MEBBEE added
-//  9.) NO WAI (if else) is optional
+//	9.) MEBBEE added
+//  10.) NO WAI (if else) is optional
+
 
 
