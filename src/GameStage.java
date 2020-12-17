@@ -453,10 +453,10 @@ public class GameStage{
 		for(int i=0;i<lexList.length;i++) {
 			if(i+1<lexList.length) {
 				if(lexList[i].matches(literals) && lexList[i+1].matches(literals) && !lexList[i].matches("\\bAN\\b") && !lexList[i+1].matches("\\bAN\\b")&& !lexList[i].matches(Lexeme.keywordsNoLitVar) && !lexList[i+1].matches(Lexeme.keywordsNoLitVar)) {
-					this.errorMessage = "Invalid " + lexList[i] + " " + lexList[i+1]+ " operands -->" + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "") + " MKAY";
+					this.errorMessage = "Invalid " + lexList[i] + " " + lexList[i+1]+ " operands -->" + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 					return null;
 				}else if(lexList[i].matches("\\bAN\\b") && lexList[i+1].matches("\\bAN\\b")) {
-					this.errorMessage = "Expression has invalid AN AN operands -->" + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "")  + " MKAY";
+					this.errorMessage = "Expression has invalid AN AN operands -->" + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 					return null;
 				}				
 			}
@@ -834,7 +834,10 @@ public class GameStage{
 
 		
 		if(lexList[lexList.length-1].matches("\\bAN\\b")) {
-			this.errorMessage = "Expression has missing operand, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+			if(lexList[0].matches(Lexeme.ANY_OF+"|"+Lexeme.ALL_OF)) {
+				this.errorMessage = "Expression has missing operand, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "") + " MKAY";
+			}
+			else this.errorMessage = "Expression has missing operand, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 			return null;
 		}
 		
@@ -1500,7 +1503,7 @@ public class GameStage{
 		for(int a=i;a<tokensProgram.size();a++) {
 			if(tokensProgram.get(a)[0].matches(Lexeme.OIC)) { //finding the OIC keyword
 				if(tokensProgram.get(a).length>1) {
-					this.errorMessage = tokensProgram.get(a)[0].replaceAll("[\\[\\]\\,]", "") + " contains operands, error!";
+					this.errorMessage = tokensProgram.get(a)[0].replaceAll("[\\[\\]\\,]", "") + " contains operands, error! --> " + Arrays.deepToString(tokensProgram.get(a)).replaceAll("[\\[\\]\\,]", "");
 					return -1;
 				}
 				isOIC=a;
@@ -1517,14 +1520,14 @@ public class GameStage{
 				isYA_RLY=a;
 			}else if(tokensProgram.get(a)[0].matches(Lexeme.NO_WAI)) {
 				if(tokensProgram.get(a).length>1) {
-					this.errorMessage = tokensProgram.get(a)[0].replaceAll("[\\[\\]\\,]", "") + " contains operands, error!";
+					this.errorMessage = tokensProgram.get(a)[0].replaceAll("[\\[\\]\\,]", "") + " contains operands, error! --> " + Arrays.deepToString(tokensProgram.get(a)).replaceAll("[\\[\\]\\,]", "");
 					return -1;
 				}
 				isNO_WAI = a;
 			}
 			else if(tokensProgram.get(a)[0].matches(Lexeme.MEBBE)) mebbeIndeces.add(a);
 			else if(tokensProgram.get(a)[0].matches(Lexeme.GTFO)) {
-				this.errorMessage = "GTFO is not implemented in switch case statements, error!";
+				this.errorMessage = "GTFO is not implemented in loop/switch case statements, error! --> " + Arrays.deepToString(tokensProgram.get(a)).replaceAll("[\\[\\]\\,]", "");
 				return -1;
 			}
 		}
