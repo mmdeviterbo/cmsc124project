@@ -387,9 +387,9 @@ public class GameStage{
 				stackOperation.remove(index);
 				stackOperation.add(index,A);
 				solveBooleanOperation(stackOperation,0);	
-			}else if(tempB.matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7))){
-				boolean Atype= tempA.matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7));
-				boolean Btype = tempB.matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7));
+			}else if(tempB.matches(Lexeme.NEW_COMBINED+"|"+Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7))){
+				boolean Atype= tempA.matches(Lexeme.NEW_COMBINED+"|"+Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7));
+				boolean Btype = tempB.matches(Lexeme.NEW_COMBINED+"|"+Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7));
 				boolean regexBool= (stackOperation.get(index+2)).matches(Lexeme.mathOperator+Lexeme.boolOperator);
 				if(stackOperation.size()>2 && Atype && Btype && regexBool && !(stackOperation.get(index+2)).matches(Lexeme.NOT)) {				
 					A = stackOperation.remove(index); B = stackOperation.remove(index);
@@ -441,7 +441,7 @@ public class GameStage{
 	}
 	
 	private String setBooleanOperationArity(String[] lexList) {	
-		String literals = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-6)+Lexeme.VARIDENT;
+		String literals = Lexeme.NEW_COMBINED+"|"+Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-6)+Lexeme.VARIDENT;
 		
 		if(checkInvalidNest(lexList)) return null;
 		else if(!lexList[lexList.length-1].matches(Lexeme.MKAY)) {
@@ -484,7 +484,7 @@ public class GameStage{
 		}else if(lexList[0].matches(Lexeme.ALL_OF+"|"+Lexeme.ANY_OF)) return setBooleanOperationArity(lexList);
 		
 		//boolean expression may contain any of the other expressions
-		String regexLiteral= Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7);
+		String regexLiteral= Lexeme.NEW_COMBINED+"|"+Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7);
 		String[] validExpressions = (Lexeme.mathOperator+Lexeme.boolOperator).split("\\|");
 		for(int i=0;i<lexList.length;i++) {
 			boolean isOperator=false;
@@ -544,7 +544,7 @@ public class GameStage{
 	@SuppressWarnings("unused")
 	private String setComparisonOperation(String[] lexList) {	
 		
-		String regexNum = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7);
+		String regexNum = Lexeme.NEW_COMBINED+"|"+Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7);
 		String regexMath = Lexeme.boolOperator + Lexeme.mathOperator.substring(0,Lexeme.mathOperator.length()-1);
 		String mathQuote = "\""+Lexeme.NUMBR +"\"|\"" +Lexeme.NUMBAR + "\"";
 		
@@ -590,7 +590,9 @@ public class GameStage{
 		for(i=1;i<lexList.length;i++) { //getting operandA
 			if(lexList[i].matches(regexNum+"|"+mathQuote+"|"+Lexeme.VARIDENT) && !lexList[i].matches(regexMath+"|\\bAN\\b")) {
 				if(lexList[i].matches(regexNum+"|"+mathQuote)) { //literal operand
-					lexList[i] = lexList[i].replaceAll("\"", "");
+					if(lexList[i].matches(Lexeme.NEW_COMBINED+"|"+Lexeme.YARN)) {
+						lexList[i] = lexList[i].substring(1,lexList[i].length()-1);
+					}
 					operandA.add(lexList[i]);
 				}else if(lexList[i].matches(Lexeme.VARIDENT) && !lexList[i].matches(Lexeme.keywordsNoLitVar)) { //varident operand
 					String temp = getValueVarident(lexList[i]);
@@ -627,7 +629,9 @@ public class GameStage{
 		for(int j=i;j<lexList.length;j++) { //getting operandB
 			if(lexList[j].matches(regexNum+"|"+ mathQuote + "|"+ Lexeme.VARIDENT) && !lexList[j].matches(regexMath+"|\\bAN\\b")) {
 				if(lexList[j].matches(regexNum+"|"+mathQuote)) {
-					lexList[j] = lexList[j].replaceAll("\"", "");
+					if(lexList[j].matches(Lexeme.NEW_COMBINED+"|"+Lexeme.YARN)) {
+						lexList[j] = lexList[j].substring(1,lexList[j].length()-1);
+					}
 					operandB.add(lexList[j]);
 					if(j+1!=lexList.length && i==j) {
 						this.errorMessage= "Comparison expression has excess operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
@@ -736,7 +740,7 @@ public class GameStage{
 				this.errorMessage = "Value in variable declaration has invalid operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 				return null;	
 			}
-			if(lexList[1].matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7))) {
+			if(lexList[1].matches(Lexeme.NEW_COMBINED+"|"+Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7))) {
 				this.errorMessage = "Variable declaration must be stored to a variable and not to a literal,  error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 				return null;
 			}else if(lexList[1].matches(Lexeme.keywordsNoLitVar)) {
@@ -773,12 +777,14 @@ public class GameStage{
 		//    0       1    2   3
 		
 		//checks if valus is literal, value, expression
-		if(lexList.length>3 && lexList[3].matches(Lexeme.ALL_LITERALS)) { //literals
+		if(lexList.length>3 && lexList[3].matches(Lexeme.NEW_COMBINED+"|"+Lexeme.ALL_LITERALS)) { //literals
 			if(lexList.length!=4) {
 				this.errorMessage = "Variable declaration has excess operands! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 				return null;
 			}
-			lexList[3] = lexList[3].replace("\"", "");
+			if(lexList[3].matches(Lexeme.NEW_COMBINED+"|"+Lexeme.YARN)) {
+				lexList[3] = lexList[3].substring(1,lexList[3].length()-1);
+			}
 			this.symbolTable.getItems().add(new SymbolTable(lexList[1],lexList[3]));	
 			return "Success";
 		}else if(ifOperations!=null) { //expression
@@ -824,7 +830,7 @@ public class GameStage{
 		if(checkInvalidNest(lexList)) return null;
 		ArrayList<String> removeAN = new ArrayList<String>();
 		String regexOperation = Lexeme.mathOperator+Lexeme.boolOperator.substring(0,Lexeme.boolOperator.length()-1);
-		String literalsVar = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-6)+Lexeme.VARIDENT;
+		String literalsVar = Lexeme.NEW_COMBINED+"|"+Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-6)+Lexeme.VARIDENT;
 
 		
 		if(lexList[lexList.length-1].matches("\\bAN\\b")) {
@@ -853,8 +859,8 @@ public class GameStage{
 						this.errorMessage= "Expression has invalid AN AN operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 						return null;
 					}
-				}else if(lexList[i].matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-6)+Lexeme.VARIDENT) && !lexList[i].matches(Lexeme.keywordsNoLitVar+"|\\bAN\\b")) {
-					if(lexList[i+1].matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-6)+Lexeme.VARIDENT) && !lexList[i+1].matches(Lexeme.keywordsNoLitVar+"|\\bAN\\b")) {
+				}else if(lexList[i].matches(literalsVar) && !lexList[i].matches(Lexeme.keywordsNoLitVar+"|\\bAN\\b")) {
+					if(lexList[i+1].matches(literalsVar) && !lexList[i+1].matches(Lexeme.keywordsNoLitVar+"|\\bAN\\b")) {
 						this.errorMessage= "Expression has invalid operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 						return null;
 					}
@@ -939,7 +945,7 @@ public class GameStage{
 		String operatorValid = Lexeme.concat+Lexeme.mathOperator+Lexeme.boolOperator.substring(0,Lexeme.boolOperator.length()-10); //remove MKAY
 		
 		//if literals
-		if(lexList[2].matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7))) {
+		if(lexList[2].matches(Lexeme.NEW_COMBINED+"|"+Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7))) {
 			if(lexList.length!=3) {
 				this.errorMessage = "R reassignment has excess operands, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
 				return null;
@@ -984,7 +990,9 @@ public class GameStage{
 		else newVal = ifOperations;
 		
 		//reassigning after checking/solving if literals/varident/expression
-		newVal = newVal.replaceAll("\"", "");
+		if(newVal.matches(Lexeme.NEW_COMBINED+"|"+Lexeme.YARN)) {
+			newVal = newVal.substring(1,newVal.length()-1);
+		}
 		updateVar(lexList[0], newVal);
 		return "success";
 	}
@@ -1000,9 +1008,8 @@ public class GameStage{
 		String expOp = Lexeme.mathOperator+Lexeme.boolOperator+Lexeme.concat.substring(0,Lexeme.concat.length()-1);
 		if(operand.matches(Lexeme.VISIBLE)) {
 			operand = operands[1];
-			System.out.println(operand);
-			if(operand.matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7)+"|"+Lexeme.VARIDENT) && !operand.matches(expOp)) return;
-		}else if(operand.matches(Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7)+"|"+Lexeme.VARIDENT) && !operand.matches(expOp)) return;
+			if(operand.matches(Lexeme.NEW_COMBINED+"|"+Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7)+"|"+Lexeme.VARIDENT) && !operand.matches(expOp)) return;
+		}else if(operand.matches(Lexeme.NEW_COMBINED+"|"+Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7)+"|"+Lexeme.VARIDENT) && !operand.matches(expOp)) return;
 
 		for(SymbolTable row : symbolTable.getItems()) {
 			
@@ -1208,7 +1215,7 @@ public class GameStage{
 		return false;
 	}
 
-	private String doVISIBLE(String[] lexList) {
+	private String doVISIBLE(String[] lexList) {	
 		
 		if(checkVISIBLEnest(lexList)) {
 			return null;
@@ -1225,6 +1232,7 @@ public class GameStage{
 		
 		ArrayList<String> outputPrint = new ArrayList<String>();
 		
+		
 		for(int i=1;i<lexList.length;i++) { //1 because VISIBLE keyword is excluded
 			//AN keyword, error
 			if(lexList[i].matches("\\bAN\\b")) {
@@ -1232,9 +1240,9 @@ public class GameStage{
 				return null; //outputPrint list will collect all operands (arity) before it prints/displays to the textarea
 			}
 			
-			else if(lexList[i].matches(Lexeme.ALL_LITERALS) && !lexList[i].matches("\\bAN\\b")) {
+			else if(lexList[i].matches(Lexeme.NEW_COMBINED+"|"+Lexeme.ALL_LITERALS) && !lexList[i].matches("\\bAN\\b")) {
 				String tempStr = lexList[i];
-				if(lexList[i].matches(Lexeme.YARN)) tempStr = lexList[i].substring(1,lexList[i].length()-1);
+				if(lexList[i].matches(Lexeme.NEW_COMBINED+"|"+Lexeme.YARN)) tempStr = lexList[i].substring(1,lexList[i].length()-1);
 				outputPrint.add(tempStr); 
 				continue; //outputPrint list will collect all operands (arity) before it prints/displays to the textarea
 			}
@@ -1282,7 +1290,7 @@ public class GameStage{
 			//math,comparison, boolean (but not any of/all of/smoosh)
 			else if(lexList[i].matches(combinedOp)) {
 				String regexOperation = Lexeme.mathOperator+Lexeme.boolOperator.substring(0,Lexeme.boolOperator.length()-1);
-				String literalsVar = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7)+"|"+Lexeme.VARIDENT;
+				String literalsVar = Lexeme.NEW_COMBINED+"|"+Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7)+"|"+Lexeme.VARIDENT;
 				ArrayList<String> tempStore = new ArrayList<String>();
 				
 				int numOperation = 0; int numOperand = 0;
@@ -1343,7 +1351,8 @@ public class GameStage{
 				 }else return null;
 			}
 		}
-		 
+		
+		
 		String finalOutput="";
 		if(outputPrint.size()!=0) {
 			for(String output : outputPrint) {
@@ -1363,7 +1372,9 @@ public class GameStage{
 	private String checkITvalue() { //this function is for IF-ELSE if the value of IT can be cast to troof datatype
 		String ITval= getValueVarident("IT");
 		if(ITval!=null) {
-			if(ITval.length()!=0) ITval = ITval.replaceAll("\"", "");
+			if(ITval.length()!=0 && ITval.matches(Lexeme.NEW_COMBINED+"|"+Lexeme.YARN)) {
+				ITval = ITval.substring(1,ITval.length()-1);
+			}
 		}
 		String validIT = "\\b"+ Lexeme.TROOF[0]+"\\b|\\b"+Lexeme.TROOF[1]+"\\b";
 	
@@ -1617,7 +1628,7 @@ public class GameStage{
 	private int doSWITCH(ArrayList<String[]> tokensProgram,int i) {
 		ArrayList<Integer> OMGlist = new ArrayList<Integer>();
 		ArrayList<Integer> GTFOlist = new ArrayList<Integer>();
-		String regexLiteral = Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7);
+		String regexLiteral = Lexeme.NEW_COMBINED+"|"+Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7);
 		int isOMGWTF=-1, isOIC=-1, increment=0;
 		
 		for(int a=i+1;a<tokensProgram.size();a++) {
@@ -1745,7 +1756,7 @@ public class GameStage{
 		if(loopStartArr[1].matches(Lexeme.keywordsNoLitVar)) {
 			this.errorMessage = loopStartArr[1] + " loop identifier is a reserved keyword, error!" +  Arrays.deepToString(tokensProgram.get(i)).replaceAll("[\\[\\]\\,]", "");
 			return -1;
-		}else if(loopStartArr[1].matches(Lexeme.ALL_LITERALS)) {
+		}else if(loopStartArr[1].matches(Lexeme.NEW_COMBINED+"|"+Lexeme.ALL_LITERALS)) {
 			this.errorMessage = " loop identifier is a literal and not a variable, error! --> " + Arrays.deepToString(tokensProgram.get(i)).replaceAll("[\\[\\]\\,]", "");
 			return -1;
 		}else if(loopStartArr.length<8) {
@@ -1754,7 +1765,7 @@ public class GameStage{
 		}else if(loopStartArr[4].matches(Lexeme.keywordsNoLitVar)) {
 			this.errorMessage =loopStartArr[4] + " variable is a reserved keyword, error! --> "  + Arrays.deepToString(tokensProgram.get(i)).replaceAll("[\\[\\]\\,]", "");
 			return -1;
-		}else if(loopStartArr[4].matches(Lexeme.ALL_LITERALS)) {
+		}else if(loopStartArr[4].matches(Lexeme.NEW_COMBINED+"|"+Lexeme.ALL_LITERALS)) {
 			this.errorMessage = loopStartArr[4] + " loop identifier is a literal and not a variable, error! --> "  + Arrays.deepToString(tokensProgram.get(i)).replaceAll("[\\[\\]\\,]", "");
 			return -1;
 		}		
@@ -1887,7 +1898,7 @@ public class GameStage{
 		}
 		
 		//literals, ANY, MKAY, ITZ, IT, R
-		String regexLiterals = Lexeme.ALL_LITERALS.substring(0, Lexeme.ALL_LITERALS.length()-7);
+		String regexLiterals = Lexeme.NEW_COMBINED+"|"+Lexeme.ALL_LITERALS.substring(0, Lexeme.ALL_LITERALS.length()-7);
 		
 		if(lexeme.matches(regexLiterals)) {
 			this.errorMessage = lexeme + " literal has unknown operation, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
@@ -1932,7 +1943,8 @@ public class GameStage{
 		if(removeComment==null) return null;
 		
 		String[] programInputwComments = removeComment.split("\n");
-		Pattern regex = Pattern.compile(Lexeme.combineRegex);
+		
+		Pattern regex = Pattern.compile(Lexeme.combineRegex);		
 		ArrayList<String[]> tokenizedOutput = new ArrayList<String[]>();
 		
 		
@@ -1961,45 +1973,65 @@ public class GameStage{
 			return null;
 		}
 		
-		//finding error in lexical analysis
-		Pattern regexSplit = Pattern.compile("[^\\s\"']+|\".+\"|'([^']*)'");
+		//finding error in double quotes inside YARN
 		for(int i=0;i<programInput.length;i++) {
+			int numQuote = 0;
+			int index = programInput[i].indexOf("\"");
+			while (index >= 0) {
+				if(index-1>=0 && programInput[i].charAt(index-1)!=':') numQuote++;
+			    index = programInput[i].indexOf("\"", index+1);
+			}
+			if(numQuote%2==1) {
+				this.errorMessage = "Invalid use of double quotes, error! --> " + programInput[i].replaceAll("[\\[\\]\\,]", "");
+				return null;
+			}
+		}	
+		
+		
+		//finding error in lexical analysis
+		Pattern regexSplit = Pattern.compile(Lexeme.NEW_COMBINED+"|[^\\s\"']+|\"([^\"]*)\"|'([^']*)'");
+		for(int i=0;i<programInput.length;i++) {	
 			Matcher regexMatcher = regexSplit.matcher(programInput[i]);
 			while(regexMatcher.find()) {
-				String tempStr = regexMatcher.group();				
-				if(tempStr.matches(Lexeme.YARN)) {
+				String tempStr = regexMatcher.group();	
+				if(tempStr.matches(Lexeme.NEW_COMBINED)) {
 					tempStr = tempStr.substring(1,tempStr.length()-1);
+					String[] charArr = tempStr.split("");
 					int a=0;
-					while(a<tempStr.length()-1){
-						if(tempStr.charAt(a)==':') {
-							if(tempStr.charAt(a+1)=='>' || tempStr.charAt(a+1)=='o' || tempStr.charAt(a+1)=='"' || tempStr.charAt(a+1)==')' || tempStr.charAt(a+1)==':') {
+					while(a<charArr.length-1){
+						if(charArr[a].contentEquals(":")) {
+							if(charArr[a+1].contentEquals(">") || charArr[a+1].contentEquals("o") || charArr[a+1].contentEquals("\"") || charArr[a+1].contentEquals(")") || charArr[a+1].contentEquals(":")) {
 								a+=2;
 							}else {
-								this.errorMessage = "Colon is used only for special characters, error! --> " + tempStr;
+								this.errorMessage = "Error in incorrect use of colon , error! --> " + tempStr;
 								return null;
 							}
-						}else a++;
+						}else if(charArr[a].contentEquals("\"")) {
+							this.errorMessage = "Invalid special character, use colon to escape special characters, error! --> " + tempStr;
+							return null;
+						}
+						else a++;
 					}
-				}
-				
-				String lex = regexMatcher.group();
-				if(lex.matches(Lexeme.INVALIDdecimal)) {
-					this.errorMessage = lex + " has invalid decimal value, error";					
-					return null;
-				}
-				if(lex.matches(Lexeme.INVALIDdigit)) {
-					 this.errorMessage = lex + "  literal has invalid positive sign, error!";
-					return null;
-				}
-				if(lex.matches(Lexeme.INVALIDvar)) {
-					if(lex.matches(Lexeme.NUMBAR+"|"+Lexeme.NUMBR)) continue;
-					 this.errorMessage = lex + " is invalid variable identifier, error!";
-					return null;
+				}else {
+					String lex = regexMatcher.group();
+					if(lex.matches("WTF\\?|RLY\\?|"+Lexeme.YARN)) continue;
+						if(lex.matches(Lexeme.INVALIDdecimal)) {
+							this.errorMessage = lex + " has invalid decimal value, error";					
+							return null;
+						}
+						if(lex.matches(Lexeme.INVALIDdigit)) {
+							 this.errorMessage = lex + "  literal has invalid positive sign, error!";
+							return null;
+						}
+						if(lex.matches(Lexeme.INVALIDvar)) {
+							if(lex.matches(Lexeme.NUMBAR+"|"+Lexeme.NUMBR+"|"+"a!")) continue;
+							 this.errorMessage = lex + " is invalid variable identifier, error!";
+							return null;
+						}
 				}
 			}
 		}
-		
-		
+
 		//finding lexeme
 		for(int i=0;i<programInput.length;i++) {	
 			Matcher regexMatcher = regex.matcher(programInput[i]);	
@@ -2028,14 +2060,13 @@ public class GameStage{
 				if(arrLexeme[a]==null) continue;
 				classification = Lexeme.findLexemeType(arrLexeme[a]);
 				if(classification!=null) {
-					if(arrLexeme[a].matches(Lexeme.YARN)) {
+					if(arrLexeme[a].matches(Lexeme.NEW_COMBINED+"|"+Lexeme.YARN)) {
 						String removeQuote = arrLexeme[a].substring(1,arrLexeme[a].length()-1);
 						if(!checkIfLexemeExist(removeQuote)) {
 							if(!checkIfLexemeExist(Lexeme.QUOTE)) this.lexemeTable.getItems().add(new Lexeme(Lexeme.QUOTE,Lexeme.STRING_DELIMETER));
 							this.lexemeTable.getItems().add(new Lexeme(removeQuote,classification));
 						}
-					}
-					else {
+					}else {
 						if(classification.equals("Code Delimeter")) arrLexeme[a] = arrLexeme[a].replaceAll(" ", "");
 						if(!checkIfLexemeExist(arrLexeme[a])) this.lexemeTable.getItems().add(new Lexeme(arrLexeme[a],classification));
 					}
@@ -2046,7 +2077,6 @@ public class GameStage{
 			}
 			
 		} //for loop k
-		
 		return tokenizedOutput;
 	} //end function
 	
@@ -2199,10 +2229,10 @@ public class GameStage{
 //BONUSES DONE:
 
 //TYPECASTING
-// 1.) typecast in arithmetic operation, comparison operation "124" to 124
-// 2.) typecast (trailing zeroes) from numbr to numbar,   2.0 to 2	(no specs related to this, we follow the rule in online interpreter) and they are equal/WIN
+// 1.) typecast in expressions "124" to 124
+// 2.) typecast (trailing zeroes) from numbar to numbr,   2.0 to 2	(no specs related to this, we follow the rule in online interpreter) and they are equal/WIN
 
-//SUPRRES NEWLINIE
+//SUPPRRESS NEWLINIE
 // 3.) a! -- suppress newline
 
 //Special characters in Strings

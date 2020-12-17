@@ -17,14 +17,19 @@ public class Lexeme{
 	//literals
 	public static final String NUMBR = "-?\\d+";
 	public static final String NUMBAR = "-?\\d*\\.\\d+";
-	public static final String YARN = "\".+\""; 
+	public static final String YARN = "\"[^\"]+\""; 
 	public static final String[] TROOF = {"WIN","FAIL"};
 	public static final String[] TYPE = {"NUMBR","NUMBAR","YARN","TROOF"};
 	public static final String[] LITERALS = {NUMBR,NUMBAR,YARN,TROOF[0],TROOF[1],TYPE[0],TYPE[1],TYPE[2],TYPE[3]};
 	public static final String ALL_LITERALS = NUMBAR+"|"+NUMBR +"|"+YARN+"|\\b"+TROOF[0]+"\\b|\\b"+TROOF[1]+"\\b|"+TYPE[0]+"|"+TYPE[1]+"|"+TYPE[2]+"|"+TYPE[3] + "|\\bAN\\b";
 	public static final String INVALIDdigit = "\\+\\d*\\.*\\d*";
 	public static final String INVALIDdecimal = "-*\\d+\\.+[.a-zA-Z_]+|-*\\d+\\.+";
-	public static final String INVALIDvar = "[-\\+\\d_][.\\w]+|\\b[a-zA-Z][\\w]*[.][\\w]*|[^\"]*[^\\w\\s\\?\\!:>)\"]+[^\"]*";
+	public static final String INVALIDvar = "[-\\+\\d_][\\w\\W]+|[\\W]+.*|.*[\\W]+|.*[\\W]+.*";
+	
+	
+	
+	//special characters string
+	public static final String NEW_COMBINED = "\"[^\"]*(:\")+[^\"]*\"|\"[^\"]*:+[^\"]*\"";
 	
 	//file naming and formatting
 	public static final String HAI =  "\\bHAI\\b";
@@ -97,6 +102,7 @@ public class Lexeme{
 	public static final String NERFIN = "\\bNERFIN\\b";
 	public static final String TIL = "\\bTIL\\b";
 	
+
 	
 	//not included in Project specification
 	// public static final String MAEK = "MAEK";
@@ -150,7 +156,7 @@ public class Lexeme{
 	public static final String conditional = Lexeme.O_RLY + "|" + Lexeme.YA_RLY + "|" + Lexeme.MEBBE + "|" + Lexeme.NO_WAI + "|" + Lexeme.WTF + "|" + Lexeme.OMGWTF + "|" + Lexeme.OMG + "|" + Lexeme.OIC + "|";
 	public static final String mathOperator = Lexeme.SUM_OF +"|" + Lexeme.DIFF_OF + "|" + Lexeme.PRODUKT_OF + "|" + Lexeme.QUOSHUNT_OF + "|" + Lexeme.MOD_OF + "|" + Lexeme.BIGGR_OF + "|" + Lexeme.SMALLR_OF + "|";
 	public static final String boolOperator = Lexeme.BOTH_OF +  "|" + Lexeme.EITHER_OF +  "|" + Lexeme.WON_OF +  "|" + Lexeme.ANY_OF +  "|" + Lexeme.ALL_OF + "|" +Lexeme.NOT + "|"+Lexeme.BOTH_SAEM + "|" + Lexeme.DIFFRINT + "|"+Lexeme.MKAY+"|";	
-	public static final String combineRegex = startEnd + I_HAS_CONSTRUCT + itz + inputOutput + concat + conditional + mathOperator + boolOperator + ALL_LITERALS+"|a!|"+VARIDENT; 
+	public static final String combineRegex = NEW_COMBINED + "|" + startEnd + I_HAS_CONSTRUCT + itz + inputOutput + concat + conditional + mathOperator + boolOperator + ALL_LITERALS+"|a!|"+VARIDENT; 
 	public static final String keywordsNoLitVar = startEnd + I_HAS_CONSTRUCT + itz + inputOutput + concat + conditional + mathOperator + boolOperator + "\\bAN\\b";
 
 	
@@ -252,8 +258,9 @@ public class Lexeme{
 		literal_NUMBR.add(Lexeme.NUMBR); literal_NUMBAR.add(Lexeme.NUMBAR);
 		literal_TROOF.add(Lexeme.TROOF[0]);literal_TROOF.add(Lexeme.TROOF[1]);
 		literal_YARN.add(Lexeme.YARN);
-
-
+		literal_YARN.add(Lexeme.NEW_COMBINED);
+		
+		
 		Lexeme.TOKENS.put(Lexeme.NUMBR_LITERAL, literal_NUMBR);
 		Lexeme.TOKENS.put(Lexeme.NUMBAR_LITERAL, literal_NUMBAR);
 		Lexeme.TOKENS.put(Lexeme.TROOF_LITERAL, literal_TROOF);	
