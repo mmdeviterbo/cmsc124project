@@ -1571,10 +1571,10 @@ public class GameStage{
 			}
 		}
 		if(numORLY<numOIC) {
-			this.errorMessage = "O RLY? is missing in nested conditional statements, error!";
+			this.errorMessage = "O RLY? is missing in conditional statements, error!";
 			return -1;
 		}else if(numORLY>numOIC) {
-			this.errorMessage = "OIC is missing in nested conditional statements, error!";
+			this.errorMessage = "OIC is missing in conditional statements, error!";
 			return -1;
 		}
 		
