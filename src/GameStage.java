@@ -1716,6 +1716,10 @@ public class GameStage{
 						this.errorMessage = "GTFO has excess operands, error!";
 						return -1;
 					}
+					if(a+1<tokensProgram.size() && !tokensProgram.get(a+1)[0].matches(Lexeme.KTHXBYE+"|"+Lexeme.OMG+"|"+Lexeme.OMGWTF+"|"+Lexeme.OIC)){
+						this.errorMessage = "Deadcode found, error! --> " + Arrays.deepToString(tokensProgram.get(a+1)).replaceAll("[\\[\\]\\,]", "");
+						return -1;
+					}
 					GTFOlist.add(a);
 			}
 		}
