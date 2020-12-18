@@ -1433,6 +1433,41 @@ public class GameStage{
 					return null;
 				}
 			}
+			for(int a=0;a<tokensProgram.size()-1;a++) {
+				if(!tokensProgram.get(a)[0].matches(Lexeme.MEBBE)) continue;
+				int mebbeStart = a;
+				int len = tokensProgram.get(a).length-1;
+				if(tokensProgram.get(mebbeStart).length==1) {
+					this.errorMessage = "MEBBE has no operand, error! --> " + Arrays.deepToString(tokensProgram.get(mebbeStart)).replaceAll("[\\[\\]\\,]", "");
+					return null;
+				}else if(tokensProgram.get(mebbeStart)[1].matches("\\bAN\\b")) {
+					this.errorMessage = "Invalid AN in MEBBE statement, error! --> " + Arrays.deepToString(tokensProgram.get(mebbeStart)).replaceAll("[\\[\\]\\,]", "");
+					return null;
+				}else if(tokensProgram.get(mebbeStart)[len].matches(Lexeme.keywordsNoLitVar)) {
+					this.errorMessage = "Invalid "+ tokensProgram.get(mebbeStart)[len] + " in MEBBE end statement, error! --> " + Arrays.deepToString(tokensProgram.get(mebbeStart)).replaceAll("[\\[\\]\\,]", "");
+					return null;
+				}
+				if(!tokensProgram.get(mebbeStart)[1].matches(Lexeme.NEW_COMBINED+"|"+Lexeme.ALL_LITERALS+"|"+Lexeme.mathOperator+Lexeme.boolOperator.substring(0, Lexeme.boolOperator.length()-10))) {
+					if(tokensProgram.get(mebbeStart)[1].matches(Lexeme.VARIDENT) && !tokensProgram.get(mebbeStart)[1].matches(Lexeme.keywordsNoLitVar)) {
+						Boolean tempValVar = checkIfVarExist(tokensProgram.get(mebbeStart)[1]);
+						if(tempValVar) {
+							tokensProgram.get(mebbeStart)[1] = getValueVarident(tokensProgram.get(mebbeStart)[1]);
+							if(tokensProgram.get(mebbeStart)[1]==null) return null;
+						}else return null;
+					}	
+					this.errorMessage = "MEBBE does not contain an expression, error! --> " + Arrays.deepToString(tokensProgram.get(mebbeStart)).replaceAll("[\\[\\]\\,]", "");
+					return null;	
+				}else if(tokensProgram.get(mebbeStart)[1].matches(Lexeme.NOT+"|"+Lexeme.NEW_COMBINED+"|"+Lexeme.ALL_LITERALS.substring(0,Lexeme.ALL_LITERALS.length()-7))){					
+					if(tokensProgram.get(mebbeStart).length>2 && !tokensProgram.get(mebbeStart)[1].matches(Lexeme.NOT)) {
+						this.errorMessage = "MEBBE has excess operands, error! --> " + Arrays.deepToString(tokensProgram.get(mebbeStart)).replaceAll("[\\[\\]\\,]", "");
+						return null;
+					}else if(tokensProgram.get(mebbeStart).length==2 && tokensProgram.get(mebbeStart)[1].matches(Lexeme.NOT)) {
+						this.errorMessage = "MEBBE has missing operand, error! --> " + Arrays.deepToString(tokensProgram.get(mebbeStart)).replaceAll("[\\[\\]\\,]", "");
+						return null;
+					}
+					
+				}
+			}
 		}
 		//if there's no mebbe
 		if(isNO_WAI!=-1 && isNO_WAI-isYA_RLY==1) {
@@ -1451,7 +1486,6 @@ public class GameStage{
 	private String findMebbeWIN(ArrayList<Integer> mebbeIndeces, ArrayList<String[]> tokensProgram, int isNO_WAI, int isOIC) {
 		String ij=null;
 		String boolOp = Lexeme.boolOperator.substring(0,Lexeme.boolOperator.length()-10);
-		String troofValues = "\\b"+Lexeme.TROOF[0]+"\\b|"+"\\b\""+Lexeme.TROOF[0]+"\"\\b";
 		
 		
 		for(int i=0;i<mebbeIndeces.size();i++) {
@@ -1462,20 +1496,16 @@ public class GameStage{
 			else mebbeEnd = isOIC;
 			
 			
-			if(tokensProgram.get(mebbeStart).length<3) {
-				this.errorMessage = "MEBBE contains invalid expression --> " + Arrays.deepToString(tokensProgram.get(mebbeStart)).replaceAll("[\\[\\]\\,]", "");
-				return null;
-			}else if(!tokensProgram.get(mebbeStart)[1].matches(Lexeme.mathOperator+Lexeme.boolOperator.substring(0, Lexeme.boolOperator.length()-10))) {
-				this.errorMessage = "MEBBE does not contain an expression, error! --> " + Arrays.deepToString(tokensProgram.get(mebbeStart)).replaceAll("[\\[\\]\\,]", "");
-				return null;	
+			String value =null;
+			if(tokensProgram.get(mebbeStart).length==2) {
+				value = tokensProgram.get(mebbeStart)[1];
+			}else {
+				String[] mebbeExpression = new String[tokensProgram.get(mebbeStart).length-1];
+				for(int a=1;a<tokensProgram.get(mebbeStart).length;a++) mebbeExpression[a-1] = tokensProgram.get(mebbeStart)[a]; 
+				value = allOperations(mebbeExpression);
 			}
-			
-			String[] mebbeExpression = new String[tokensProgram.get(mebbeStart).length-1];
-			for(int a=1;a<tokensProgram.get(mebbeStart).length;a++) mebbeExpression[a-1] = tokensProgram.get(mebbeStart)[a]; 
-					
-			String value = allOperations(mebbeExpression);
 			if(value!=null) {
-				if(value.matches(troofValues)) {
+				if(!value.matches(Lexeme.TROOF[1]+"|0")) {
 					ij=mebbeStart+"-"+mebbeEnd;
 					break;
 				}else {
@@ -1500,15 +1530,16 @@ public class GameStage{
 		ArrayList<Integer> mebbeIndeces = new ArrayList<Integer>(); //list of mebee indeces (key)
 		
 		//finding the ORLY, YA RLY, NO WAI, OIC keywords
+		int numORLY=0, numOIC=0;
 		for(int a=i;a<tokensProgram.size();a++) {
 			if(tokensProgram.get(a)[0].matches(Lexeme.OIC)) { //finding the OIC keyword
 				if(tokensProgram.get(a).length>1) {
 					this.errorMessage = tokensProgram.get(a)[0].replaceAll("[\\[\\]\\,]", "") + " contains operands, error! --> " + Arrays.deepToString(tokensProgram.get(a)).replaceAll("[\\[\\]\\,]", "");
 					return -1;
 				}
-				isOIC=a;
+				if(isOIC==-1) isOIC=a;
 				increment= a+1;
-				break;
+				numOIC++;
 			}else if(tokensProgram.get(a)[0].matches(Lexeme.YA_RLY)) {
 				if(!tokensProgram.get(a-1)[0].matches(Lexeme.O_RLY)) {
 					this.errorMessage = tokensProgram.get(a)[0].replaceAll("[\\[\\]\\,]", "") + " must be preceded by O RLY?, error!";
@@ -1517,7 +1548,7 @@ public class GameStage{
 					this.errorMessage = "YA RLY contains operands, error! --> " + Arrays.deepToString(tokensProgram.get(a)).replaceAll("[\\[\\]\\,]", "");
 					return -1;
 				}
-				isYA_RLY=a;
+				if(isYA_RLY==-1) isYA_RLY=a;
 			}else if(tokensProgram.get(a)[0].matches(Lexeme.NO_WAI)) {
 				if(tokensProgram.get(a).length>1) {
 					this.errorMessage = tokensProgram.get(a)[0].replaceAll("[\\[\\]\\,]", "") + " contains operands, error! --> " + Arrays.deepToString(tokensProgram.get(a)).replaceAll("[\\[\\]\\,]", "");
@@ -1525,13 +1556,27 @@ public class GameStage{
 				}
 				isNO_WAI = a;
 			}
-			else if(tokensProgram.get(a)[0].matches(Lexeme.MEBBE)) mebbeIndeces.add(a);
+			else if(tokensProgram.get(a)[0].matches(Lexeme.MEBBE)) {
+				if(numORLY-numOIC==1) mebbeIndeces.add(a);
+			}
 			else if(tokensProgram.get(a)[0].matches(Lexeme.GTFO)) {
 				this.errorMessage = "GTFO is not implemented in loop/switch case statements, error! --> " + Arrays.deepToString(tokensProgram.get(a)).replaceAll("[\\[\\]\\,]", "");
 				return -1;
+			}else if(tokensProgram.get(a)[0].matches(Lexeme.O_RLY)) {
+				if(a+1<tokensProgram.size() && !tokensProgram.get(a+1)[0].matches(Lexeme.YA_RLY)) {
+					this.errorMessage = "O RLY? is not succeeded by YA RLY, error! --> " + Arrays.deepToString(tokensProgram.get(a)).replaceAll("[\\[\\]\\,]", "");
+					return -1;
+				}
+				numORLY++;
 			}
 		}
-		
+		if(numORLY<numOIC) {
+			this.errorMessage = "O RLY? is missing in nested conditional statements, error!";
+			return -1;
+		}else if(numORLY>numOIC) {
+			this.errorMessage = "OIC is missing in nested conditional statements, error!";
+			return -1;
+		}
 		
 		//finding error in IF else construct
 		String isError = findErrorInIFELSE(i, isYA_RLY, isNO_WAI, isOIC, increment, mebbeIndeces, tokensProgram);
@@ -1778,7 +1823,7 @@ public class GameStage{
 			if(variable.matches("\\b"+Lexeme.TROOF[1]+"\\b")) updateVar(loopStartArr[4],"0"); //online interpreter makes FAIL = 0, WIN = 1
 			else if(variable.matches("\\b"+Lexeme.TROOF[0]+"\\b")) updateVar(loopStartArr[4],"1");
 			else if(!variable.matches(Lexeme.NUMBR+"|"+Lexeme.NUMBAR)) {
-				this.errorMessage = loopStartArr[4] +" variable is not troof, numbar, nor numbr data type, error!"  + Arrays.deepToString(tokensProgram.get(i)).replaceAll("[\\[\\]\\,]", "");
+				this.errorMessage = loopStartArr[4] +" variable is not troof, numbar, nor numbr data type, error! --> "  + Arrays.deepToString(tokensProgram.get(i)).replaceAll("[\\[\\]\\,]", "");
 				return -1;
 			}
 		}else return -1;
@@ -2191,7 +2236,6 @@ public class GameStage{
     	Lexeme.resetErrorFlags();
     	errorMessage=""; 
 	}
-	
 	
 	
 	private void btnExecuteHandle() { //get and process the code input by user from texarea named "inputUser"
