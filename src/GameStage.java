@@ -445,7 +445,7 @@ public class GameStage{
 		
 		if(checkInvalidNest(lexList)) return null;
 		else if(!lexList[lexList.length-1].matches(Lexeme.MKAY)) {
-			this.errorMessage = "MKAY is not found, error! --> " + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "")  + " MKAY";
+			this.errorMessage = "MKAY is not found, error!";
 			return null;
 		}
 		
@@ -453,10 +453,10 @@ public class GameStage{
 		for(int i=0;i<lexList.length;i++) {
 			if(i+1<lexList.length) {
 				if(lexList[i].matches(literals) && lexList[i+1].matches(literals) && !lexList[i].matches("\\bAN\\b") && !lexList[i+1].matches("\\bAN\\b")&& !lexList[i].matches(Lexeme.keywordsNoLitVar) && !lexList[i+1].matches(Lexeme.keywordsNoLitVar)) {
-					this.errorMessage = "Invalid " + lexList[i] + " " + lexList[i+1]+ " operands -->" + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+					this.errorMessage = "Invalid " + lexList[i] + " " + lexList[i+1]+ " operands";
 					return null;
 				}else if(lexList[i].matches("\\bAN\\b") && lexList[i+1].matches("\\bAN\\b")) {
-					this.errorMessage = "Expression has invalid AN AN operands -->" + Arrays.deepToString(lexList).replaceAll("[\\[\\]\\,]", "");
+					this.errorMessage = "Expression has invalid AN AN operands";
 					return null;
 				}				
 			}
